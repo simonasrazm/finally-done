@@ -43,9 +43,9 @@ void main() async {
       options.attachStacktrace = true; // Include stack traces
       options.sendDefaultPii = false; // Don't send personal info
       
-      // Session Replay Configuration
-      options.sessionReplaySampleRate = 0.1; // Capture 10% of sessions for replay
-      options.sessionReplayOnErrorSampleRate = 1.0; // Always capture replay on errors
+      // Session Replay Configuration (Note: These options may not be available in current Sentry Flutter version)
+      // options.sessionReplaySampleRate = 0.1; // Capture 10% of sessions for replay
+      // options.sessionReplayOnErrorSampleRate = 1.0; // Always capture replay on errors
       
       // Release tracking
       options.release = 'finally-done@1.0.0+1'; // App version for tracking
