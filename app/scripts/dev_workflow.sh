@@ -24,36 +24,38 @@ fi
 echo "🚀 Development Workflow"
 echo "======================"
 
-# 1. Add all changes
-echo "📝 Adding changes to Git..."
-git add .
-
-# 2. Commit with message
-echo "💾 Committing: $COMMIT_MSG"
-git commit -m "$COMMIT_MSG"
-
-# 3. Push to GitHub
-echo "📤 Pushing to GitHub..."
-git push origin main
-
-# 4. Run tests
-echo "🧪 Running tests..."
+# 1. Run tests FIRST
+echo "🧪 Running tests first..."
 cd app
 flutter test
 
-if [ $? -eq 0 ]; then
-    echo "✅ Tests passed!"
-    echo ""
-    
-    if [ "$RUN_APP" = true ]; then
-        echo "📱 Starting app automatically..."
-        flutter run
-    else
-        echo "📱 Ready to test on phone!"
-        echo "💡 Run: flutter run"
-        echo "💡 Or use: ./scripts/dev_workflow.sh \"$COMMIT_MSG\" --run-app"
-    fi
-else
-    echo "❌ Tests failed! Fix issues before testing on phone."
+if [ $? -ne 0 ]; then
+    echo "❌ Tests failed! Not committing or pushing broken code."
     exit 1
+fi
+
+# 2. Go back to root and add all changes
+cd ..
+echo "📝 Adding changes to Git..."
+git add .
+
+# 3. Commit with message
+echo "💾 Committing: $COMMIT_MSG"
+git commit -m "$COMMIT_MSG"
+
+# 4. Push to GitHub
+echo "📤 Pushing to GitHub..."
+git push origin main
+
+echo "✅ Tests passed and code pushed to GitHub!"
+echo ""
+
+if [ "$RUN_APP" = true ]; then
+    echo "📱 Starting app automatically..."
+    cd app
+    flutter run
+else
+    echo "📱 Ready to test on phone!"
+    echo "💡 Run: flutter run"
+    echo "💡 Or use: ./scripts/dev_workflow.sh \"$COMMIT_MSG\" --run-app"
 fi

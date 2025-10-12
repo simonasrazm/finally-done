@@ -247,11 +247,25 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
     try {
       Logger.info('Removing command from queue: $id', tag: 'QUEUE');
       
+      // Store command data before any Realm operations to avoid invalidation
+      final commandsToKeep = <QueuedCommandRealm>[];
+      for (final cmd in state) {
+        try {
+          final cmdId = cmd.id;
+          if (cmdId != id) {
+            commandsToKeep.add(cmd);
+          }
+        } catch (e) {
+          Logger.warning('Skipping invalid command in removeCommand: $e', tag: 'QUEUE');
+          // Skip invalid commands
+        }
+      }
+      
       // Remove from Realm
       _realmService.removeCommand(id);
       
-      // Update state
-      state = state.where((cmd) => cmd.id != id).toList();
+      // Update state with pre-filtered commands
+      state = commandsToKeep;
       
       Logger.info('Successfully removed command: $id', tag: 'QUEUE');
     } catch (e, stackTrace) {
