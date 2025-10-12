@@ -86,6 +86,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 builder: (context, ref, child) {
                   final integrationService = ref.watch(integrationServiceProvider);
                   
+                  print('🔵 DEBUG: Building individual service tiles');
+                  print('🔵 DEBUG: isTasksConnected: ${integrationService.isTasksConnected}');
+                  print('🔵 DEBUG: isCalendarConnected: ${integrationService.isCalendarConnected}');
+                  print('🔵 DEBUG: isGmailConnected: ${integrationService.isGmailConnected}');
+                  
                   return Column(
                     children: [
                       _buildGoogleServiceTile(
@@ -343,6 +348,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     required bool isConnected,
     required VoidCallback onTap,
   }) {
+    print('🔵 DEBUG: Building Google service tile: $title, connected: $isConnected');
     return ListTile(
       leading: Icon(
         icon,
