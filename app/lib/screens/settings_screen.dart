@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../services/speech_service.dart';
+import '../services/integration_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -67,19 +68,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _buildSection(
             title: 'Connected Services',
             children: [
-              _buildServiceTile(
-                icon: Icons.task_alt,
-                title: 'Google Tasks',
-                subtitle: 'Manage your tasks',
-                isConnected: true,
-                onTap: () => _showServiceDialog('Google Tasks'),
+              Consumer(
+                builder: (context, ref, child) {
+                  final isAuthenticated = ref.watch(isIntegrationAuthenticatedProvider);
+                  return _buildServiceTile(
+                    icon: Icons.task_alt,
+                    title: 'Google Tasks',
+                    subtitle: isAuthenticated ? 'Connected' : 'Tap to connect',
+                    isConnected: isAuthenticated,
+                    onTap: () => _handleGoogleAuth(ref),
+                  );
+                },
               ),
-              _buildServiceTile(
-                icon: Icons.calendar_today,
-                title: 'Google Calendar',
-                subtitle: 'Schedule your events',
-                isConnected: true,
-                onTap: () => _showServiceDialog('Google Calendar'),
+              Consumer(
+                builder: (context, ref, child) {
+                  final isAuthenticated = ref.watch(isIntegrationAuthenticatedProvider);
+                  return _buildServiceTile(
+                    icon: Icons.calendar_today,
+                    title: 'Google Calendar',
+                    subtitle: isAuthenticated ? 'Connected' : 'Tap to connect',
+                    isConnected: isAuthenticated,
+                    onTap: () => _handleGoogleAuth(ref),
+                  );
+                },
               ),
               _buildServiceTile(
                 icon: Icons.note_alt,
@@ -275,6 +286,81 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
   
+  void _handleGoogleAuth(WidgetRef ref) async {
+    try {
+      final integrationService = ref.read(integrationServiceProvider);
+      
+      if (integrationService.isAuthenticated) {
+        // Show sign out dialog
+        final shouldSignOut = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Google Account'),
+            content: Text('Signed in as: ${integrationService.userEmail}\n\nDo you want to sign out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Sign Out'),
+              ),
+            ],
+          ),
+        );
+        
+        if (shouldSignOut == true) {
+          await integrationService.signOut();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Signed out from Google')),
+            );
+          }
+        }
+      } else {
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Connecting to Google...'),
+              ],
+            ),
+          ),
+        );
+        
+        // Authenticate
+        final success = await integrationService.authenticate();
+        
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Connected as: ${integrationService.userEmail}')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to connect to Google')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog if open
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   void _showServiceDialog(String service) {
     showDialog(
       context: context,

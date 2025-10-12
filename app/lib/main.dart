@@ -13,6 +13,7 @@ import 'models/command.dart';
 import 'screens/home_screen.dart';
 import 'screens/mission_control_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/tasks_screen.dart';
 import 'services/queue_service.dart';
 
 void main() async {
@@ -286,6 +287,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const MissionControlScreen(),
+    const TasksScreen(),
     const SettingsScreen(),
   ];
   
@@ -362,6 +364,11 @@ class _MainScreenState extends State<MainScreen> {
               },
             ),
             label: 'Mission Control',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.task_alt_outlined),
+            activeIcon: Icon(Icons.task_alt),
+            label: 'Tasks',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
