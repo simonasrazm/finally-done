@@ -56,6 +56,7 @@ class GoogleAuthService {
       scopes: _scopes,
       // Note: clientId should be configured for production
       // For now, using default which works for development
+      // In production, you should set the clientId from GoogleService-Info.plist
     );
   }
 
@@ -108,12 +109,28 @@ class GoogleAuthService {
     try {
       Logger.info('Starting Google OAuth2 authentication for USER', tag: 'GOOGLE_AUTH');
       
-      // Sign in with Google
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      // Check if Google Sign-In is properly configured
+      if (_googleSignIn == null) {
+        Logger.error('GoogleSignIn is not initialized', tag: 'GOOGLE_AUTH');
+        return false;
+      }
+      
+      Logger.info('Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
+      
+      // Sign in with Google (with timeout to prevent freezing)
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          Logger.error('Google sign-in timed out after 30 seconds', tag: 'GOOGLE_AUTH');
+          throw TimeoutException('Google sign-in timed out', const Duration(seconds: 30));
+        },
+      );
       if (googleUser == null) {
         Logger.info('User cancelled Google sign-in', tag: 'GOOGLE_AUTH');
         return false;
       }
+      
+      Logger.info('Google sign-in successful for user: ${googleUser.email}', tag: 'GOOGLE_AUTH');
 
       // Get authentication details
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;

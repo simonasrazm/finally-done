@@ -83,21 +83,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _buildServiceTile(
                 icon: Icons.note_alt,
                 title: 'Evernote',
-                subtitle: 'Store your notes',
+                subtitle: 'Coming soon',
                 isConnected: false,
                 onTap: () => _showServiceDialog('Evernote'),
               ),
               _buildServiceTile(
                 icon: Icons.notes,
                 title: 'Apple Notes',
-                subtitle: 'Local note storage',
-                isConnected: true,
+                subtitle: 'Coming soon',
+                isConnected: false,
                 onTap: () => _showServiceDialog('Apple Notes'),
               ),
               _buildServiceTile(
                 icon: Icons.alarm,
                 title: 'Custom Alarms',
-                subtitle: 'Works like iPhone Clock app',
+                subtitle: 'Coming soon',
                 isConnected: false,
                 onTap: () => _showServiceDialog('Custom Alarms'),
               ),
@@ -359,14 +359,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(width: 20),
-                Text('Connecting to Google...'),
+                Text('Opening Google Sign-In...'),
               ],
             ),
           ),
         );
         
-        // Authenticate
-        final success = await integrationService.authenticate();
+        // Authenticate with timeout
+        final success = await integrationService.authenticate().timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Google Sign-In timed out. Please try again.')),
+              );
+            }
+            return false;
+          },
+        );
         
         if (mounted) {
           Navigator.pop(context); // Close loading dialog
@@ -377,7 +387,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to connect to Google')),
+              const SnackBar(content: Text('Failed to connect to Google. Please try again.')),
             );
           }
         }
