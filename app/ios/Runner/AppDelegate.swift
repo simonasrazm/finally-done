@@ -1,6 +1,5 @@
 import UIKit
 import Flutter
-import GoogleSignIn
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -10,27 +9,9 @@ import GoogleSignIn
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     
-    // Configure Google Sign-In
-    guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") else {
-      fatalError("GoogleService-Info.plist not found")
-    }
-    guard let plist = NSDictionary(contentsOfFile: path) else {
-      fatalError("Could not load GoogleService-Info.plist")
-    }
-    guard let clientId = plist["CLIENT_ID"] as? String else {
-      fatalError("CLIENT_ID not found in GoogleService-Info.plist")
-    }
-    
-    GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
+    // No Google Sign-In initialization at startup
+    // Google services will be initialized only when user tries to connect
     
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-  
-  override func application(
-    _ app: UIApplication,
-    open url: URL,
-    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
-  ) -> Bool {
-    return GIDSignIn.sharedInstance.handle(url)
   }
 }

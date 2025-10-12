@@ -30,7 +30,7 @@ class GoogleAuthService {
     gmail.GmailApi.gmailComposeScope,    // USER's email (compose)
   ];
 
-  late GoogleSignIn _googleSignIn;
+  GoogleSignIn? _googleSignIn;
   AuthClient? _authClient;
   String? _userId;
   String? _userEmail;
@@ -52,12 +52,36 @@ class GoogleAuthService {
   bool get isAuthenticated => _authClient != null;
 
   GoogleAuthService() {
-    _googleSignIn = GoogleSignIn(
-      scopes: _scopes,
-      // Note: clientId should be configured for production
-      // For now, using default which works for development
-      // In production, you should set the clientId from GoogleService-Info.plist
-    );
+    // Lazy initialization - GoogleSignIn will be created only when needed
+    _googleSignIn = null;
+    
+    // Run background reconnection if tokens exist (non-blocking)
+    _initializeFromStoredTokensAsync();
+  }
+  
+  /// Initialize GoogleSignIn only when needed
+  void _ensureGoogleSignInInitialized() {
+    if (_googleSignIn == null) {
+      _googleSignIn = GoogleSignIn(
+        scopes: _scopes,
+        // No clientId needed - users authenticate with their own accounts
+      );
+    }
+  }
+  
+  /// Background reconnection (non-blocking)
+  Future<void> _initializeFromStoredTokensAsync() async {
+    try {
+      // Check if we have stored tokens
+      final accessToken = await _storage.read(key: _accessTokenKey);
+      if (accessToken != null) {
+        Logger.info('Found stored Google tokens, attempting background reconnection', tag: 'GOOGLE_AUTH');
+        await initializeFromStoredTokens();
+      }
+    } catch (e) {
+      Logger.warning('Background Google token reconnection failed: $e', tag: 'GOOGLE_AUTH');
+      // Don't throw - this is background operation
+    }
   }
 
   /// Initialize authentication from stored tokens
@@ -109,16 +133,13 @@ class GoogleAuthService {
     try {
       Logger.info('Starting Google OAuth2 authentication for USER', tag: 'GOOGLE_AUTH');
       
-      // Check if Google Sign-In is properly configured
-      if (_googleSignIn == null) {
-        Logger.error('GoogleSignIn is not initialized', tag: 'GOOGLE_AUTH');
-        return false;
-      }
+      // Initialize GoogleSignIn only when user tries to authenticate
+      _ensureGoogleSignInInitialized();
       
       Logger.info('Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
       
       // Sign in with Google (with timeout to prevent freezing)
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn().timeout(
+      final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn().timeout(
         const Duration(seconds: 30),
         onTimeout: () {
           Logger.error('Google sign-in timed out after 30 seconds', tag: 'GOOGLE_AUTH');
@@ -185,7 +206,7 @@ class GoogleAuthService {
       Logger.info('Refreshing Google access tokens', tag: 'GOOGLE_AUTH');
       
       // Use Google Sign-In to refresh tokens
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signInSilently();
+      final GoogleSignInAccount? googleUser = await _googleSignIn!.signInSilently();
       if (googleUser == null) {
         Logger.warning('Silent sign-in failed, user needs to re-authenticate', tag: 'GOOGLE_AUTH');
         return false;
@@ -263,7 +284,7 @@ class GoogleAuthService {
       Logger.info('Signing out USER from Google', tag: 'GOOGLE_AUTH');
       
       // Sign out from Google Sign-In
-      await _googleSignIn.signOut();
+      await _googleSignIn?.signOut();
       
       // Clear stored tokens
       await _storage.delete(key: _accessTokenKey);
@@ -298,6 +319,9 @@ class GoogleAuthService {
         return false;
       }
 
+      // Initialize GoogleSignIn if needed
+      _ensureGoogleSignInInitialized();
+      
       // Check if we have a refresh token
       final refreshToken = await _storage.read(key: _refreshTokenKey);
       if (refreshToken == null) {

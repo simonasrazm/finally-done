@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'dart:ui' show PlatformDispatcher;
+import 'dart:async';
 // import 'package:realm/realm.dart';  // TODO: Add back when implementing local storage
 
 import 'design_system/colors.dart';
@@ -20,80 +21,92 @@ void main() async {
   print('🚀 App starting...');
   
   print('📄 Loading environment variables first...');
-  await dotenv.load(fileName: ".env");
-  print('✅ Environment variables loaded');
+  try {
+    await dotenv.load(fileName: ".env");
+    print('✅ Environment variables loaded');
+  } catch (e) {
+    print('⚠️ Environment file not found or invalid, continuing with defaults: $e');
+  }
   
   final sentryDsn = dotenv.env['SENTRY_DSN'];
   print('🔍 Sentry DSN found: ${sentryDsn != null ? "YES" : "NO"}');
   if (sentryDsn != null) {
     print('🔍 Sentry DSN: ${sentryDsn.substring(0, 20)}...');
+  } else {
+    print('⚠️ No Sentry DSN found, error tracking disabled');
   }
   
   print('🔧 Starting Sentry initialization...');
   final stopwatch = Stopwatch()..start();
   
   try {
-    await SentryFlutter.init(
-    (options) {
-      print('🔧 Configuring Sentry options...');
-      options.dsn = sentryDsn; // Use loaded DSN
-      options.tracesSampleRate = 1.0; // Capture 100% of transactions for debugging
-      options.debug = true; // Enable debug mode
-      options.enableAutoPerformanceTracing = false; // Disable profiling to fix C++ compilation
-      options.enableAutoSessionTracking = true; // Enable session tracking
-      options.attachStacktrace = true; // Include stack traces
-      options.sendDefaultPii = false; // Don't send personal info
-      
-      // Session Replay Configuration
-      options.replay.sessionSampleRate = 1.0; // Capture 100% during testing
-      options.replay.onErrorSampleRate = 1.0; // Always capture on errors
-      // Note: maskAllText and maskAllImages are not available in current Flutter version
-      
-      // Release tracking
-      options.release = 'finally-done@1.0.0+1'; // App version for tracking
-      options.dist = '1'; // Build number
-      print('✅ Sentry options configured');
-    },
-    appRunner: () async {
-      stopwatch.stop();
-      print('⏱️ Sentry initialization took: ${stopwatch.elapsedMilliseconds}ms');
-      
-      print('📱 Flutter binding initialized');
-      WidgetsFlutterBinding.ensureInitialized();
-      
-      // Set up global error handling
-      FlutterError.onError = (FlutterErrorDetails details) {
-        print('🚨 Flutter Error: ${details.exception}');
-        Sentry.captureException(details.exception, stackTrace: details.stack);
-      };
-      
-      // Set up global zone error handling for async errors
-      PlatformDispatcher.instance.onError = (error, stack) {
-        print('🚨 Platform Error: $error');
-        Sentry.captureException(error, stackTrace: stack);
-        return true;
-      };
-      
-      
-      print('🔄 Setting device orientation...');
-      // Disable auto-rotate for better UX
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
-                 print('✅ Device orientation set');
+    // Add timeout to Sentry initialization to prevent hanging
+    await Future.any([
+      SentryFlutter.init(
+      (options) {
+        print('🔧 Configuring Sentry options...');
+        options.dsn = sentryDsn; // Use loaded DSN
+        options.tracesSampleRate = 1.0; // Capture 100% of transactions for debugging
+        options.debug = true; // Enable debug mode
+        options.enableAutoPerformanceTracing = false; // Disable profiling to fix C++ compilation
+        options.enableAutoSessionTracking = true; // Enable session tracking
+        options.attachStacktrace = true; // Include stack traces
+        options.sendDefaultPii = false; // Don't send personal info
+        
+        // Session Replay Configuration
+        options.replay.sessionSampleRate = 1.0; // Capture 100% during testing
+        options.replay.onErrorSampleRate = 1.0; // Always capture on errors
+        // Note: maskAllText and maskAllImages are not available in current Flutter version
+        
+        // Release tracking
+        options.release = 'finally-done@1.0.0+1'; // App version for tracking
+        options.dist = '1'; // Build number
+        print('✅ Sentry options configured');
+      },
+      appRunner: () async {
+        stopwatch.stop();
+        print('⏱️ Sentry initialization took: ${stopwatch.elapsedMilliseconds}ms');
+        
+        print('📱 Flutter binding initialized');
+        WidgetsFlutterBinding.ensureInitialized();
+        
+        // Set up global error handling
+        FlutterError.onError = (FlutterErrorDetails details) {
+          print('🚨 Flutter Error: ${details.exception}');
+          Sentry.captureException(details.exception, stackTrace: details.stack);
+        };
+        
+        // Set up global zone error handling for async errors
+        PlatformDispatcher.instance.onError = (error, stack) {
+          print('🚨 Platform Error: $error');
+          Sentry.captureException(error, stackTrace: stack);
+          return true;
+        };
+        
+        
+        print('🔄 Setting device orientation...');
+        // Disable auto-rotate for better UX
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
+                   print('✅ Device orientation set');
 
-                 print('🎨 Starting app...');
-                 runApp(
-                   SentryWidget(
-                     child: const ProviderScope(
-                       child: FinallyDoneApp(),
+                   print('🎨 Starting app...');
+                   runApp(
+                     SentryWidget(
+                       child: const ProviderScope(
+                         child: FinallyDoneApp(),
+                       ),
                      ),
-                   ),
-                 );
-                 print('✅ App started');
-    },
-  );
+                   );
+                   print('✅ App started');
+      },
+    ),
+      Future.delayed(Duration(seconds: 10), () {
+        throw TimeoutException('Sentry initialization timed out', Duration(seconds: 10));
+      })
+    ]);
   
   print('🏁 Sentry initialization completed');
   } catch (e, stackTrace) {
