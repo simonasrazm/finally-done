@@ -3,32 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>YOUR_CLIENT_ID_HERE</string>
+	<string>848873593637-553q92kqo93k2u814il7c2f0hd4oo86r.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.YOUR_CLIENT_ID_HERE</string>
-	<key>API_KEY</key>
-	<string>YOUR_API_KEY_HERE</string>
-	<key>GCM_SENDER_ID</key>
-	<string>YOUR_SENDER_ID_HERE</string>
+	<string>com.googleusercontent.apps.848873593637-553q92kqo93k2u814il7c2f0hd4oo86r</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.finallyDone</string>
-	<key>PROJECT_ID</key>
-	<string>your-project-id</string>
-	<key>STORAGE_BUCKET</key>
-	<string>your-project-id.appspot.com</string>
-	<key>IS_ADS_ENABLED</key>
-	<false/>
-	<key>IS_ANALYTICS_ENABLED</key>
-	<false/>
-	<key>IS_APPINVITE_ENABLED</key>
-	<true/>
-	<key>IS_GCM_ENABLED</key>
-	<true/>
-	<key>IS_SIGNIN_ENABLED</key>
-	<true/>
-	<key>GOOGLE_APP_ID</key>
-	<string>1:YOUR_SENDER_ID_HERE:ios:YOUR_APP_ID_HERE</string>
+	<string>com.finallydone.finallyDone</string>
 </dict>
 </plist>

@@ -10,7 +10,7 @@ import GoogleSignIn
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     
-    // Configure Google Sign-In
+    // Configure Google Sign-In using GoogleService-Info.plist
     if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
        let plist = NSDictionary(contentsOfFile: path),
        let clientId = plist["CLIENT_ID"] as? String {
