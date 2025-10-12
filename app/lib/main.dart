@@ -46,8 +46,7 @@ void main() async {
       // Session Replay Configuration
       options.replay.sessionSampleRate = 1.0; // Capture 100% during testing
       options.replay.onErrorSampleRate = 1.0; // Always capture on errors
-      options.replay.maskAllText = true; // Mask sensitive text data
-      options.replay.maskAllImages = true; // Mask sensitive image data
+      // Note: maskAllText and maskAllImages are not available in current Flutter version
       
       // Release tracking
       options.release = 'finally-done@1.0.0+1'; // App version for tracking
