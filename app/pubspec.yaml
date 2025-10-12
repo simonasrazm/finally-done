@@ -46,6 +46,9 @@ dependencies:
   record: ^4.4.4
   audioplayers: ^6.0.0
   image_picker: ^1.0.7
+  
+  # Error tracking
+  sentry_flutter: ^9.7.0
 
 dev_dependencies:
   flutter_test:

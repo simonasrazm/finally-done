@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'dart:ui' show PlatformDispatcher;
 // import 'package:realm/realm.dart';  // TODO: Add back when implementing local storage
 
 import 'design_system/colors.dart';
@@ -11,24 +13,109 @@ import 'models/command.dart';
 import 'screens/home_screen.dart';
 import 'screens/mission_control_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/queue_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  print('🚀 App starting...');
   
-  // Load environment variables
+  print('📄 Loading environment variables first...');
   await dotenv.load(fileName: ".env");
+  print('✅ Environment variables loaded');
   
-  // Disable auto-rotate for better UX
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  final sentryDsn = dotenv.env['SENTRY_DSN'];
+  print('🔍 Sentry DSN found: ${sentryDsn != null ? "YES" : "NO"}');
+  if (sentryDsn != null) {
+    print('🔍 Sentry DSN: ${sentryDsn.substring(0, 20)}...');
+  }
   
-  runApp(
-    const ProviderScope(
-      child: FinallyDoneApp(),
-    ),
+  print('🔧 Starting Sentry initialization...');
+  final stopwatch = Stopwatch()..start();
+  
+  try {
+    await SentryFlutter.init(
+    (options) {
+      print('🔧 Configuring Sentry options...');
+      options.dsn = sentryDsn; // Use loaded DSN
+      options.tracesSampleRate = 1.0; // Capture 100% of transactions for debugging
+      options.debug = true; // Enable debug mode
+      options.enableAutoPerformanceTracing = false; // Disable profiling to fix C++ compilation
+      options.enableAutoSessionTracking = true; // Enable session tracking for replay
+      options.attachStacktrace = true; // Include stack traces
+      options.sendDefaultPii = false; // Don't send personal info
+      
+      // Session Replay Configuration
+      options.sessionReplaySampleRate = 0.1; // Capture 10% of sessions for replay
+      options.sessionReplayOnErrorSampleRate = 1.0; // Always capture replay on errors
+      
+      // Release tracking
+      options.release = 'finally-done@1.0.0+1'; // App version for tracking
+      options.dist = '1'; // Build number
+      print('✅ Sentry options configured');
+    },
+    appRunner: () async {
+      stopwatch.stop();
+      print('⏱️ Sentry initialization took: ${stopwatch.elapsedMilliseconds}ms');
+      
+      print('📱 Flutter binding initialized');
+      WidgetsFlutterBinding.ensureInitialized();
+      
+      // Set up global error handling
+      FlutterError.onError = (FlutterErrorDetails details) {
+        print('🚨 Flutter Error: ${details.exception}');
+        Sentry.captureException(details.exception, stackTrace: details.stack);
+      };
+      
+      // Set up global zone error handling for async errors
+      PlatformDispatcher.instance.onError = (error, stack) {
+        print('🚨 Platform Error: $error');
+        Sentry.captureException(error, stackTrace: stack);
+        return true;
+      };
+      
+      
+      print('🔄 Setting device orientation...');
+      // Disable auto-rotate for better UX
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+      print('✅ Device orientation set');
+
+      print('🎨 Starting app...');
+      runApp(
+        const ProviderScope(
+          child: FinallyDoneApp(),
+        ),
+      );
+      print('✅ App started');
+    },
   );
+  
+  print('🏁 Sentry initialization completed');
+  } catch (e, stackTrace) {
+    stopwatch.stop();
+    print('❌ Sentry initialization failed after ${stopwatch.elapsedMilliseconds}ms: $e');
+    print('📄 Stack trace: $stackTrace');
+    
+    // Continue without Sentry
+    print('🔄 Continuing without Sentry...');
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    print('🔄 Setting device orientation...');
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    print('✅ Device orientation set');
+
+    print('🎨 Starting app...');
+    runApp(
+      const ProviderScope(
+        child: FinallyDoneApp(),
+      ),
+    );
+    print('✅ App started without Sentry');
+  }
 }
 
 class FinallyDoneApp extends StatelessWidget {
@@ -200,9 +287,9 @@ class _MainScreenState extends State<MainScreen> {
   ];
   
   int _getPendingCount() {
-    // TODO: Get actual count from Mission Control data
-    // For now, return 3 to match what you see in the app
-    return 3;
+    // Get actual count of failed commands from Mission Control data
+    // This will be updated when the provider changes
+    return 0; // Will be updated by Consumer widget
   }
 
   Widget _buildNotificationIcon(IconData icon, int count) {
@@ -259,8 +346,18 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: _buildNotificationIcon(Icons.control_camera_outlined, _getPendingCount()),
-            activeIcon: _buildNotificationIcon(Icons.control_camera, _getPendingCount()),
+            icon: Consumer(
+              builder: (context, ref, child) {
+                final failedCommands = ref.watch(failedCommandsProvider);
+                return _buildNotificationIcon(Icons.control_camera_outlined, failedCommands.length);
+              },
+            ),
+            activeIcon: Consumer(
+              builder: (context, ref, child) {
+                final failedCommands = ref.watch(failedCommandsProvider);
+                return _buildNotificationIcon(Icons.control_camera, failedCommands.length);
+              },
+            ),
             label: 'Mission Control',
           ),
           const BottomNavigationBarItem(

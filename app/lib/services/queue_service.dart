@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../models/queued_command.dart';
 import 'realm_service.dart';
+import '../utils/logger.dart';
 
 /// Queue state notifier for managing commands with Realm persistence
 class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
@@ -50,15 +51,20 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
     final cleanedCommands = <QueuedCommandRealm>[];
     
     for (final command in commands) {
-      if (command.audioPath != null && command.audioPath!.isNotEmpty) {
-        // Check if it's a full path (old format) or just filename (new format)
-        final isFullPath = command.audioPath!.contains('/');
-        print('🔵 QUEUE MIGRATION: Command "${command.text}" - AudioPath: "${command.audioPath}" - IsFullPath: $isFullPath');
+      try {
+        // Safely access command properties
+        final audioPath = command.audioPath;
+        final text = command.text;
+        
+        if (audioPath != null && audioPath.isNotEmpty) {
+          // Check if it's a full path (old format) or just filename (new format)
+          final isFullPath = audioPath.contains('/');
+          print('🔵 QUEUE MIGRATION: Command "$text" - AudioPath: "$audioPath" - IsFullPath: $isFullPath');
         String fullPath;
         
         if (isFullPath) {
           // Old format - try to move file to new location
-          final fileName = command.audioPath!.split('/').last;
+          final fileName = audioPath.split('/').last;
           final directory = await getApplicationDocumentsDirectory();
           final audioDir = Directory('${directory.path}/audio');
           
@@ -67,7 +73,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
             await audioDir.create(recursive: true);
           }
           
-          final oldFile = File(command.audioPath!);
+          final oldFile = File(audioPath);
           final newFullPath = '${audioDir.path}/$fileName';
           final newFile = File(newFullPath);
           
@@ -76,7 +82,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
               // Move the file to the new location
               await oldFile.copy(newFullPath);
               await oldFile.delete(); // Remove old file
-              print('🔵 QUEUE: Moved audio file from ${command.audioPath} to $newFullPath');
+              print('🔵 QUEUE: Moved audio file from $audioPath to $newFullPath');
               
               // Update database to new format (filename only)
               final migratedCommand = command.copyWithRealm(audioPath: fileName);
@@ -97,7 +103,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
             cleanedCommands.add(migratedCommand);
           } else {
             // File doesn't exist anywhere, clean up
-            print('🔵 QUEUE: Audio file not found, cleaning up: ${command.audioPath}');
+            print('🔵 QUEUE: Audio file not found, cleaning up: $audioPath');
             final cleanedCommand = command.copyWithRealm(audioPath: null);
             commandsToUpdate.add(cleanedCommand);
             cleanedCommands.add(cleanedCommand);
@@ -105,7 +111,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
         } else {
           // New format - construct full path
           final directory = await getApplicationDocumentsDirectory();
-          fullPath = '${directory.path}/audio/${command.audioPath}';
+          fullPath = '${directory.path}/audio/$audioPath';
           
           final file = File(fullPath);
           final exists = file.existsSync();
@@ -126,11 +132,29 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
       } else {
         cleanedCommands.add(command); // Keep command without audio path
       }
+      } catch (e, stackTrace) {
+        Logger.error('Error processing command during migration',
+          tag: 'QUEUE_MIGRATION',
+          error: e,
+          stackTrace: stackTrace
+        );
+        // Skip this command and continue with others
+        print('🔵 QUEUE MIGRATION: Skipping invalid command due to error: $e');
+      }
     }
     
     // Update commands in Realm
     for (final command in commandsToUpdate) {
-      _realmService.updateCommandAudioPath(command.id, null);
+      try {
+        _realmService.updateCommandAudioPath(command.id, null);
+      } catch (e, stackTrace) {
+        Logger.error('Failed to update command audio path during migration',
+          tag: 'QUEUE_MIGRATION',
+          error: e,
+          stackTrace: stackTrace
+        );
+        // Continue with other commands
+      }
     }
     
     if (commandsToUpdate.isNotEmpty) {
@@ -221,15 +245,21 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
 
   void removeCommand(String id) {
     try {
+      Logger.info('Removing command from queue: $id', tag: 'QUEUE');
+      
       // Remove from Realm
       _realmService.removeCommand(id);
       
       // Update state
       state = state.where((cmd) => cmd.id != id).toList();
       
-      print('🔵 QUEUE: Removed command $id');
-    } catch (e) {
-      print('🔵 QUEUE: Error removing command: $e');
+      Logger.info('Successfully removed command: $id', tag: 'QUEUE');
+    } catch (e, stackTrace) {
+      Logger.error('Failed to remove command: $id', 
+        tag: 'QUEUE', 
+        error: e, 
+        stackTrace: stackTrace
+      );
       rethrow;
     }
   }
@@ -244,38 +274,124 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
 final queueProvider = StateNotifierProvider<QueueNotifier, List<QueuedCommandRealm>>((ref) => QueueNotifier());
 
 final queuedCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
-  final commands = ref.watch(queueProvider);
-  // Apply filtering and sorting to the watched commands
-  final sortedCommands = commands
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
-  
-  // Limit to 30 most recent items for performance
-  return sortedCommands.take(30).toList();
+  try {
+    final commands = ref.watch(queueProvider);
+    // Apply filtering and sorting to the watched commands
+    final sortedCommands = commands
+      ..sort((a, b) {
+        try {
+          return b.createdAt.compareTo(a.createdAt); // Newest first
+        } catch (e) {
+          Logger.warning('Error sorting commands in queuedCommandsProvider: $e', tag: 'PROVIDER');
+          return 0;
+        }
+      });
+    
+    // Limit to 30 most recent items for performance
+    return sortedCommands.take(30).toList();
+  } catch (e, stackTrace) {
+    Logger.error('Error in queuedCommandsProvider', 
+      tag: 'PROVIDER', 
+      error: e, 
+      stackTrace: stackTrace
+    );
+    return [];
+  }
 });
 
 final processingCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
-  final commands = ref.watch(queueProvider);
-  final filtered = commands
-    .where((cmd) => cmd.status == CommandStatus.processing.name)
-    .toList()
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  return filtered.take(30).toList();
+  try {
+    final commands = ref.watch(queueProvider);
+    final filtered = commands
+      .where((cmd) {
+        try {
+          return cmd.status == CommandStatus.processing.name;
+        } catch (e) {
+          Logger.warning('Skipping invalid command in processingCommandsProvider: $e', tag: 'PROVIDER');
+          return false;
+        }
+      })
+      .toList()
+      ..sort((a, b) {
+        try {
+          return b.createdAt.compareTo(a.createdAt);
+        } catch (e) {
+          Logger.warning('Error sorting commands in processingCommandsProvider: $e', tag: 'PROVIDER');
+          return 0;
+        }
+      });
+    return filtered.take(30).toList();
+  } catch (e, stackTrace) {
+    Logger.error('Error in processingCommandsProvider', 
+      tag: 'PROVIDER', 
+      error: e, 
+      stackTrace: stackTrace
+    );
+    return [];
+  }
 });
 
 final completedCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
-  final commands = ref.watch(queueProvider);
-  final filtered = commands
-    .where((cmd) => cmd.status == CommandStatus.completed.name)
-    .toList()
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  return filtered.take(30).toList();
+  try {
+    final commands = ref.watch(queueProvider);
+    final filtered = commands
+      .where((cmd) {
+        try {
+          return cmd.status == CommandStatus.completed.name;
+        } catch (e) {
+          Logger.warning('Skipping invalid command in completedCommandsProvider: $e', tag: 'PROVIDER');
+          return false;
+        }
+      })
+      .toList()
+      ..sort((a, b) {
+        try {
+          return b.createdAt.compareTo(a.createdAt);
+        } catch (e) {
+          Logger.warning('Error sorting commands in completedCommandsProvider: $e', tag: 'PROVIDER');
+          return 0;
+        }
+      });
+    return filtered.take(30).toList();
+  } catch (e, stackTrace) {
+    Logger.error('Error in completedCommandsProvider', 
+      tag: 'PROVIDER', 
+      error: e, 
+      stackTrace: stackTrace
+    );
+    return [];
+  }
 });
 
 final failedCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
-  final commands = ref.watch(queueProvider);
-  final filtered = commands
-    .where((cmd) => cmd.status == CommandStatus.failed.name)
-    .toList()
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  return filtered.take(30).toList();
+  try {
+    final commands = ref.watch(queueProvider);
+    final filtered = commands
+      .where((cmd) {
+        try {
+          return cmd.status == CommandStatus.failed.name;
+        } catch (e) {
+          // If we can't access the command properties, skip it
+          Logger.warning('Skipping invalid command in failedCommandsProvider: $e', tag: 'PROVIDER');
+          return false;
+        }
+      })
+      .toList()
+      ..sort((a, b) {
+        try {
+          return b.createdAt.compareTo(a.createdAt);
+        } catch (e) {
+          Logger.warning('Error sorting commands in failedCommandsProvider: $e', tag: 'PROVIDER');
+          return 0;
+        }
+      });
+    return filtered.take(30).toList();
+  } catch (e, stackTrace) {
+    Logger.error('Error in failedCommandsProvider', 
+      tag: 'PROVIDER', 
+      error: e, 
+      stackTrace: stackTrace
+    );
+    return [];
+  }
 });

@@ -11,6 +11,7 @@ import '../services/speech_service.dart';
 import '../services/nlp_service.dart';
 import '../services/queue_service.dart';
 import '../models/queued_command.dart';
+import '../utils/logger.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -149,7 +150,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         await _processCommand(result);
       }
       
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // Log and send to Sentry
+      Logger.handleException(e, stackTrace, tag: 'RECORDING', context: 'Voice recording failed');
+      
       setState(() {
         _status = 'Error: ${e.toString()}';
         _isRecording = false;

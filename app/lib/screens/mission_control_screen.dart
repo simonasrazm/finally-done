@@ -8,6 +8,7 @@ import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../services/queue_service.dart';
 import '../models/queued_command.dart';
+import '../utils/logger.dart';
 
 class MissionControlScreen extends ConsumerStatefulWidget {
   const MissionControlScreen({super.key});
@@ -48,8 +49,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.queue_outlined, size: 16),
-                  Text('Queued', style: TextStyle(fontSize: 10)),
+                  Icon(Icons.settings_outlined, size: 16),
+                  Text('Processing', style: TextStyle(fontSize: 10)),
                 ],
               ),
             ),
@@ -63,35 +64,41 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               ),
             ),
             Tab(
-              child: Stack(
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final failedCommands = ref.watch(failedCommandsProvider);
+                  return Stack(
                     children: [
-                      Icon(Icons.rate_review_outlined, size: 16),
-                      Text('Review', style: TextStyle(fontSize: 10)),
-                    ],
-                  ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: const BoxDecoration(
-                        color: AppColors.warning,
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.rate_review_outlined, size: 16),
+                          Text('Review', style: TextStyle(fontSize: 10)),
+                        ],
                       ),
-                      child: const Text(
-                        '3',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
+                      if (failedCommands.isNotEmpty)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: const BoxDecoration(
+                              color: AppColors.warning,
+                              borderRadius: BorderRadius.all(Radius.circular(8)),
+                            ),
+                            child: Text(
+                              '${failedCommands.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -100,7 +107,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildQueuedTab(),
+          _buildProcessingTab(),
           _buildExecutedTab(),
           _buildReviewTab(),
         ],
@@ -108,8 +115,10 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     );
   }
   
-  Widget _buildQueuedTab() {
-    final queuedCommands = ref.watch(queuedCommandsProvider);
+  Widget _buildProcessingTab() {
+    final allCommands = ref.watch(queuedCommandsProvider);
+    // Filter out failed commands - they should only appear in Review tab
+    final processingCommands = allCommands.where((cmd) => cmd.status != CommandStatus.failed.name).toList();
     
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -124,13 +133,13 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           child: Row(
             children: [
               Icon(
-                Icons.queue_outlined,
+                Icons.settings_outlined,
                 color: AppColors.primary,
                 size: 24,
               ),
               const SizedBox(width: 12),
               Text(
-                'QUEUED (${queuedCommands.length} items)',
+                'PROCESSING (${processingCommands.length} items)',
                 style: AppTypography.headline.copyWith(
                   color: AppColors.getTextPrimaryColor(context),
                 ),
@@ -142,7 +151,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         const SizedBox(height: 20),
         
         // Commands list or empty state
-        if (queuedCommands.isEmpty)
+        if (processingCommands.isEmpty)
           Center(
             child: Column(
               children: [
@@ -169,12 +178,50 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
             ),
           )
         else
-          ...queuedCommands.map((command) => _buildQueuedCommandCard(command)),
+          ...processingCommands.map((command) => _buildQueuedCommandCard(command)),
       ],
     );
   }
   
   Widget _buildQueuedCommandCard(QueuedCommandRealm command) {
+    // Safely get command properties to avoid Realm invalidation errors
+    String commandText;
+    String commandStatus;
+    String? audioPath;
+    String? transcription;
+    DateTime createdAt;
+    List<String> photoPaths;
+    
+    try {
+      commandText = command.text;
+      commandStatus = command.status;
+      audioPath = command.audioPath;
+      transcription = command.transcription;
+      createdAt = command.createdAt;
+      photoPaths = List<String>.from(command.photoPaths);
+    } catch (e) {
+      Logger.warning('Error accessing command properties in UI: $e', tag: 'UI');
+      // Return a placeholder card for invalid commands
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.getSecondaryBackgroundColor(context),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.error.withOpacity(0.3),
+          ),
+        ),
+        child: Text(
+          'Invalid command (deleted)',
+          style: AppTypography.body.copyWith(
+            color: AppColors.error,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -191,14 +238,14 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           Row(
             children: [
               Icon(
-                command.audioPath != null ? Icons.mic : Icons.text_fields,
+                audioPath != null ? Icons.mic : Icons.text_fields,
                 size: 16,
                 color: AppColors.getTextSecondaryColor(context),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  command.transcription?.isNotEmpty == true ? command.transcription! : command.text,
+                  transcription?.isNotEmpty == true ? transcription! : commandText,
                   style: AppTypography.body.copyWith(
                     color: AppColors.getTextPrimaryColor(context),
                   ),
@@ -210,20 +257,20 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(command.status).withOpacity(0.1),
+                      color: _getStatusColor(commandStatus).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      _getStatusText(command.status),
+                      _getStatusText(commandStatus),
                       style: AppTypography.caption1.copyWith(
-                        color: _getStatusColor(command.status),
+                        color: _getStatusColor(commandStatus),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _deleteCommand(command),
+                GestureDetector(
+                  onTap: () => _deleteCommand(command.id),
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -245,16 +292,15 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           Row(
             children: [
               Text(
-                'Scheduled: ${_formatTime(command.createdAt)}',
+                'Scheduled: ${_formatTime(createdAt)}',
                 style: AppTypography.footnote.copyWith(
                   color: AppColors.getTextTertiaryColor(context),
                 ),
               ),
-              if (command.audioPath != null && command.audioPath!.isNotEmpty) ...[
+              if (audioPath != null && audioPath.isNotEmpty) ...[
                 const SizedBox(width: 16),
                 GestureDetector(
                   onTap: () {
-                    final audioPath = command.audioPath;
                     if (audioPath != null) {
                       _playAudio(audioPath);
                     }
@@ -290,10 +336,10 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           ),
           
           // Photo attachments
-          if (command.photoPaths.isNotEmpty) ...[
+          if (photoPaths.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
-              'Photos (${command.photoPaths.length})',
+              'Photos (${photoPaths.length})',
               style: AppTypography.footnote.copyWith(
                 color: AppColors.getTextSecondaryColor(context),
                 fontWeight: FontWeight.w600,
@@ -304,18 +350,18 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               height: 80,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: command.photoPaths.length,
+                itemCount: photoPaths.length,
                 itemBuilder: (context, index) {
                   return Container(
                     margin: const EdgeInsets.only(right: 8),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: FutureBuilder<String>(
-                        future: _getPhotoPath(command.photoPaths[index]),
+                        future: _getPhotoPath(photoPaths[index]),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             return GestureDetector(
-                              onTap: () => _showPhotoPreview(snapshot.data!, command.photoPaths),
+                              onTap: () => _showPhotoPreview(snapshot.data!, photoPaths),
                               child: Image.file(
                                 File(snapshot.data!),
                                 width: 80,
@@ -426,12 +472,17 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     );
   }
 
-  void _deleteCommand(QueuedCommandRealm command) async {
+  void _deleteCommand(String commandId) async {
     try {
+      // Get command data from current state before deletion
+      final allCommands = ref.read(queueProvider);
+      final command = allCommands.firstWhere((cmd) => cmd.id == commandId);
+      
       // Store command data before deletion to avoid Realm invalidation issues
-      final commandId = command.id;
       final audioPath = command.audioPath;
       final photoPaths = List<String>.from(command.photoPaths);
+      
+      Logger.info('Deleting command: $commandId', tag: 'DELETE');
       
       // Remove from queue first (this deletes from Realm)
       ref.read(queueProvider.notifier).removeCommand(commandId);
@@ -442,7 +493,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         final audioFile = File(fullAudioPath);
         if (await audioFile.exists()) {
           await audioFile.delete();
-          print('🗑️ DELETE: Removed audio file: $fullAudioPath');
+          Logger.debug('Removed audio file: $fullAudioPath', tag: 'DELETE');
         }
       }
       
@@ -452,7 +503,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         final photoFile = File(fullPhotoPath);
         if (await photoFile.exists()) {
           await photoFile.delete();
-          print('🗑️ DELETE: Removed photo file: $fullPhotoPath');
+          Logger.debug('Removed photo file: $fullPhotoPath', tag: 'DELETE');
         }
       }
       
@@ -463,8 +514,15 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           backgroundColor: AppColors.success,
         ),
       );
-    } catch (e) {
-      print('🗑️ DELETE: Error deleting command: $e');
+      
+      Logger.info('Successfully deleted command: $commandId', tag: 'DELETE');
+    } catch (e, stackTrace) {
+      Logger.error('Failed to delete command: $commandId', 
+        tag: 'DELETE', 
+        error: e, 
+        stackTrace: stackTrace
+      );
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error deleting command: $e'),

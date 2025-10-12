@@ -1,6 +1,8 @@
 import 'package:realm/realm.dart';
 import '../models/queued_command.dart';
+import '../utils/logger.dart';
 import '../database/migrations/migration_manager.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Realm database service for persistent storage
 class RealmService {
@@ -12,13 +14,16 @@ class RealmService {
 
   void _initializeRealm() {
     try {
+      print('🗄️ REALM: Starting database initialization...');
       // SCHEMA VERSION HISTORY:
       // v0: Initial schema (id, text, audioPath, status, createdAt, transcription)
       // v1: Added photoPaths (List<String>)
       // v2: Added errorMessage (String?) + status renames (audioRecorded→recorded, transcribed→queued)
+      print('🗄️ REALM: Creating configuration...');
       final config = Configuration.local([
         QueuedCommandRealm.schema,
       ], schemaVersion: MigrationManager.currentVersion, migrationCallback: MigrationManager.migrate);
+      print('🗄️ REALM: Opening Realm database...');
       _realm = Realm(config);
       print('🗄️ REALM: Database initialized successfully');
     } catch (e) {
@@ -161,12 +166,20 @@ class RealmService {
         _realm.write(() {
           _realm.delete(realmCommand);
         });
-        print('🗄️ REALM: Removed command $id');
+        Logger.info('Removed command from Realm: $id', tag: 'REALM');
       } else {
-        print('🗄️ REALM: Command $id not found for removal');
+        Logger.warning('Command not found for removal: $id', tag: 'REALM');
       }
-    } catch (e) {
-      print('🗄️ REALM: Error removing command: $e');
+    } catch (e, stackTrace) {
+      Logger.error('Failed to remove command from Realm: $id', 
+        tag: 'REALM', 
+        error: e, 
+        stackTrace: stackTrace
+      );
+      
+      // Send to Sentry for debugging
+      Sentry.captureException(e, stackTrace: stackTrace);
+      
       rethrow;
     }
   }
