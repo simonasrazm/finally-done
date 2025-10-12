@@ -8,7 +8,9 @@ import 'package:googleapis/gmail/v1.dart' as gmail;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../utils/logger.dart';
+import '../utils/performance_monitor.dart';
 
 /// Google Authentication Service
 /// Handles USER authentication for Google services (Tasks, Calendar, Gmail)
@@ -130,31 +132,38 @@ class GoogleAuthService {
 
   /// Authenticate with Google OAuth2 (USER's personal account)
   Future<bool> authenticate() async {
-    try {
-      Logger.info('Starting Google OAuth2 authentication for USER', tag: 'GOOGLE_AUTH');
-      
-      // Initialize GoogleSignIn only when user tries to authenticate
-      _ensureGoogleSignInInitialized();
-      
-      Logger.info('Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
-      
-      // Sign in with Google (with timeout to prevent freezing)
-      final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn().timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          Logger.error('Google sign-in timed out after 30 seconds', tag: 'GOOGLE_AUTH');
-          throw TimeoutException('Google sign-in timed out', const Duration(seconds: 30));
-        },
-      );
-      if (googleUser == null) {
-        Logger.info('User cancelled Google sign-in', tag: 'GOOGLE_AUTH');
-        return false;
-      }
-      
-      Logger.info('Google sign-in successful for user: ${googleUser.email}', tag: 'GOOGLE_AUTH');
+    return await PerformanceMonitor.measure(
+      'google_auth.authenticate',
+      'auth.google_signin',
+      () async {
+        Logger.info('🚀 Starting Google OAuth2 authentication for USER', tag: 'GOOGLE_AUTH');
+        
+        // Initialize GoogleSignIn only when user tries to authenticate
+        Logger.info('🔧 Initializing GoogleSignIn...', tag: 'GOOGLE_AUTH');
+        _ensureGoogleSignInInitialized();
+        Logger.info('✅ GoogleSignIn initialized', tag: 'GOOGLE_AUTH');
+        
+        // Sign in with Google
+        Logger.info('📱 Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
+        
+        // Sign in with Google (with timeout to prevent freezing)
+        final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn().timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            Logger.error('⏰ Google sign-in timed out after 30 seconds', tag: 'GOOGLE_AUTH');
+            throw TimeoutException('Google sign-in timed out', const Duration(seconds: 30));
+          },
+        );
+        
+        if (googleUser == null) {
+          Logger.info('❌ User cancelled Google sign-in', tag: 'GOOGLE_AUTH');
+          return false;
+        }
+        
+        Logger.info('✅ Google sign-in successful for user: ${googleUser.email}', tag: 'GOOGLE_AUTH');
 
-      // Get authentication details
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        // Get authentication details
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       
       if (googleAuth.accessToken == null) {
         Logger.error('No access token received from Google', tag: 'GOOGLE_AUTH');
@@ -188,16 +197,11 @@ class GoogleAuthService {
         googleUser.displayName ?? '',
       );
 
-      Logger.info('Successfully authenticated USER: ${googleUser.email}', tag: 'GOOGLE_AUTH');
-      return true;
-    } catch (e, stackTrace) {
-      Logger.error('USER authentication failed', 
-        tag: 'GOOGLE_AUTH', 
-        error: e, 
-        stackTrace: stackTrace
-      );
-      return false;
-    }
+        Logger.info('Successfully authenticated USER: ${googleUser.email}', tag: 'GOOGLE_AUTH');
+        return true;
+      },
+      data: {'operation': 'google_signin'},
+    );
   }
 
   /// Refresh access tokens

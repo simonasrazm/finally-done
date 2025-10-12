@@ -18,13 +18,23 @@ import 'screens/tasks_screen.dart';
 import 'services/queue_service.dart';
 
 void main() async {
+  // Start Sentry transaction for app startup performance
+  final appStartTransaction = Sentry.startTransaction(
+    'app.startup',
+    'app.lifecycle',
+  );
+  
   print('🚀 App starting...');
   
   print('📄 Loading environment variables first...');
+  final envSpan = appStartTransaction.startChild('app.env_loading');
   try {
     await dotenv.load(fileName: ".env");
+    envSpan.finish();
     print('✅ Environment variables loaded');
   } catch (e) {
+    envSpan.setData('error', e.toString());
+    envSpan.finish(status: const SpanStatus.internalError());
     print('⚠️ Environment file not found or invalid, continuing with defaults: $e');
   }
   
@@ -37,7 +47,7 @@ void main() async {
   }
   
   print('🔧 Starting Sentry initialization...');
-  final stopwatch = Stopwatch()..start();
+  final sentryStopwatch = Stopwatch()..start();
   
   try {
     // Add timeout to Sentry initialization to prevent hanging
@@ -64,8 +74,8 @@ void main() async {
         print('✅ Sentry options configured');
       },
       appRunner: () async {
-        stopwatch.stop();
-        print('⏱️ Sentry initialization took: ${stopwatch.elapsedMilliseconds}ms');
+        sentryStopwatch.stop();
+        print('⏱️ Sentry initialization took: ${sentryStopwatch.elapsedMilliseconds}ms');
         
         print('📱 Flutter binding initialized');
         WidgetsFlutterBinding.ensureInitialized();
@@ -100,6 +110,7 @@ void main() async {
                        ),
                      ),
                    );
+                   appStartTransaction.finish(status: const SpanStatus.ok());
                    print('✅ App started');
       },
     ),
@@ -110,8 +121,8 @@ void main() async {
   
   print('🏁 Sentry initialization completed');
   } catch (e, stackTrace) {
-    stopwatch.stop();
-    print('❌ Sentry initialization failed after ${stopwatch.elapsedMilliseconds}ms: $e');
+    sentryStopwatch.stop();
+    print('❌ Sentry initialization failed after ${sentryStopwatch.elapsedMilliseconds}ms: $e');
     print('📄 Stack trace: $stackTrace');
     
     // Continue without Sentry
