@@ -25,15 +25,21 @@ class GoogleAuthService {
   static const String _userNameKey = 'user_google_name';
 
   // Google API scopes for USER's personal data
-  // Using non-restricted scopes to prevent freezing issues
-  static const List<String> _scopes = [
+  // Request basic scopes first, then add service-specific scopes
+  static const List<String> _basicScopes = [
     'https://www.googleapis.com/auth/userinfo.profile',  // Basic profile info
     'https://www.googleapis.com/auth/userinfo.email',    // Email access
-    tasks.TasksApi.tasksScope,                           // USER's tasks
-    calendar.CalendarApi.calendarScope,                  // USER's calendar
-    // Note: Gmail scopes are restricted and can cause freezing
-    // We'll add them back when we have proper OAuth consent screen verification
   ];
+  
+  // Service-specific scopes
+  static const Map<String, String> _serviceScopes = {
+    'tasks': tasks.TasksApi.tasksScope,
+    'calendar': calendar.CalendarApi.calendarScope,
+    'gmail': 'https://www.googleapis.com/auth/gmail.readonly',
+  };
+  
+  // Track which services are connected
+  Set<String> _connectedServices = {};
 
   GoogleSignIn? _googleSignIn;
   AuthClient? _authClient;
@@ -55,6 +61,86 @@ class GoogleAuthService {
 
   /// Check if user is authenticated
   bool get isAuthenticated => _authClient != null;
+  
+  /// Get list of connected services
+  Set<String> get connectedServices => Set.from(_connectedServices);
+  
+  /// Check if a specific service is connected
+  bool isServiceConnected(String service) => _connectedServices.contains(service);
+  
+  /// Get available services
+  List<String> get availableServices => _serviceScopes.keys.toList();
+  
+  /// Connect to additional Google services
+  Future<bool> connectToService(String service) async {
+    if (!_serviceScopes.containsKey(service)) {
+      print('🔵 DEBUG: Unknown service: $service');
+      return false;
+    }
+    
+    if (_connectedServices.contains(service)) {
+      print('🔵 DEBUG: Service $service already connected');
+      return true;
+    }
+    
+    try {
+      print('🔵 DEBUG: Connecting to service: $service');
+      
+      // Create new GoogleSignIn instance with additional scope
+      final additionalScopes = [..._basicScopes, _serviceScopes[service]!];
+      final serviceGoogleSignIn = GoogleSignIn(scopes: additionalScopes);
+      
+      // Sign in with additional scope
+      final GoogleSignInAccount? googleUser = await serviceGoogleSignIn.signIn();
+      if (googleUser == null) {
+        print('🔵 DEBUG: User cancelled service connection: $service');
+        return false;
+      }
+      
+      // Get authentication details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      if (googleAuth.accessToken == null) {
+        print('🔵 DEBUG: No access token for service: $service');
+        return false;
+      }
+      
+      // Update auth client with new scopes
+      _authClient = authenticatedClient(
+        http.Client(),
+        AccessCredentials(
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
+          null,
+          additionalScopes,
+        ),
+      );
+      
+      // Add service to connected services
+      _connectedServices.add(service);
+      
+      // Store updated tokens
+      await _storeTokens(
+        AccessCredentials(
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
+          null,
+          additionalScopes,
+        ),
+        googleUser.id,
+        googleUser.email,
+        googleUser.displayName ?? '',
+      );
+      
+      print('🔵 DEBUG: Successfully connected to service: $service');
+      return true;
+    } catch (e, stackTrace) {
+      print('🔵 DEBUG: Failed to connect to service $service: $e');
+      Logger.error('Failed to connect to service $service',
+        tag: 'GOOGLE_AUTH',
+        error: e,
+        stackTrace: stackTrace
+      );
+      return false;
+    }
+  }
 
   GoogleAuthService() {
     // Lazy initialization - GoogleSignIn will be created only when needed
@@ -65,15 +151,28 @@ class GoogleAuthService {
   }
   
   /// Initialize GoogleSignIn only when needed
-  /// Creates a new instance for each sign-in attempt to prevent session issues
   void _ensureGoogleSignInInitialized() {
     if (_googleSignIn == null) {
       _googleSignIn = GoogleSignIn(
-        scopes: _scopes,
+        scopes: _basicScopes,
         // No clientId needed - users authenticate with their own accounts
-        // Force account selection to prevent cached session issues
-        forceCodeForRefreshToken: true,
+        // This allows users to sign in with their personal Google accounts
       );
+      
+      // Check if user is already signed in
+      _googleSignIn!.isSignedIn().then((isSignedIn) {
+        if (isSignedIn) {
+          print('🔵 DEBUG: User already signed in to Google');
+          _googleSignIn!.signInSilently().then((account) {
+            if (account != null) {
+              print('🔵 DEBUG: Silently signed in as: ${account.email}');
+              _userEmail = account.email;
+              _userName = account.displayName;
+              _userId = account.id;
+            }
+          });
+        }
+      });
     }
   }
   
@@ -120,7 +219,7 @@ class GoogleAuthService {
         AccessCredentials(
           AccessToken('Bearer', accessToken, expiry),
           refreshToken,
-          _scopes,
+          _basicScopes,
         ),
       );
 
@@ -138,42 +237,30 @@ class GoogleAuthService {
 
   /// Authenticate with Google OAuth2 (USER's personal account)
   Future<bool> authenticate() async {
-    return await PerformanceMonitor.measure(
-      'google_auth.authenticate',
-      'auth.google_signin',
-      () async {
-        Logger.info('🚀 Starting Google OAuth2 authentication for USER', tag: 'GOOGLE_AUTH');
-        
-        // Initialize GoogleSignIn only when user tries to authenticate
-        Logger.info('🔧 Initializing GoogleSignIn...', tag: 'GOOGLE_AUTH');
-        _ensureGoogleSignInInitialized();
-        Logger.info('✅ GoogleSignIn initialized', tag: 'GOOGLE_AUTH');
-        
-        // Sign in with Google
-        Logger.info('📱 Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
-        
-                 // Sign in with Google (with timeout to prevent freezing)
-                 // Clear any existing session first to prevent conflicts
-                 await _googleSignIn!.signOut();
-                 
-                 final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn().timeout(
-                   const Duration(seconds: 30),
-                   onTimeout: () {
-                     Logger.error('⏰ Google sign-in timed out after 30 seconds', tag: 'GOOGLE_AUTH');
-                     throw TimeoutException('Google sign-in timed out', const Duration(seconds: 30));
-                   },
-                 );
-        
-        if (googleUser == null) {
-          Logger.info('❌ User cancelled Google sign-in', tag: 'GOOGLE_AUTH');
-          return false;
-        }
-        
-        Logger.info('✅ Google sign-in successful for user: ${googleUser.email}', tag: 'GOOGLE_AUTH');
-
-        // Get authentication details
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    print('🔵 DEBUG: GoogleAuthService.authenticate() called!');
+    try {
+      Logger.info('🚀 Starting Google OAuth2 authentication for USER', tag: 'GOOGLE_AUTH');
       
+      // Initialize GoogleSignIn only when user tries to authenticate
+      Logger.info('🔧 Initializing GoogleSignIn...', tag: 'GOOGLE_AUTH');
+      _ensureGoogleSignInInitialized();
+      Logger.info('✅ GoogleSignIn initialized', tag: 'GOOGLE_AUTH');
+      
+      // Sign in with Google
+      Logger.info('📱 Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
+      
+      final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
+      
+      if (googleUser == null) {
+        Logger.info('❌ User cancelled Google sign-in', tag: 'GOOGLE_AUTH');
+        return false;
+      }
+
+      Logger.info('✅ Google sign-in successful for user: ${googleUser.email}', tag: 'GOOGLE_AUTH');
+
+      // Get authentication details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
       if (googleAuth.accessToken == null) {
         Logger.error('No access token received from Google', tag: 'GOOGLE_AUTH');
         return false;
@@ -185,7 +272,7 @@ class GoogleAuthService {
         AccessCredentials(
           AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
           null, // Google Sign-In handles refresh internally
-          _scopes,
+          _basicScopes,
         ),
       );
 
@@ -199,18 +286,25 @@ class GoogleAuthService {
         AccessCredentials(
           AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
           null, // Google Sign-In handles refresh internally
-          _scopes,
+          _basicScopes,
         ),
         googleUser.id,
         googleUser.email,
         googleUser.displayName ?? '',
       );
 
-        Logger.info('Successfully authenticated USER: ${googleUser.email}', tag: 'GOOGLE_AUTH');
-        return true;
-      },
-      data: {'operation': 'google_signin'},
-    );
+      Logger.info('Successfully authenticated USER: ${googleUser.email}', tag: 'GOOGLE_AUTH');
+      return true;
+    } catch (e, stackTrace) {
+      print('🔵 DEBUG: GoogleAuthService.authenticate() crashed: $e');
+      print('🔵 DEBUG: Stack trace: $stackTrace');
+      Logger.error('GoogleAuthService.authenticate() crashed',
+        tag: 'GOOGLE_AUTH',
+        error: e,
+        stackTrace: stackTrace
+      );
+      return false;
+    }
   }
 
   /// Refresh access tokens
@@ -237,7 +331,7 @@ class GoogleAuthService {
         AccessCredentials(
           AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
           null, // Google Sign-In handles refresh internally
-          _scopes,
+          _basicScopes,
         ),
       );
 
@@ -246,7 +340,7 @@ class GoogleAuthService {
         AccessCredentials(
           AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
           null, // Google Sign-In handles refresh internally
-          _scopes,
+          _basicScopes,
         ),
         googleUser.id,
         googleUser.email,
@@ -362,7 +456,7 @@ class GoogleAuthService {
   }
 
   /// Get required scopes for Google services
-  static List<String> get requiredScopes => List.from(_scopes);
+  static List<String> get requiredScopes => List.from(_basicScopes);
 }
 
 /// Provider for Google Auth Service

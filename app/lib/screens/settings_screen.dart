@@ -76,7 +76,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   return _buildGoogleIntegrationTile(
                     isAuthenticated: isAuthenticated,
                     userEmail: integrationService.userEmail,
+                    connectedServices: integrationService.connectedServices,
                     onTap: () => _handleGoogleAuth(ref),
+                  );
+                },
+              ),
+              // Individual Google Services
+              Consumer(
+                builder: (context, ref, child) {
+                  final integrationService = ref.watch(integrationServiceProvider);
+                  
+                  return Column(
+                    children: [
+                      _buildGoogleServiceTile(
+                        icon: Icons.task_alt,
+                        title: 'Google Tasks',
+                        isConnected: integrationService.isTasksConnected,
+                        onTap: () => _handleGoogleServiceConnection(ref, 'tasks'),
+                      ),
+                      _buildGoogleServiceTile(
+                        icon: Icons.calendar_today,
+                        title: 'Google Calendar',
+                        isConnected: integrationService.isCalendarConnected,
+                        onTap: () => _handleGoogleServiceConnection(ref, 'calendar'),
+                      ),
+                      _buildGoogleServiceTile(
+                        icon: Icons.email,
+                        title: 'Gmail',
+                        isConnected: integrationService.isGmailConnected,
+                        onTap: () => _handleGoogleServiceConnection(ref, 'gmail'),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -249,6 +279,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildGoogleIntegrationTile({
     required bool isAuthenticated,
     String? userEmail,
+    required Set<String> connectedServices,
     required VoidCallback onTap,
   }) {
     return ListTile(
@@ -266,7 +297,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       subtitle: Text(
         isAuthenticated 
-            ? 'Connected as: $userEmail\nTasks • Calendar • Gmail'
+            ? _buildConnectedServicesText(userEmail, connectedServices)
             : 'Connect to access Tasks, Calendar, and Gmail',
         style: AppTypography.footnote.copyWith(
           color: AppColors.getTextSecondaryColor(context),
@@ -284,9 +315,119 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const Icon(Icons.chevron_right, size: 20),
         ],
       ),
-      onTap: onTap,
+      onTap: () {
+        print('🔵 DEBUG: Google integration tile tapped!');
+        onTap();
+      },
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     );
+  }
+  
+  String _buildConnectedServicesText(String? userEmail, Set<String> connectedServices) {
+    final List<String> serviceNames = [];
+    
+    if (connectedServices.contains('tasks')) serviceNames.add('Tasks');
+    if (connectedServices.contains('calendar')) serviceNames.add('Calendar');
+    if (connectedServices.contains('gmail')) serviceNames.add('Gmail');
+    
+    final servicesText = serviceNames.isEmpty 
+        ? 'No services connected'
+        : serviceNames.join(' • ');
+    
+    return 'Connected as: $userEmail\n$servicesText';
+  }
+  
+  Widget _buildGoogleServiceTile({
+    required IconData icon,
+    required String title,
+    required bool isConnected,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: isConnected ? AppColors.primary : AppColors.getTextSecondaryColor(context),
+        size: 24,
+      ),
+      title: Text(
+        title,
+        style: AppTypography.body.copyWith(
+          color: AppColors.getTextPrimaryColor(context),
+          fontWeight: isConnected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(
+        isConnected ? 'Connected' : 'Not connected',
+        style: AppTypography.footnote.copyWith(
+          color: isConnected ? AppColors.success : AppColors.getTextSecondaryColor(context),
+        ),
+      ),
+      trailing: Icon(
+        isConnected ? Icons.check_circle : Icons.circle_outlined,
+        color: isConnected ? AppColors.success : AppColors.textTertiary,
+        size: 20,
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    );
+  }
+  
+  void _handleGoogleServiceConnection(WidgetRef ref, String service) async {
+    try {
+      final integrationService = ref.read(integrationServiceProvider);
+      
+      if (!integrationService.isAuthenticated) {
+        // User needs to authenticate first
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please connect to Google first')),
+        );
+        return;
+      }
+      
+      if (integrationService.isServiceConnected(service)) {
+        // Service is already connected - show disconnect option
+        final shouldDisconnect = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Disconnect $service?'),
+            content: Text('Are you sure you want to disconnect from $service?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Disconnect'),
+              ),
+            ],
+          ),
+        );
+        
+        if (shouldDisconnect == true) {
+          // TODO: Implement service disconnection
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$service disconnected')),
+          );
+        }
+      } else {
+        // Connect to service
+        final success = await integrationService.connectToService(service);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(success ? '$service connected successfully' : 'Failed to connect to $service'),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildServiceTile({
@@ -318,10 +459,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
   
   void _handleGoogleAuth(WidgetRef ref) async {
+    print('🔵 DEBUG: _handleGoogleAuth called!');
     try {
+      print('🔵 DEBUG: Getting integration service...');
       final integrationService = ref.read(integrationServiceProvider);
+      print('🔵 DEBUG: Integration service obtained, isAuthenticated: ${integrationService.isAuthenticated}');
       
       if (integrationService.isAuthenticated) {
+        print('🔵 DEBUG: User is authenticated, showing sign out dialog...');
         // Show sign out dialog
         final shouldSignOut = await showDialog<bool>(
           context: context,
@@ -350,6 +495,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           }
         }
       } else {
+        print('🔵 DEBUG: User not authenticated, showing loading dialog...');
         // Show loading dialog
         showDialog(
           context: context,
@@ -364,6 +510,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
         );
+        print('🔵 DEBUG: Loading dialog shown, calling authenticate...');
         
         // Authenticate with timeout
         final success = await integrationService.authenticate().timeout(

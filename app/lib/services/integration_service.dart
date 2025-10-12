@@ -26,13 +26,49 @@ class IntegrationService {
   /// Get user information
   String? get userEmail => _authService.userEmail;
   String? get userName => _authService.userName;
+  
+  /// Check if specific services are connected
+  bool get isTasksConnected => _authService.isServiceConnected('tasks');
+  bool get isCalendarConnected => _authService.isServiceConnected('calendar');
+  bool get isGmailConnected => _authService.isServiceConnected('gmail');
+  
+  /// Get list of connected services
+  Set<String> get connectedServices => _authService.connectedServices;
+  
+  /// Check if a specific service is connected
+  bool isServiceConnected(String service) => _authService.isServiceConnected(service);
+  
+  /// Connect to specific Google service
+  Future<bool> connectToService(String service) async {
+    try {
+      print('🔵 DEBUG: IntegrationService.connectToService($service) called!');
+      final success = await _authService.connectToService(service);
+      
+      if (success && service == 'tasks') {
+        _tasksService = GoogleTasksService(_authService.authClient!);
+        print('🔵 DEBUG: Tasks service initialized');
+      }
+      
+      return success;
+    } catch (e, stackTrace) {
+      Logger.error('Failed to connect to service $service', 
+        tag: 'INTEGRATION', 
+        error: e, 
+        stackTrace: stackTrace
+      );
+      return false;
+    }
+  }
 
   /// Authenticate user with Google
   Future<bool> authenticate() async {
     try {
+      print('🔵 DEBUG: IntegrationService.authenticate() called!');
       Logger.info('Starting USER authentication for integrations', tag: 'INTEGRATION');
       
+      print('🔵 DEBUG: Calling _authService.authenticate()...');
       final success = await _authService.authenticate();
+      print('🔵 DEBUG: _authService.authenticate() returned: $success');
       if (success) {
         _tasksService = GoogleTasksService(_authService.authClient!);
         Logger.info('USER authenticated successfully for integrations', tag: 'INTEGRATION');
