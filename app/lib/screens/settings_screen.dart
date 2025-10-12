@@ -71,23 +71,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Consumer(
                 builder: (context, ref, child) {
                   final isAuthenticated = ref.watch(isIntegrationAuthenticatedProvider);
-                  return _buildServiceTile(
-                    icon: Icons.task_alt,
-                    title: 'Google Tasks',
-                    subtitle: isAuthenticated ? 'Connected' : 'Tap to connect',
-                    isConnected: isAuthenticated,
-                    onTap: () => _handleGoogleAuth(ref),
-                  );
-                },
-              ),
-              Consumer(
-                builder: (context, ref, child) {
-                  final isAuthenticated = ref.watch(isIntegrationAuthenticatedProvider);
-                  return _buildServiceTile(
-                    icon: Icons.calendar_today,
-                    title: 'Google Calendar',
-                    subtitle: isAuthenticated ? 'Connected' : 'Tap to connect',
-                    isConnected: isAuthenticated,
+                  final integrationService = ref.watch(integrationServiceProvider);
+                  
+                  return _buildGoogleIntegrationTile(
+                    isAuthenticated: isAuthenticated,
+                    userEmail: integrationService.userEmail,
                     onTap: () => _handleGoogleAuth(ref),
                   );
                 },
@@ -258,6 +246,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
   
+  Widget _buildGoogleIntegrationTile({
+    required bool isAuthenticated,
+    String? userEmail,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(
+        Icons.account_circle,
+        color: isAuthenticated ? AppColors.primary : AppColors.getTextSecondaryColor(context),
+        size: 28,
+      ),
+      title: Text(
+        'Google Account',
+        style: AppTypography.body.copyWith(
+          color: AppColors.getTextPrimaryColor(context),
+          fontWeight: isAuthenticated ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(
+        isAuthenticated 
+            ? 'Connected as: $userEmail\nTasks • Calendar • Gmail'
+            : 'Connect to access Tasks, Calendar, and Gmail',
+        style: AppTypography.footnote.copyWith(
+          color: AppColors.getTextSecondaryColor(context),
+        ),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isAuthenticated ? Icons.check_circle : Icons.circle_outlined,
+            color: isAuthenticated ? AppColors.success : AppColors.textTertiary,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right, size: 20),
+        ],
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    );
+  }
+
   Widget _buildServiceTile({
     required IconData icon,
     required String title,

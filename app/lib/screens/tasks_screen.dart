@@ -5,7 +5,9 @@ import '../design_system/typography.dart';
 import '../services/integration_service.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
-  const TasksScreen({super.key});
+  final VoidCallback? onNavigateToSettings;
+  
+  const TasksScreen({super.key, this.onNavigateToSettings});
 
   @override
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
@@ -162,8 +164,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
-                // Navigate to Settings tab
-                DefaultTabController.of(context)?.animateTo(2);
+                // Navigate to Settings tab using the callback
+                widget.onNavigateToSettings?.call();
               },
               icon: const Icon(Icons.settings),
               label: const Text('Go to Settings'),

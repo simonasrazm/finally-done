@@ -284,12 +284,22 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const MissionControlScreen(),
-    const TasksScreen(),
-    const SettingsScreen(),
-  ];
+  late final List<Widget> _screens;
+  
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const HomeScreen(),
+      const MissionControlScreen(),
+      TasksScreen(onNavigateToSettings: () {
+        setState(() {
+          _currentIndex = 3; // Settings tab
+        });
+      }),
+      const SettingsScreen(),
+    ];
+  }
   
   int _getPendingCount() {
     // Get actual count of failed commands from Mission Control data
