@@ -18,23 +18,13 @@ import 'screens/tasks_screen.dart';
 import 'services/queue_service.dart';
 
 void main() async {
-  // Start Sentry transaction for app startup performance
-  final appStartTransaction = Sentry.startTransaction(
-    'app.startup',
-    'app.lifecycle',
-  );
-  
   print('🚀 App starting...');
   
   print('📄 Loading environment variables first...');
-  final envSpan = appStartTransaction.startChild('app.env_loading');
   try {
     await dotenv.load(fileName: ".env");
-    envSpan.finish();
     print('✅ Environment variables loaded');
   } catch (e) {
-    envSpan.setData('error', e.toString());
-    envSpan.finish(status: const SpanStatus.internalError());
     print('⚠️ Environment file not found or invalid, continuing with defaults: $e');
   }
   
@@ -77,6 +67,12 @@ void main() async {
         sentryStopwatch.stop();
         print('⏱️ Sentry initialization took: ${sentryStopwatch.elapsedMilliseconds}ms');
         
+        // Start Sentry transaction for app startup performance (now that Sentry is ready)
+        final appStartTransaction = Sentry.startTransaction(
+          'app.startup',
+          'app.lifecycle',
+        );
+        
         print('📱 Flutter binding initialized');
         WidgetsFlutterBinding.ensureInitialized();
         
@@ -94,24 +90,32 @@ void main() async {
         };
         
         
+        // Device orientation setup span
+        final orientationSpan = appStartTransaction.startChild('app.orientation_setup');
         print('🔄 Setting device orientation...');
         // Disable auto-rotate for better UX
         await SystemChrome.setPreferredOrientations([
           DeviceOrientation.portraitUp,
           DeviceOrientation.portraitDown,
         ]);
-                   print('✅ Device orientation set');
+        orientationSpan.finish();
+        print('✅ Device orientation set');
 
-                   print('🎨 Starting app...');
-                   runApp(
-                     SentryWidget(
-                       child: const ProviderScope(
-                         child: FinallyDoneApp(),
-                       ),
-                     ),
-                   );
-                   appStartTransaction.finish(status: const SpanStatus.ok());
-                   print('✅ App started');
+        // App launch span
+        final appLaunchSpan = appStartTransaction.startChild('app.launch');
+        print('🎨 Starting app...');
+        runApp(
+          SentryWidget(
+            child: const ProviderScope(
+              child: FinallyDoneApp(),
+            ),
+          ),
+        );
+        appLaunchSpan.finish();
+        
+        // Finish the main startup transaction
+        appStartTransaction.finish(status: const SpanStatus.ok());
+        print('✅ App started');
       },
     ),
       Future.delayed(Duration(seconds: 10), () {

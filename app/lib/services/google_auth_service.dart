@@ -25,11 +25,14 @@ class GoogleAuthService {
   static const String _userNameKey = 'user_google_name';
 
   // Google API scopes for USER's personal data
+  // Using non-restricted scopes to prevent freezing issues
   static const List<String> _scopes = [
-    tasks.TasksApi.tasksScope,           // USER's tasks
-    calendar.CalendarApi.calendarScope,  // USER's calendar
-    gmail.GmailApi.gmailReadonlyScope,   // USER's email (read)
-    gmail.GmailApi.gmailComposeScope,    // USER's email (compose)
+    'https://www.googleapis.com/auth/userinfo.profile',  // Basic profile info
+    'https://www.googleapis.com/auth/userinfo.email',    // Email access
+    tasks.TasksApi.tasksScope,                           // USER's tasks
+    calendar.CalendarApi.calendarScope,                  // USER's calendar
+    // Note: Gmail scopes are restricted and can cause freezing
+    // We'll add them back when we have proper OAuth consent screen verification
   ];
 
   GoogleSignIn? _googleSignIn;
@@ -62,11 +65,14 @@ class GoogleAuthService {
   }
   
   /// Initialize GoogleSignIn only when needed
+  /// Creates a new instance for each sign-in attempt to prevent session issues
   void _ensureGoogleSignInInitialized() {
     if (_googleSignIn == null) {
       _googleSignIn = GoogleSignIn(
         scopes: _scopes,
         // No clientId needed - users authenticate with their own accounts
+        // Force account selection to prevent cached session issues
+        forceCodeForRefreshToken: true,
       );
     }
   }
@@ -146,14 +152,17 @@ class GoogleAuthService {
         // Sign in with Google
         Logger.info('📱 Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
         
-        // Sign in with Google (with timeout to prevent freezing)
-        final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn().timeout(
-          const Duration(seconds: 30),
-          onTimeout: () {
-            Logger.error('⏰ Google sign-in timed out after 30 seconds', tag: 'GOOGLE_AUTH');
-            throw TimeoutException('Google sign-in timed out', const Duration(seconds: 30));
-          },
-        );
+                 // Sign in with Google (with timeout to prevent freezing)
+                 // Clear any existing session first to prevent conflicts
+                 await _googleSignIn!.signOut();
+                 
+                 final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn().timeout(
+                   const Duration(seconds: 30),
+                   onTimeout: () {
+                     Logger.error('⏰ Google sign-in timed out after 30 seconds', tag: 'GOOGLE_AUTH');
+                     throw TimeoutException('Google sign-in timed out', const Duration(seconds: 30));
+                   },
+                 );
         
         if (googleUser == null) {
           Logger.info('❌ User cancelled Google sign-in', tag: 'GOOGLE_AUTH');
