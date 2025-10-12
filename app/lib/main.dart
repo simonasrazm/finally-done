@@ -39,13 +39,15 @@ void main() async {
       options.tracesSampleRate = 1.0; // Capture 100% of transactions for debugging
       options.debug = true; // Enable debug mode
       options.enableAutoPerformanceTracing = false; // Disable profiling to fix C++ compilation
-      options.enableAutoSessionTracking = true; // Enable session tracking for replay
+      options.enableAutoSessionTracking = true; // Enable session tracking
       options.attachStacktrace = true; // Include stack traces
       options.sendDefaultPii = false; // Don't send personal info
       
-      // Session Replay Configuration (Note: These options may not be available in current Sentry Flutter version)
-      // options.sessionReplaySampleRate = 0.1; // Capture 10% of sessions for replay
-      // options.sessionReplayOnErrorSampleRate = 1.0; // Always capture replay on errors
+      // Session Replay Configuration
+      options.replay.sessionSampleRate = 1.0; // Capture 100% during testing
+      options.replay.onErrorSampleRate = 1.0; // Always capture on errors
+      options.replay.maskAllText = true; // Mask sensitive text data
+      options.replay.maskAllImages = true; // Mask sensitive image data
       
       // Release tracking
       options.release = 'finally-done@1.0.0+1'; // App version for tracking
@@ -79,15 +81,17 @@ void main() async {
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
       ]);
-      print('✅ Device orientation set');
+                 print('✅ Device orientation set');
 
-      print('🎨 Starting app...');
-      runApp(
-        const ProviderScope(
-          child: FinallyDoneApp(),
-        ),
-      );
-      print('✅ App started');
+                 print('🎨 Starting app...');
+                 runApp(
+                   SentryWidget(
+                     child: const ProviderScope(
+                       child: FinallyDoneApp(),
+                     ),
+                   ),
+                 );
+                 print('✅ App started');
     },
   );
   

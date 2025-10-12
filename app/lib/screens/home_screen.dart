@@ -275,23 +275,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         orElse: () => throw Exception('Command not found'),
       );
       
+      // Store command ID before any Realm operations to avoid invalidation
+      final commandId = command.id;
+      
       // Process audio in background
       String transcription = await speechService.processRecordedAudio();
       
-      // Update with transcription and final status
-      queueNotifier.updateCommandTranscription(command.id, transcription);
-      queueNotifier.updateCommandStatus(command.id, CommandStatus.queued);
+      // Update with transcription and final status using stored ID
+      queueNotifier.updateCommandTranscription(commandId, transcription);
+      queueNotifier.updateCommandStatus(commandId, CommandStatus.queued);
       
     } catch (e) {
       print('🎤 BACKGROUND: Error processing audio - $e');
-      // Update status to failed
-      final queueNotifier = ref.read(queueProvider.notifier);
-      final commands = ref.read(queueProvider);
-      final command = commands.firstWhere(
-        (cmd) => cmd.audioPath == audioPath,
-        orElse: () => throw Exception('Command not found'),
-      );
-      queueNotifier.updateCommandStatus(command.id, CommandStatus.failed);
+      // Update status to failed - use stored commandId if available
+      try {
+        final queueNotifier = ref.read(queueProvider.notifier);
+        final commands = ref.read(queueProvider);
+        final fileName = audioPath.split('/').last;
+        final command = commands.firstWhere(
+          (cmd) => cmd.audioPath == fileName,
+          orElse: () => throw Exception('Command not found'),
+        );
+        // Store ID before any potential Realm operations
+        final commandId = command.id;
+        queueNotifier.updateCommandStatus(commandId, CommandStatus.failed);
+      } catch (updateError) {
+        print('🎤 BACKGROUND: Failed to update command status: $updateError');
+        // If we can't update the status, at least log the error
+        Logger.handleException(updateError, null, tag: 'AUDIO_PROCESSING', context: 'Failed to update command status after audio processing error');
+      }
     }
   }
   
