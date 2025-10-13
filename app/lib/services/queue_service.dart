@@ -17,10 +17,8 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
   void _loadCommandsFromRealmSync() {
     try {
       final commands = _realmService.getAllCommands();
-      print('🔵 QUEUE: Loaded ${commands.length} commands from Realm');
       state = commands;
     } catch (e) {
-      print('🔵 QUEUE: Error loading commands from Realm: $e');
       state = [];
     }
   }
@@ -28,11 +26,9 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
   Future<void> _loadCommandsFromRealm() async {
     try {
       final commands = _realmService.getAllCommands();
-      print('🔵 QUEUE: Loaded ${commands.length} commands from Realm');
       
       // Debug: Show all commands and their audio paths
       for (var cmd in commands) {
-        print('🔵 QUEUE DEBUG: Command "${cmd.text}" - AudioPath: "${cmd.audioPath}" - Status: "${cmd.status}"');
       }
       
       // Clean up commands with missing audio files BEFORE setting state
@@ -40,7 +36,6 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
       state = cleanedCommands;
       
     } catch (e) {
-      print('🔵 QUEUE: Error loading commands from Realm: $e');
       state = [];
     }
   }
@@ -59,7 +54,6 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
         if (audioPath != null && audioPath.isNotEmpty) {
           // Check if it's a full path (old format) or just filename (new format)
           final isFullPath = audioPath.contains('/');
-          print('🔵 QUEUE MIGRATION: Command "$text" - AudioPath: "$audioPath" - IsFullPath: $isFullPath');
         String fullPath;
         
         if (isFullPath) {
@@ -82,14 +76,12 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
               // Move the file to the new location
               await oldFile.copy(newFullPath);
               await oldFile.delete(); // Remove old file
-              print('🔵 QUEUE: Moved audio file from $audioPath to $newFullPath');
               
               // Update database to new format (filename only)
               final migratedCommand = command.copyWithRealm(audioPath: fileName);
               commandsToUpdate.add(migratedCommand);
               cleanedCommands.add(migratedCommand);
             } catch (e) {
-              print('🔵 QUEUE: Failed to move audio file: $e');
               // If move fails, clean up
               final cleanedCommand = command.copyWithRealm(audioPath: null);
               commandsToUpdate.add(cleanedCommand);
@@ -97,13 +89,11 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
             }
           } else if (await newFile.exists()) {
             // File already exists in new location, just update database
-            print('🔵 QUEUE: File already exists in new location, updating database: $fileName');
             final migratedCommand = command.copyWithRealm(audioPath: fileName);
             commandsToUpdate.add(migratedCommand);
             cleanedCommands.add(migratedCommand);
           } else {
             // File doesn't exist anywhere, clean up
-            print('🔵 QUEUE: Audio file not found, cleaning up: $audioPath');
             final cleanedCommand = command.copyWithRealm(audioPath: null);
             commandsToUpdate.add(cleanedCommand);
             cleanedCommands.add(cleanedCommand);
@@ -115,14 +105,10 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
           
           final file = File(fullPath);
           final exists = file.existsSync();
-          print('🔵 QUEUE DEBUG: Checking audio file: $fullPath');
-          print('🔵 QUEUE DEBUG: File exists: $exists');
           if (exists) {
             final size = file.lengthSync();
-            print('🔵 QUEUE DEBUG: File size: $size bytes');
             cleanedCommands.add(command); // Keep command with valid audio
           } else {
-            print('🔵 QUEUE: Cleaning up missing audio file: $fullPath');
             // Create a new command without audioPath
             final cleanedCommand = command.copyWithRealm(audioPath: null);
             commandsToUpdate.add(cleanedCommand);
@@ -139,7 +125,6 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
           stackTrace: stackTrace
         );
         // Skip this command and continue with others
-        print('🔵 QUEUE MIGRATION: Skipping invalid command due to error: $e');
       }
     }
     
@@ -158,16 +143,13 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
     }
     
     if (commandsToUpdate.isNotEmpty) {
-      print('🔵 QUEUE: Cleaned up ${commandsToUpdate.length} commands with missing audio files');
     }
     
     return cleanedCommands;
   }
 
   List<QueuedCommandRealm> get queuedCommands {
-    print('🔵 QUEUE DEBUG: Total commands: ${state.length}');
     for (var cmd in state) {
-      print('🔵 QUEUE DEBUG: Command "${cmd.text}" - Status: ${cmd.status} - Audio: ${cmd.audioPath != null ? "YES" : "NO"}');
     }
     
     // Show ALL commands for now (no filtering)
@@ -188,17 +170,13 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
 
   void addCommand(QueuedCommandRealm command) {
     try {
-      print('🔵 QUEUE: Adding command: "${command.text}"');
       
       // Save to Realm
       _realmService.addCommand(command);
       
       // Update state
       state = [...state, command];
-      print('🔵 QUEUE: Total commands now: ${state.length}');
-      print('🔵 QUEUE: Queued commands: ${queuedCommands.length}');
     } catch (e) {
-      print('🔵 QUEUE: Error adding command: $e');
       rethrow;
     }
   }
@@ -216,9 +194,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
         return cmd;
       }).toList();
       
-      print('🔵 QUEUE: Updated command $id status to ${status.name}');
     } catch (e) {
-      print('🔵 QUEUE: Error updating command status: $e');
       rethrow;
     }
   }
@@ -236,9 +212,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
         return cmd;
       }).toList();
       
-      print('🔵 QUEUE: Updated command $id transcription');
     } catch (e) {
-      print('🔵 QUEUE: Error updating transcription: $e');
       rethrow;
     }
   }

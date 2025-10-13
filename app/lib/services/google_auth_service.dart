@@ -9,6 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:flutter/services.dart';
 import '../utils/logger.dart';
 import '../utils/performance_monitor.dart';
 
@@ -79,58 +80,143 @@ class GoogleAuthService {
 
       // Initialize GoogleSignIn only when user tries to authenticate
       Logger.info('🔧 Initializing GoogleSignIn...', tag: 'GOOGLE_AUTH');
+      print('🔵 DEBUG: About to call _ensureGoogleSignInInitialized()...');
       _ensureGoogleSignInInitialized();
+      print('🔵 DEBUG: _ensureGoogleSignInInitialized() completed');
       Logger.info('✅ GoogleSignIn initialized', tag: 'GOOGLE_AUTH');
 
       // Sign in with Google
       Logger.info('📱 Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
+      print('🔵 DEBUG: About to call _googleSignIn!.signIn()...');
 
-      final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
+      // Start Sentry transaction to monitor this critical operation
+      final transaction = Sentry.startTransaction('google.signin', 'auth');
+      final span = transaction.startChild('google.signin.call');
 
-      if (googleUser == null) {
-        Logger.info('❌ User cancelled Google sign-in', tag: 'GOOGLE_AUTH');
+      try {
+        // Add timeout to prevent infinite hanging
+        print('🔵 DEBUG: About to call _googleSignIn!.signIn() with 10s timeout...');
+        
+        // Use a Completer to detect if the call never returns
+        final completer = Completer<GoogleSignInAccount?>();
+        bool hasCompleted = false;
+        
+        // Use safe native method channel to avoid native exceptions
+        print('🔵 FLUTTER DEBUG: About to call safe native Google Sign-In...');
+        
+        try {
+          // Call our safe native method that catches exceptions
+          const platform = MethodChannel('safe_google_sign_in');
+          final result = await platform.invokeMethod('signIn');
+          
+          print('🔵 FLUTTER DEBUG: Safe native Google Sign-In result: $result');
+          
+          if (result['success'] == true) {
+            // Native sign-in was successful, now get the account from Flutter SDK
+            final GoogleSignInAccount? googleUser = await _googleSignIn!.signInSilently();
+            print('🔵 FLUTTER DEBUG: Flutter SDK signInSilently returned: ${googleUser?.email ?? "null"}');
+            
+            if (!hasCompleted) {
+              hasCompleted = true;
+              completer.complete(googleUser);
+            }
+          } else {
+            // Native sign-in failed with error
+            final errorMessage = result['error'] ?? 'Unknown error';
+            print('🔵 FLUTTER DEBUG: Safe native Google Sign-In failed: $errorMessage');
+            
+            if (!hasCompleted) {
+              hasCompleted = true;
+              completer.completeError(Exception(errorMessage));
+            }
+          }
+        } catch (e, stackTrace) {
+          print('🔵 FLUTTER DEBUG: Safe native Google Sign-In exception: $e');
+          print('🔵 FLUTTER DEBUG: Stack trace: $stackTrace');
+          
+          // Don't send to Sentry here - Swift already handled it
+          // Just complete the error for Flutter handling
+          if (!hasCompleted) {
+            hasCompleted = true;
+            completer.completeError(e);
+          }
+        }
+        
+        // Wait for the completer result
+        final GoogleSignInAccount? googleUser = await completer.future;
+      
+        print('🔵 DEBUG: _googleSignIn!.signIn() returned: ${googleUser?.email ?? "null"}');
+
+        if (googleUser == null) {
+          // This could be user cancellation OR a configuration error
+          Logger.error('Google sign-in returned null - this could be user cancellation or configuration error', tag: 'GOOGLE_AUTH');
+          
+          // Don't report to Sentry here - native code already handled it
+          
+          span.setData('result', 'null');
+          span.finish(status: const SpanStatus.cancelled());
+          transaction.finish(status: const SpanStatus.cancelled());
+          return false;
+        }
+
+        Logger.info('✅ Google sign-in successful for user: ${googleUser.email}', tag: 'GOOGLE_AUTH');
+
+        // Get authentication details
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+        if (googleAuth.accessToken == null) {
+          Logger.error('No access token received from Google', tag: 'GOOGLE_AUTH');
+          span.setData('error', 'no_access_token');
+          span.finish(status: const SpanStatus.internalError());
+          transaction.finish(status: const SpanStatus.internalError());
+          return false;
+        }
+
+        // Create authenticated client
+        _authClient = authenticatedClient(
+          http.Client(),
+          AccessCredentials(
+            AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
+            null, // Google Sign-In handles refresh internally
+            _basicScopes,
+          ),
+        );
+
+        // Store user information
+        _userId = googleUser.id;
+        _userEmail = googleUser.email;
+        _userName = googleUser.displayName;
+
+        // Store tokens securely
+        await _storeTokens(
+          AccessCredentials(
+            AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
+            null, // Google Sign-In handles refresh internally
+            _basicScopes,
+          ),
+          googleUser.id,
+          googleUser.email,
+          googleUser.displayName ?? '',
+        );
+
+        Logger.info('Successfully authenticated USER: ${googleUser.email}', tag: 'GOOGLE_AUTH');
+        
+        // Success case
+        span.setData('result', 'success');
+        span.setData('user_email', googleUser.email);
+        span.finish(status: const SpanStatus.ok());
+        transaction.finish(status: const SpanStatus.ok());
+        return true;
+      } catch (e, stackTrace) {
+        // Error case - this should catch native exceptions
+        print('🔵 DEBUG: EXCEPTION CAUGHT in Google sign-in: $e');
+        print('🔵 DEBUG: Stack trace: $stackTrace');
+        Logger.error('Google sign-in failed', tag: 'GOOGLE_AUTH', error: e, stackTrace: stackTrace);
+        span.setData('error', e.toString());
+        span.finish(status: const SpanStatus.internalError());
+        transaction.finish(status: const SpanStatus.internalError());
         return false;
       }
-
-      Logger.info('✅ Google sign-in successful for user: ${googleUser.email}', tag: 'GOOGLE_AUTH');
-
-      // Get authentication details
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      if (googleAuth.accessToken == null) {
-        Logger.error('No access token received from Google', tag: 'GOOGLE_AUTH');
-        return false;
-      }
-
-      // Create authenticated client
-      _authClient = authenticatedClient(
-        http.Client(),
-        AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
-          null, // Google Sign-In handles refresh internally
-          _basicScopes,
-        ),
-      );
-
-      // Store user information
-      _userId = googleUser.id;
-      _userEmail = googleUser.email;
-      _userName = googleUser.displayName;
-
-      // Store tokens securely
-      await _storeTokens(
-        AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
-          null, // Google Sign-In handles refresh internally
-          _basicScopes,
-        ),
-        googleUser.id,
-        googleUser.email,
-        googleUser.displayName ?? '',
-      );
-
-      Logger.info('Successfully authenticated USER: ${googleUser.email}', tag: 'GOOGLE_AUTH');
-      return true;
     } catch (e, stackTrace) {
       print('🔵 DEBUG: GoogleAuthService.authenticate() crashed: $e');
       print('🔵 DEBUG: Stack trace: $stackTrace');
@@ -224,28 +310,38 @@ class GoogleAuthService {
   
   /// Initialize GoogleSignIn only when needed
   void _ensureGoogleSignInInitialized() {
+    print('🔵 DEBUG: _ensureGoogleSignInInitialized() called, _googleSignIn is null: ${_googleSignIn == null}');
     if (_googleSignIn == null) {
+      print('🔵 DEBUG: Creating new GoogleSignIn instance...');
+      print('🔵 DEBUG: Using scopes: $_basicScopes');
       _googleSignIn = GoogleSignIn(
         scopes: _basicScopes,
         // No clientId needed - users authenticate with their own accounts
         // This allows users to sign in with their personal Google accounts
       );
+      print('🔵 DEBUG: GoogleSignIn instance created successfully');
       
-      // Check if user is already signed in
-      _googleSignIn!.isSignedIn().then((isSignedIn) {
-        if (isSignedIn) {
-          print('🔵 DEBUG: User already signed in to Google');
-          _googleSignIn!.signInSilently().then((account) {
-            if (account != null) {
-              print('🔵 DEBUG: Silently signed in as: ${account.email}');
-              _userEmail = account.email;
-              _userName = account.displayName;
-              _userId = account.id;
-            }
-          });
-        }
-      });
+      // Check if user is already signed in - do this asynchronously to avoid blocking UI
+      _checkExistingSession();
     }
+  }
+
+  void _checkExistingSession() {
+    // This runs asynchronously and won't block the UI
+    _googleSignIn!.isSignedIn().then((isSignedIn) {
+      if (isSignedIn) {
+        print('🔵 DEBUG: User already signed in to Google');
+        _googleSignIn!.signInSilently().then((account) {
+          if (account != null) {
+            print('🔵 DEBUG: Silently signed in as: ${account.email}');
+            _userEmail = account.email;
+            _userName = account.displayName;
+            _userId = account.id;
+            // TODO: Load connected services from storage
+          }
+        });
+      }
+    });
   }
   
   /// Background reconnection (non-blocking)
@@ -427,8 +523,8 @@ class GoogleAuthService {
         return false;
       }
 
-      // Initialize GoogleSignIn if needed
-      _ensureGoogleSignInInitialized();
+      // Don't initialize GoogleSignIn during UI build - only when actually needed
+      // _ensureGoogleSignInInitialized();
       
       // Check if we have a refresh token
       final refreshToken = await _storage.read(key: _refreshTokenKey);

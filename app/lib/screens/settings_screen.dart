@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design_system/colors.dart';
@@ -320,10 +321,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const Icon(Icons.chevron_right, size: 20),
         ],
       ),
-      onTap: () {
-        print('🔵 DEBUG: Google integration tile tapped!');
-        onTap();
-      },
+          onTap: () {
+            print('🔵 DEBUG: Google integration tile tapped!');
+            // Immediate haptic feedback - don't wait for async operations
+            HapticFeedback.lightImpact();
+            onTap();
+          },
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     );
   }
@@ -501,8 +504,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           }
         }
       } else {
-        print('🔵 DEBUG: User not authenticated, showing loading dialog...');
-        // Show loading dialog
+        print('🔵 DEBUG: User not authenticated, showing loading dialog immediately...');
+        // Show loading dialog IMMEDIATELY for better UX
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -520,8 +523,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         
         // Authenticate with timeout
         final success = await integrationService.authenticate().timeout(
-          const Duration(seconds: 30),
+          const Duration(seconds: 15),
           onTimeout: () {
+            print('🔵 DEBUG: Authentication timed out after 15 seconds');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Google Sign-In timed out. Please try again.')),
@@ -536,11 +540,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           
           if (success) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Connected as: ${integrationService.userEmail}')),
+              SnackBar(
+                content: Text('Connected as: ${integrationService.userEmail}'),
+                backgroundColor: AppColors.success,
+              ),
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to connect to Google. Please try again.')),
+            // Show error dialog instead of snackbar for better visibility
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Row(
+                  children: [
+                    Icon(Icons.error, color: AppColors.error),
+                    SizedBox(width: 8),
+                    Text('Google Sign-In Failed'),
+                  ],
+                ),
+                content: const Text(
+                  'Google Sign-In is not configured properly. Please contact support or check your configuration.',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
             );
           }
         }

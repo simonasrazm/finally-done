@@ -44,3 +44,6 @@ app/coverage/
 # Temporary files
 *.tmp
 *.temp
+
+# Debug files
+app/ios/errors.txt

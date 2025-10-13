@@ -18,25 +18,17 @@ import 'screens/tasks_screen.dart';
 import 'services/queue_service.dart';
 
 void main() async {
-  print('🚀 App starting...');
-  
-  print('📄 Loading environment variables first...');
-  try {
-    await dotenv.load(fileName: ".env");
-    print('✅ Environment variables loaded');
-  } catch (e) {
-    print('⚠️ Environment file not found or invalid, continuing with defaults: $e');
-  }
-  
-  final sentryDsn = dotenv.env['SENTRY_DSN'];
-  print('🔍 Sentry DSN found: ${sentryDsn != null ? "YES" : "NO"}');
-  if (sentryDsn != null) {
-    print('🔍 Sentry DSN: ${sentryDsn.substring(0, 20)}...');
-  } else {
-    print('⚠️ No Sentry DSN found, error tracking disabled');
-  }
-  
-  print('🔧 Starting Sentry initialization...');
+        print('🚀 App starting...');
+
+        // Load environment variables
+        try {
+          await dotenv.load(fileName: ".env");
+        } catch (e) {
+          // Continue with defaults
+        }
+
+        final sentryDsn = dotenv.env['SENTRY_DSN'];
+        print('🔧 Starting Sentry initialization...');
   final sentryStopwatch = Stopwatch()..start();
   
   try {
@@ -65,45 +57,33 @@ void main() async {
       },
       appRunner: () async {
         sentryStopwatch.stop();
-        print('⏱️ Sentry initialization took: ${sentryStopwatch.elapsedMilliseconds}ms');
-        
+
         // Start Sentry transaction for app startup performance (now that Sentry is ready)
         final appStartTransaction = Sentry.startTransaction(
           'app.startup',
           'app.lifecycle',
         );
-        
-        print('📱 Flutter binding initialized');
+
         WidgetsFlutterBinding.ensureInitialized();
-        
+
         // Set up global error handling
         FlutterError.onError = (FlutterErrorDetails details) {
-          print('🚨 Flutter Error: ${details.exception}');
           Sentry.captureException(details.exception, stackTrace: details.stack);
         };
-        
+
         // Set up global zone error handling for async errors
         PlatformDispatcher.instance.onError = (error, stack) {
-          print('🚨 Platform Error: $error');
           Sentry.captureException(error, stackTrace: stack);
           return true;
         };
-        
-        
-        // Device orientation setup span
-        final orientationSpan = appStartTransaction.startChild('app.orientation_setup');
-        print('🔄 Setting device orientation...');
-        // Disable auto-rotate for better UX
+
+        // Device orientation setup
         await SystemChrome.setPreferredOrientations([
           DeviceOrientation.portraitUp,
           DeviceOrientation.portraitDown,
         ]);
-        orientationSpan.finish();
-        print('✅ Device orientation set');
 
-        // App launch span
-        final appLaunchSpan = appStartTransaction.startChild('app.launch');
-        print('🎨 Starting app...');
+        // App launch
         runApp(
           SentryWidget(
             child: const ProviderScope(
@@ -111,11 +91,9 @@ void main() async {
             ),
           ),
         );
-        appLaunchSpan.finish();
-        
+
         // Finish the main startup transaction
         appStartTransaction.finish(status: const SpanStatus.ok());
-        print('✅ App started');
       },
     ),
       Future.delayed(Duration(seconds: 10), () {
@@ -123,31 +101,22 @@ void main() async {
       })
     ]);
   
-  print('🏁 Sentry initialization completed');
-  } catch (e, stackTrace) {
-    sentryStopwatch.stop();
-    print('❌ Sentry initialization failed after ${sentryStopwatch.elapsedMilliseconds}ms: $e');
-    print('📄 Stack trace: $stackTrace');
-    
-    // Continue without Sentry
-    print('🔄 Continuing without Sentry...');
-    WidgetsFlutterBinding.ensureInitialized();
-    
-    print('🔄 Setting device orientation...');
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-    print('✅ Device orientation set');
+        print('🏁 Sentry initialization completed');
+      } catch (e, stackTrace) {
+        // Continue without Sentry
+        WidgetsFlutterBinding.ensureInitialized();
 
-    print('🎨 Starting app...');
-    runApp(
-      const ProviderScope(
-        child: FinallyDoneApp(),
-      ),
-    );
-    print('✅ App started without Sentry');
-  }
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
+
+        runApp(
+          const ProviderScope(
+            child: FinallyDoneApp(),
+          ),
+        );
+      }
 }
 
 class FinallyDoneApp extends StatelessWidget {

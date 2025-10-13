@@ -14,20 +14,15 @@ class RealmService {
 
   void _initializeRealm() {
     try {
-      print('🗄️ REALM: Starting database initialization...');
       // SCHEMA VERSION HISTORY:
       // v0: Initial schema (id, text, audioPath, status, createdAt, transcription)
       // v1: Added photoPaths (List<String>)
       // v2: Added errorMessage (String?) + status renames (audioRecorded→recorded, transcribed→queued)
-      print('🗄️ REALM: Creating configuration...');
       final config = Configuration.local([
         QueuedCommandRealm.schema,
       ], schemaVersion: MigrationManager.currentVersion, migrationCallback: MigrationManager.migrate);
-      print('🗄️ REALM: Opening Realm database...');
       _realm = Realm(config);
-      print('🗄️ REALM: Database initialized successfully');
     } catch (e) {
-      print('🗄️ REALM: Error initializing database: $e');
       rethrow;
     }
   }
@@ -39,7 +34,6 @@ class RealmService {
       final realmCommands = _realm.all<QueuedCommandRealm>();
       return realmCommands.toList();
     } catch (e) {
-      print('🗄️ REALM: Error getting all commands: $e');
       return [];
     }
   }
@@ -50,7 +44,6 @@ class RealmService {
       final realmCommands = _realm.query<QueuedCommandRealm>('status == "queued"');
       return realmCommands.toList();
     } catch (e) {
-      print('🗄️ REALM: Error getting queued commands: $e');
       return [];
     }
   }
@@ -63,7 +56,6 @@ class RealmService {
       );
       return realmCommands.toList();
     } catch (e) {
-      print('🗄️ REALM: Error getting processing commands: $e');
       return [];
     }
   }
@@ -74,7 +66,6 @@ class RealmService {
       final realmCommands = _realm.query<QueuedCommandRealm>('status == "completed"');
       return realmCommands.toList();
     } catch (e) {
-      print('🗄️ REALM: Error getting completed commands: $e');
       return [];
     }
   }
@@ -85,7 +76,6 @@ class RealmService {
       final realmCommands = _realm.query<QueuedCommandRealm>('status == "failed"');
       return realmCommands.toList();
     } catch (e) {
-      print('🗄️ REALM: Error getting failed commands: $e');
       return [];
     }
   }
@@ -93,13 +83,10 @@ class RealmService {
   /// Add a new command
   void addCommand(QueuedCommandRealm command) {
     try {
-      print('🗄️ REALM: Adding command: "${command.text}"');
       _realm.write(() {
         _realm.add(command);
       });
-      print('🗄️ REALM: Command added successfully');
     } catch (e) {
-      print('🗄️ REALM: Error adding command: $e');
       rethrow;
     }
   }
@@ -112,12 +99,9 @@ class RealmService {
         _realm.write(() {
           realmCommand.status = status.name;
         });
-        print('🗄️ REALM: Updated command $id status to ${status.name}');
       } else {
-        print('🗄️ REALM: Command $id not found for update');
       }
     } catch (e) {
-      print('🗄️ REALM: Error updating command status: $e');
       rethrow;
     }
   }
@@ -130,12 +114,9 @@ class RealmService {
         _realm.write(() {
           realmCommand.transcription = transcription;
         });
-        print('🗄️ REALM: Updated command $id transcription');
       } else {
-        print('🗄️ REALM: Command $id not found for transcription update');
       }
     } catch (e) {
-      print('🗄️ REALM: Error updating transcription: $e');
       rethrow;
     }
   }
@@ -148,12 +129,9 @@ class RealmService {
         _realm.write(() {
           realmCommand.audioPath = audioPath;
         });
-        print('🗄️ REALM: Updated command $id audio path');
       } else {
-        print('🗄️ REALM: Command $id not found for audio path update');
       }
     } catch (e) {
-      print('🗄️ REALM: Error updating audio path: $e');
       rethrow;
     }
   }
@@ -190,9 +168,7 @@ class RealmService {
       _realm.write(() {
         _realm.deleteAll<QueuedCommandRealm>();
       });
-      print('🗄️ REALM: Cleared all commands');
     } catch (e) {
-      print('🗄️ REALM: Error clearing commands: $e');
       rethrow;
     }
   }
@@ -200,6 +176,5 @@ class RealmService {
   /// Close the database
   void close() {
     _realm.close();
-    print('🗄️ REALM: Database closed');
   }
 }
