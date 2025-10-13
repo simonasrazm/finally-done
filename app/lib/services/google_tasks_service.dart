@@ -204,7 +204,7 @@ class GoogleTasksService {
 
 /// Provider for Google Tasks Service
 final googleTasksServiceProvider = Provider<GoogleTasksService?>((ref) {
-  final authService = ref.watch(googleAuthServiceProvider);
+  final authService = ref.watch(googleAuthServiceProvider.notifier);
   if (authService.isAuthenticated && authService.authClient != null) {
     return GoogleTasksService(authService.authClient!);
   }

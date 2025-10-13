@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
+import '../design_system/tokens.dart';
 import '../services/integration_service.dart';
+import '../generated/app_localizations.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
   final VoidCallback? onNavigateToSettings;
@@ -66,20 +68,20 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Task completed!')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.taskCompleted)),
           );
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${result['message']}')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.errorGeneric(result['message']))),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error completing task: $e')),
+              SnackBar(content: Text(AppLocalizations.of(context)!.errorCompletingTask(e.toString()))),
         );
       }
     }
@@ -89,7 +91,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google Tasks'),
+        title: Text(AppLocalizations.of(context)!.googleTasks),
         backgroundColor: AppColors.getBackgroundColor(context),
         elevation: 0,
         actions: [
@@ -108,13 +110,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           }
           
           if (_isLoading) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Loading tasks...'),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: DesignTokens.componentPadding),
+                  Text(AppLocalizations.of(context)!.loadingTasks),
                 ],
               ),
             );
@@ -137,7 +139,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget _buildNotConnectedView() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(DesignTokens.sectionSpacing + DesignTokens.spacing2),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -146,14 +148,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               size: 64,
               color: AppColors.getTextSecondaryColor(context),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignTokens.componentPadding),
             Text(
               'Not Connected to Google',
               style: AppTypography.largeTitle.copyWith(
                 color: AppColors.getTextPrimaryColor(context),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignTokens.spacing2),
             Text(
               'Connect to Google in Settings to view your tasks',
               style: AppTypography.body.copyWith(
@@ -161,14 +163,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DesignTokens.sectionSpacing),
             ElevatedButton.icon(
               onPressed: () {
                 // Navigate to Settings tab using the callback
                 widget.onNavigateToSettings?.call();
               },
               icon: const Icon(Icons.settings),
-              label: const Text('Go to Settings'),
+              label: Text(AppLocalizations.of(context)!.goToSettings),
             ),
           ],
         ),
@@ -179,7 +181,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget _buildErrorView() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(DesignTokens.sectionSpacing + DesignTokens.spacing2),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -188,14 +190,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               size: 64,
               color: AppColors.error,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignTokens.componentPadding),
             Text(
               'Error Loading Tasks',
               style: AppTypography.largeTitle.copyWith(
                 color: AppColors.getTextPrimaryColor(context),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignTokens.spacing2),
             Text(
               _errorMessage ?? 'Unknown error occurred',
               style: AppTypography.body.copyWith(
@@ -203,11 +205,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DesignTokens.sectionSpacing),
             ElevatedButton.icon(
               onPressed: _loadTasks,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: Text(AppLocalizations.of(context)!.tryAgain),
             ),
           ],
         ),
@@ -218,7 +220,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget _buildEmptyView() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(DesignTokens.sectionSpacing + DesignTokens.spacing2),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -227,14 +229,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               size: 64,
               color: AppColors.getTextSecondaryColor(context),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignTokens.componentPadding),
             Text(
               'No Tasks Found',
               style: AppTypography.largeTitle.copyWith(
                 color: AppColors.getTextPrimaryColor(context),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignTokens.spacing2),
             Text(
               'Your Google Tasks list is empty. Create some tasks in Google Tasks or try voice commands!',
               style: AppTypography.body.copyWith(
@@ -242,11 +244,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DesignTokens.sectionSpacing),
             ElevatedButton.icon(
               onPressed: _loadTasks,
               icon: const Icon(Icons.refresh),
-              label: const Text('Refresh'),
+              label: Text(AppLocalizations.of(context)!.refresh),
             ),
           ],
         ),
@@ -260,14 +262,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     return RefreshIndicator(
       onRefresh: _loadTasks,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(DesignTokens.componentPadding),
         itemCount: tasks.length,
         itemBuilder: (context, index) {
           final task = tasks[index];
           final isCompleted = task['status'] == 'completed';
           
           return Card(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: DesignTokens.spacing2),
             child: ListTile(
               leading: Icon(
                 isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,

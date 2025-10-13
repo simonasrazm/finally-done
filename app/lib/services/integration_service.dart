@@ -41,12 +41,10 @@ class IntegrationService {
   /// Connect to specific Google service
   Future<bool> connectToService(String service) async {
     try {
-      print('🔵 DEBUG: IntegrationService.connectToService($service) called!');
       final success = await _authService.connectToService(service);
       
       if (success && service == 'tasks') {
         _tasksService = GoogleTasksService(_authService.authClient!);
-        print('🔵 DEBUG: Tasks service initialized');
       }
       
       return success;
@@ -63,12 +61,9 @@ class IntegrationService {
   /// Authenticate user with Google
   Future<bool> authenticate() async {
     try {
-      print('🔵 DEBUG: IntegrationService.authenticate() called!');
       Logger.info('Starting USER authentication for integrations', tag: 'INTEGRATION');
-      
-      print('🔵 DEBUG: Calling _authService.authenticate()...');
+
       final success = await _authService.authenticate();
-      print('🔵 DEBUG: _authService.authenticate() returned: $success');
       if (success) {
         _tasksService = GoogleTasksService(_authService.authClient!);
         Logger.info('USER authenticated successfully for integrations', tag: 'INTEGRATION');
@@ -309,12 +304,12 @@ class IntegrationService {
 
 /// Provider for Integration Service
 final integrationServiceProvider = Provider<IntegrationService>((ref) {
-  final authService = ref.watch(googleAuthServiceProvider);
+  final authService = ref.watch(googleAuthServiceProvider.notifier);
   return IntegrationService(authService);
 });
 
 /// Provider for authentication status
 final isIntegrationAuthenticatedProvider = Provider<bool>((ref) {
-  final integrationService = ref.watch(integrationServiceProvider);
-  return integrationService.isAuthenticated;
+  final authState = ref.watch(googleAuthServiceProvider);
+  return authState.isAuthenticated;
 });

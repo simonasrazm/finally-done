@@ -300,8 +300,8 @@ func setupCrashHandlers() {
       NSLog("🔵 SWIFT DEBUG: Starting Google Sign-In configuration with crash protection...")
       
       do {
-        // Check if GoogleService-Info.plist exists
-        if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") {
+        // Check if GoogleService-Info 2.plist exists
+        if let path = Bundle.main.path(forResource: "GoogleService-Info 2", ofType: "plist") {
           NSLog("🔵 SWIFT DEBUG: GoogleService-Info.plist found at: \(path)")
           
           if let plist = NSDictionary(contentsOfFile: path) {
@@ -327,7 +327,7 @@ func setupCrashHandlers() {
           }
         } else {
           let error = NSError(domain: "ConfigurationError", code: -1004, userInfo: [
-            NSLocalizedDescriptionKey: "GoogleService-Info.plist not found in app bundle"
+            NSLocalizedDescriptionKey: "GoogleService-Info 2.plist not found in app bundle"
           ])
           reportError(error, context: "Google Sign-In configuration")
           // Notify Flutter about the error

@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
+import '../design_system/tokens.dart';
 import '../services/speech_service.dart';
 import '../services/integration_service.dart';
+import '../services/google_auth_service.dart';
+import '../generated/app_localizations.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -19,7 +23,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   double _confidenceThreshold = 0.7;
   bool _hapticEnabled = true;
   bool _soundEnabled = true;
-  
   @override
   void initState() {
     super.initState();
@@ -36,7 +39,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(AppLocalizations.of(context)!.settings),
         backgroundColor: AppColors.getBackgroundColor(context),
         elevation: 0,
       ),
@@ -44,19 +47,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         children: [
           // Profile Section
           _buildSection(
-            title: 'Profile',
+            title: AppLocalizations.of(context)!.profile,
             children: [
               _buildListTile(
                 leading: const Icon(Icons.person_outline),
-                title: 'Name',
-                subtitle: 'Enter your name',
+                title: AppLocalizations.of(context)!.name,
+                subtitle: AppLocalizations.of(context)!.enterYourName,
                 trailing: SizedBox(
-                  width: 150,
+                  width: DesignTokens.inputWidthLg,
                   child: TextField(
                     controller: _nameController,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: DesignTokens.inputPadding,
+                        vertical: DesignTokens.spacing2,
+                      ),
                     ),
                     style: AppTypography.body,
                   ),
@@ -67,17 +73,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           
           // Connected Services Section
           _buildSection(
-            title: 'Connected Services',
+            title: AppLocalizations.of(context)!.connectedServices,
             children: [
               Consumer(
                 builder: (context, ref, child) {
-                  final isAuthenticated = ref.watch(isIntegrationAuthenticatedProvider);
-                  final integrationService = ref.watch(integrationServiceProvider);
+                  final authState = ref.watch(googleAuthServiceProvider);
                   
                   return _buildGoogleIntegrationTile(
-                    isAuthenticated: isAuthenticated,
-                    userEmail: integrationService.userEmail,
-                    connectedServices: integrationService.connectedServices,
+                    isAuthenticated: authState.isAuthenticated,
+                    userEmail: authState.userEmail,
+                    connectedServices: authState.connectedServices,
                     onTap: () => _handleGoogleAuth(ref),
                   );
                 },
@@ -87,16 +92,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 builder: (context, ref, child) {
                   final integrationService = ref.watch(integrationServiceProvider);
                   
-                  print('🔵 DEBUG: Building individual service tiles');
-                  print('🔵 DEBUG: isTasksConnected: ${integrationService.isTasksConnected}');
-                  print('🔵 DEBUG: isCalendarConnected: ${integrationService.isCalendarConnected}');
-                  print('🔵 DEBUG: isGmailConnected: ${integrationService.isGmailConnected}');
                   
                   return Column(
                     children: [
                       _buildGoogleServiceTile(
                         icon: Icons.task_alt,
-                        title: 'Google Tasks',
+                        title: AppLocalizations.of(context)!.googleTasks,
                         isConnected: integrationService.isTasksConnected,
                         onTap: () => _handleGoogleServiceConnection(ref, 'tasks'),
                       ),
@@ -142,12 +143,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           
           // Preferences Section
           _buildSection(
-            title: 'Preferences',
+            title: AppLocalizations.of(context)!.preferences,
             children: [
               _buildListTile(
                 leading: const Icon(Icons.psychology),
-                title: 'Speech Engine',
-                subtitle: 'Choose your preferred speech recognition engine',
+                title: AppLocalizations.of(context)!.speechRecognition,
+                subtitle: AppLocalizations.of(context)!.chooseSpeechEngine,
                 trailing: Consumer(
                   builder: (context, ref, child) {
                     final enginePreference = ref.watch(speechEngineProvider);
@@ -156,10 +157,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onChanged: (String? newValue) {
                         ref.read(speechEngineProvider.notifier).setEngine(newValue!);
                       },
-                      items: const [
-                        DropdownMenuItem(value: 'auto', child: Text('Auto (iOS + Gemini)')),
-                        DropdownMenuItem(value: 'ios', child: Text('iOS Native')),
-                        DropdownMenuItem(value: 'gemini', child: Text('Gemini Pro')),
+                      items: [
+                        DropdownMenuItem(value: 'auto', child: Text(AppLocalizations.of(context)!.autoIosGemini)),
+                        DropdownMenuItem(value: 'ios', child: Text(AppLocalizations.of(context)!.iosNative)),
+                        DropdownMenuItem(value: 'gemini', child: Text(AppLocalizations.of(context)!.geminiPro)),
                       ],
                     );
                   },
@@ -167,18 +168,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               _buildListTile(
                 leading: const Icon(Icons.analytics),
-                title: 'Confidence Threshold',
-                subtitle: 'Commands below this threshold need review',
+                title: AppLocalizations.of(context)!.confidenceThreshold,
+                subtitle: AppLocalizations.of(context)!.confidenceThresholdDescription,
                 trailing: SizedBox(
-                  width: 100,
-                  child: Text('${(_confidenceThreshold * 100).round()}%'),
+                  width: DesignTokens.inputWidthMd,
+                  child: Text(AppLocalizations.of(context)!.confidencePercentage((_confidenceThreshold * 100).round())),
                 ),
                 onTap: () => _showConfidenceDialog(),
               ),
               _buildSwitchTile(
                 leading: const Icon(Icons.vibration),
-                title: 'Haptic Feedback',
-                subtitle: 'Vibrate on button presses',
+                title: AppLocalizations.of(context)!.hapticFeedback,
+                subtitle: AppLocalizations.of(context)!.hapticFeedbackDescription,
                 value: _hapticEnabled,
                 onChanged: (value) {
                   setState(() {
@@ -188,8 +189,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               _buildSwitchTile(
                 leading: const Icon(Icons.volume_up),
-                title: 'Sounds',
-                subtitle: 'Play success/error sounds',
+                title: AppLocalizations.of(context)!.soundEffects,
+                subtitle: AppLocalizations.of(context)!.soundEffectsDescription,
                 value: _soundEnabled,
                 onChanged: (value) {
                   setState(() {
@@ -231,7 +232,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+          padding: EdgeInsets.fromLTRB(
+          DesignTokens.layoutPadding,
+          DesignTokens.sectionSpacing,
+          DesignTokens.layoutPadding,
+          DesignTokens.spacing2,
+        ),
           child: Text(
             title.toUpperCase(),
             style: AppTypography.sectionHeader.copyWith(
@@ -259,7 +265,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           : null,
       trailing: trailing,
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.componentPadding,
+        vertical: DesignTokens.spacing1,
+      ),
     );
   }
   
@@ -278,7 +287,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           : null,
       value: value,
       onChanged: onChanged,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.componentPadding,
+        vertical: DesignTokens.spacing1,
+      ),
     );
   }
   
@@ -294,17 +306,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         color: isAuthenticated ? AppColors.primary : AppColors.getTextSecondaryColor(context),
         size: 28,
       ),
-      title: Text(
-        'Google Account',
-        style: AppTypography.body.copyWith(
-          color: AppColors.getTextPrimaryColor(context),
-          fontWeight: isAuthenticated ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      subtitle: Text(
-        isAuthenticated 
-            ? _buildConnectedServicesText(userEmail, connectedServices)
-            : 'Connect to access Tasks, Calendar, and Gmail',
+          title: Text(
+            AppLocalizations.of(context)!.googleAccount,
+            style: AppTypography.body.copyWith(
+              color: AppColors.getTextPrimaryColor(context),
+              fontWeight: isAuthenticated ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          subtitle: Text(
+            isAuthenticated 
+                ? _buildConnectedServicesText(userEmail, connectedServices)
+                : AppLocalizations.of(context)!.connectToGoogle,
         style: AppTypography.footnote.copyWith(
           color: AppColors.getTextSecondaryColor(context),
         ),
@@ -317,17 +329,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             color: isAuthenticated ? AppColors.success : AppColors.textTertiary,
             size: 20,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: DesignTokens.iconSpacing),
           const Icon(Icons.chevron_right, size: 20),
         ],
       ),
           onTap: () {
-            print('🔵 DEBUG: Google integration tile tapped!');
-            // Immediate haptic feedback - don't wait for async operations
-            HapticFeedback.lightImpact();
-            onTap();
+            // Use microtask to let ripple animation complete before heavy work
+            Future.microtask(() => onTap());
           },
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.componentPadding,
+        vertical: DesignTokens.spacing2,
+      ),
     );
   }
   
@@ -351,7 +364,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     required bool isConnected,
     required VoidCallback onTap,
   }) {
-    print('🔵 DEBUG: Building Google service tile: $title, connected: $isConnected');
     return ListTile(
       leading: Icon(
         icon,
@@ -377,7 +389,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         size: 20,
       ),
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.componentPadding,
+        vertical: DesignTokens.spacing1,
+      ),
     );
   }
   
@@ -458,28 +473,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             color: isConnected ? AppColors.success : AppColors.textTertiary,
             size: 20,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: DesignTokens.iconSpacing),
           const Icon(Icons.chevron_right, size: 20),
         ],
       ),
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.componentPadding,
+        vertical: DesignTokens.spacing1,
+      ),
     );
   }
   
   void _handleGoogleAuth(WidgetRef ref) async {
-    print('🔵 DEBUG: _handleGoogleAuth called!');
     
     // 1. IMMEDIATE UI feedback - show loading dialog instantly
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
+      builder: (context) => AlertDialog(
         content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 20),
-            Text('Opening Google Sign-In...'),
+            const CircularProgressIndicator(),
+            const SizedBox(width: DesignTokens.sectionSpacing),
+            Text(AppLocalizations.of(context)!.openingGoogleSignIn),
           ],
         ),
       ),
@@ -489,26 +506,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await Future.delayed(Duration.zero);
     
     try {
-      print('🔵 DEBUG: Getting integration service...');
       final integrationService = ref.read(integrationServiceProvider);
-      print('🔵 DEBUG: Integration service obtained, isAuthenticated: ${integrationService.isAuthenticated}');
       
       if (integrationService.isAuthenticated) {
-        print('🔵 DEBUG: User is authenticated, showing sign out dialog...');
         // Show sign out dialog
         final shouldSignOut = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Google Account'),
-            content: Text('Signed in as: ${integrationService.userEmail}\n\nDo you want to sign out?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+            backgroundColor: Theme.of(context).dialogBackgroundColor,
+                title: Text(
+                  AppLocalizations.of(context)!.googleAccount,
+                  style: AppTypography.headline.copyWith(
+                    color: AppColors.getTextPrimaryColor(context),
+                  ),
+                ),
+                content: Text(
+                  '${AppLocalizations.of(context)!.signedInAs(integrationService.userEmail!)}\n\n${AppLocalizations.of(context)!.doYouWantToSignOut}',
+              style: AppTypography.body.copyWith(
+                color: AppColors.getTextPrimaryColor(context),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Sign Out'),
+            ),
+            actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text(
+                      AppLocalizations.of(context)!.cancel,
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.getTextSecondaryColor(context),
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text(
+                      AppLocalizations.of(context)!.signOut,
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
               ),
             ],
           ),
@@ -517,63 +552,83 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (shouldSignOut == true) {
           await integrationService.signOut();
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Signed out from Google')),
-            );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(AppLocalizations.of(context)!.signedOutFromGoogle)),
+                );
           }
         }
       } else {
-        print('🔵 DEBUG: User not authenticated, proceeding with authentication...');
         
-        // Authenticate with timeout
-        final success = await integrationService.authenticate().timeout(
-          const Duration(seconds: 15),
-          onTimeout: () {
-            print('🔵 DEBUG: Authentication timed out after 15 seconds');
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Google Sign-In timed out. Please try again.')),
-              );
-            }
-            return false;
-          },
-        );
+        // Start a warning timer for long-running authentication
+        Timer? warningTimer;
+        warningTimer = Timer(const Duration(minutes: 1, seconds: 30), () {
+          // Don't interrupt the user - just log a warning
+        });
         
-        if (mounted) {
-          Navigator.pop(context); // Close loading dialog
+        try {
+          // Authenticate without timeout - let user take as much time as needed
+          final success = await integrationService.authenticate();
           
-          if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Connected as: ${integrationService.userEmail}'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-          } else {
-            // Show error dialog instead of snackbar for better visibility
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Row(
-                  children: [
-                    Icon(Icons.error, color: AppColors.error),
-                    SizedBox(width: 8),
-                    Text('Google Sign-In Failed'),
+          // Cancel warning timer if authentication completes
+          warningTimer?.cancel();
+          
+          if (mounted) {
+            Navigator.pop(context); // Close loading dialog
+            
+            if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.connectedAs(integrationService.userEmail!)),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+            } else {
+              // Show error dialog instead of snackbar for better visibility
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: Theme.of(context).dialogBackgroundColor,
+                  title: Row(
+                    children: [
+                      Icon(Icons.error, color: AppColors.error),
+                      const SizedBox(width: DesignTokens.iconSpacing),
+                      Text(
+                        AppLocalizations.of(context)!.googleSignInFailed,
+                        style: AppTypography.headline.copyWith(
+                          color: AppColors.getTextPrimaryColor(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    AppLocalizations.of(context)!.googleSignInNotConfigured,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.getTextPrimaryColor(context),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        AppLocalizations.of(context)!.ok,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                content: Text(
-                  'Google Sign-In is not configured properly. Please contact support or check your configuration.',
-                  style: AppTypography.body.copyWith(
-                    color: AppColors.getTextPrimaryColor(context),
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
+              );
+            }
+          }
+        } catch (e) {
+          // Cancel warning timer on error
+          warningTimer?.cancel();
+          
+          if (mounted) {
+            Navigator.pop(context); // Close loading dialog if open
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(AppLocalizations.of(context)!.error(e.toString()))),
             );
           }
         }
@@ -582,7 +637,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog if open
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.error(e.toString()))),
         );
       }
     }
@@ -592,19 +647,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('$service Integration'),
-        content: Text('Connect to $service to sync your data.'),
+        title: Text(AppLocalizations.of(context)!.serviceIntegration(service)),
+        content: Text(AppLocalizations.of(context)!.connectToServiceDescription(service)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               // TODO: Implement service connection
             },
-            child: const Text('Connect'),
+            child: Text(AppLocalizations.of(context)!.connect),
           ),
         ],
       ),
@@ -615,7 +670,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confidence Threshold'),
+        title: Text(AppLocalizations.of(context)!.confidenceThreshold),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -631,13 +686,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 });
               },
             ),
-            const Text('Commands below this threshold will need manual review.'),
+            Text(AppLocalizations.of(context)!.confidenceThresholdDescription),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Done'),
+            child: Text(AppLocalizations.of(context)!.done),
           ),
         ],
       ),

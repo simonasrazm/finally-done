@@ -7,6 +7,7 @@ import 'dart:io';
 
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
+import '../design_system/tokens.dart';
 import '../services/speech_service.dart';
 import '../services/nlp_service.dart';
 import '../services/queue_service.dart';
@@ -80,8 +81,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 60,
-        height: 60,
+        width: DesignTokens.buttonHeight2xl,
+        height: DesignTokens.buttonHeight2xl,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
@@ -100,7 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         child: Icon(
           icon,
           color: Colors.white,
-          size: 24,
+          size: DesignTokens.iconLg,
         ),
       ),
     );
@@ -423,7 +424,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
+          padding: EdgeInsets.all(DesignTokens.layoutPadding + DesignTokens.spacing1),
           child: Column(
             children: [
               // Status text
@@ -437,7 +438,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
               // Photo preview
               if (_selectedPhotos.isNotEmpty) ...[
-                const SizedBox(height: 20),
+                SizedBox(height: DesignTokens.sectionSpacing),
                 Row(
                   children: [
                     Text(
@@ -454,20 +455,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: DesignTokens.spacing3,
+                          vertical: DesignTokens.spacing1 + DesignTokens.spacing1,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(DesignTokens.radius2xl),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.clear,
-                              size: 16,
+                              size: DesignTokens.iconSm,
                               color: AppColors.error,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: DesignTokens.spacing1),
                             Text(
                               'Clear',
                               style: AppTypography.caption1.copyWith(
@@ -481,30 +485,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DesignTokens.spacing2),
                 Container(
-                  height: 100,
+                  height: DesignTokens.photoPreviewHeight,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: _selectedPhotos.length,
                     itemBuilder: (context, index) {
                       return Container(
-                        margin: const EdgeInsets.only(right: 8),
+                        margin: const EdgeInsets.only(right: DesignTokens.spacing2),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                           child: FutureBuilder<String>(
                             future: _getPhotoPath(_selectedPhotos[index]),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 return Image.file(
                                   File(snapshot.data!),
-                                  width: 100,
-                                  height: 100,
+                                  width: DesignTokens.photoPreviewWidth,
+                                  height: DesignTokens.photoPreviewHeight,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
-                                      width: 100,
-                                      height: 100,
+                                      width: DesignTokens.spacing24 + DesignTokens.spacing1,
+                                      height: DesignTokens.spacing24 + DesignTokens.spacing1,
                                       color: Colors.grey[300],
                                       child: const Icon(Icons.image_not_supported),
                                     );
@@ -512,8 +516,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 );
                               } else {
                                 return Container(
-                                  width: 100,
-                                  height: 100,
+                                  width: DesignTokens.photoPreviewWidth,
+                                  height: DesignTokens.photoPreviewHeight,
                                   color: Colors.grey[300],
                                   child: const CircularProgressIndicator(),
                                 );
@@ -527,7 +531,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
               ],
               
-              const SizedBox(height: 40),
+              SizedBox(height: DesignTokens.sectionSpacing + DesignTokens.spacing4),
               
               // Main recording area with three buttons
               Row(
@@ -539,7 +543,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     onTap: () => _takePhoto(),
                   ),
                   
-                  const SizedBox(width: 20),
+                  SizedBox(width: DesignTokens.sectionSpacing),
                   
                   // Main recording button
                   AnimatedBuilder(
@@ -551,16 +555,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           onTapDown: (_) => _scaleController.forward(),
                           onTapUp: (_) {
                             _scaleController.reverse();
-                            if (_isRecording) {
-                              _stopRecording();
-                            } else {
-                              _startRecording();
-                            }
+                            // Use microtask to let scale animation complete before heavy work
+                            Future.microtask(() {
+                              if (_isRecording) {
+                                _stopRecording();
+                              } else {
+                                _startRecording();
+                              }
+                            });
                           },
                           onTapCancel: () => _scaleController.reverse(),
                           child: Container(
-                            width: 200,
-                            height: 200,
+                            width: DesignTokens.buttonHeight3xl,
+                            height: DesignTokens.buttonHeight3xl,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: LinearGradient(
@@ -580,7 +587,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             ),
                             child: Icon(
                               _isRecording ? Icons.stop : Icons.mic,
-                              size: 80,
+                              size: DesignTokens.icon4xl,
                               color: Colors.white,
                             ),
                           ),
@@ -589,7 +596,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     },
                   ),
                   
-                  const SizedBox(width: 20),
+                  SizedBox(width: DesignTokens.sectionSpacing),
                   
                   // Photos button on the right
                   _buildInputButton(
@@ -599,14 +606,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ],
               ),
               
-              const SizedBox(height: 40),
+              SizedBox(height: DesignTokens.sectionSpacing + DesignTokens.spacing4),
               
               // Text input alternative
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: DesignTokens.componentPadding,
+                  vertical: DesignTokens.spacing3,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.getSecondaryBackgroundColor(context),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
                   border: Border.all(
                     color: AppColors.separator.withOpacity(0.3),
                   ),
@@ -642,16 +652,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
               ),
               
-              const SizedBox(height: 20),
+              SizedBox(height: DesignTokens.sectionSpacing),
               
               // Transcription result
               if (_transcription.isNotEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(DesignTokens.componentPadding),
                   decoration: BoxDecoration(
                     color: AppColors.getSecondaryBackgroundColor(context),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
                     border: Border.all(
                       color: AppColors.separator.withOpacity(0.3),
                     ),
@@ -665,7 +675,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           color: AppColors.getTextSecondaryColor(context),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: DesignTokens.spacing2),
                       Text(
                         _transcription,
                         style: AppTypography.body,
@@ -674,7 +684,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 ),
               
-              const SizedBox(height: 20),
+              SizedBox(height: DesignTokens.sectionSpacing),
             ],
           ),
         ),

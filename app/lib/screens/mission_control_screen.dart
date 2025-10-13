@@ -6,9 +6,11 @@ import 'dart:io';
 
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
+import '../design_system/tokens.dart';
 import '../services/queue_service.dart';
 import '../models/queued_command.dart';
 import '../utils/logger.dart';
+import '../generated/app_localizations.dart';
 
 class MissionControlScreen extends ConsumerStatefulWidget {
   const MissionControlScreen({super.key});
@@ -39,7 +41,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mission Control'),
+        title: Text(AppLocalizations.of(context)!.missionControl),
         backgroundColor: AppColors.getBackgroundColor(context),
         elevation: 0,
         bottom: TabBar(
@@ -50,7 +52,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.settings_outlined, size: 16),
-                  Text('Processing', style: TextStyle(fontSize: 10)),
+                  Text(AppLocalizations.of(context)!.processing, style: TextStyle(fontSize: 10)),
                 ],
               ),
             ),
@@ -59,7 +61,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.check_circle_outline, size: 16),
-                  Text('Done', style: TextStyle(fontSize: 10)),
+                  Text(AppLocalizations.of(context)!.completed, style: TextStyle(fontSize: 10)),
                 ],
               ),
             ),
@@ -73,7 +75,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.rate_review_outlined, size: 16),
-                          Text('Review', style: TextStyle(fontSize: 10)),
+                          Text(AppLocalizations.of(context)!.review, style: TextStyle(fontSize: 10)),
                         ],
                       ),
                       if (failedCommands.isNotEmpty)
@@ -81,7 +83,10 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                           top: 0,
                           right: 0,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: DesignTokens.spacing1,
+                              vertical: DesignTokens.spacing0,
+                            ),
                             decoration: const BoxDecoration(
                               color: AppColors.warning,
                               borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -121,14 +126,14 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     final processingCommands = allCommands.where((cmd) => cmd.status != CommandStatus.failed.name).toList();
     
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(DesignTokens.componentPadding),
       children: [
         // Header
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(DesignTokens.componentPadding),
           decoration: BoxDecoration(
             color: AppColors.getSecondaryBackgroundColor(context),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
           ),
           child: Row(
             children: [
@@ -137,7 +142,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 color: AppColors.primary,
                 size: 24,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: DesignTokens.spacing3),
               Text(
                 'PROCESSING (${processingCommands.length} items)',
                 style: AppTypography.headline.copyWith(
@@ -148,7 +153,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           ),
         ),
         
-        const SizedBox(height: 20),
+        SizedBox(height: DesignTokens.sectionSpacing),
         
         // Commands list or empty state
         if (processingCommands.isEmpty)
@@ -160,14 +165,14 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                   size: 64,
                   color: AppColors.getTextTertiaryColor(context),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: DesignTokens.componentPadding),
                 Text(
                   'No items in queue',
                   style: AppTypography.body.copyWith(
                     color: AppColors.getTextTertiaryColor(context),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DesignTokens.spacing2),
                 Text(
                   'Scheduled commands will appear here',
                   style: AppTypography.footnote.copyWith(
@@ -203,8 +208,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       Logger.warning('Error accessing command properties in UI: $e', tag: 'UI');
       // Return a placeholder card for invalid commands
       return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: DesignTokens.spacing3),
+        padding: EdgeInsets.all(DesignTokens.componentPadding),
         decoration: BoxDecoration(
           color: AppColors.getSecondaryBackgroundColor(context),
           borderRadius: BorderRadius.circular(12),
@@ -213,7 +218,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           ),
         ),
         child: Text(
-          'Invalid command (deleted)',
+          AppLocalizations.of(context)!.invalidCommandDeleted,
           style: AppTypography.body.copyWith(
             color: AppColors.error,
             fontStyle: FontStyle.italic,
@@ -223,8 +228,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     }
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: DesignTokens.spacing3),
+      padding: EdgeInsets.all(DesignTokens.componentPadding),
       decoration: BoxDecoration(
         color: AppColors.getSecondaryBackgroundColor(context),
         borderRadius: BorderRadius.circular(12),
@@ -242,7 +247,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 size: 16,
                 color: AppColors.getTextSecondaryColor(context),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: DesignTokens.spacing2),
               Expanded(
                 child: Text(
                   transcription?.isNotEmpty == true ? transcription! : commandText,
@@ -255,10 +260,13 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: DesignTokens.spacing2,
+                      vertical: DesignTokens.spacing1,
+                    ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(commandStatus).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
                     ),
                     child: Text(
                       _getStatusText(commandStatus),
@@ -268,14 +276,14 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: DesignTokens.spacing2),
                 GestureDetector(
                   onTap: () => _deleteCommand(command.id),
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: EdgeInsets.all(DesignTokens.spacing1 + DesignTokens.spacing1),
                       decoration: BoxDecoration(
                         color: AppColors.error.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                       ),
                       child: Icon(
                         Icons.delete_outline,
@@ -288,7 +296,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: DesignTokens.spacing2),
           Row(
             children: [
               Text(
@@ -298,7 +306,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 ),
               ),
               if (audioPath != null && audioPath.isNotEmpty) ...[
-                const SizedBox(width: 16),
+                const SizedBox(width: DesignTokens.componentPadding),
                 GestureDetector(
                   onTap: () {
                     if (audioPath != null) {
@@ -306,10 +314,13 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: DesignTokens.spacing2,
+                      vertical: DesignTokens.spacing1,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -319,7 +330,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                           size: 14,
                           color: AppColors.primary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: DesignTokens.spacing1),
                         Text(
                           'Play',
                           style: AppTypography.caption1.copyWith(
@@ -337,7 +348,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           
           // Photo attachments
           if (photoPaths.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignTokens.spacing3),
             Text(
               'Photos (${photoPaths.length})',
               style: AppTypography.footnote.copyWith(
@@ -345,7 +356,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignTokens.spacing2),
             Container(
               height: 80,
               child: ListView.builder(
@@ -353,9 +364,9 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 itemCount: photoPaths.length,
                 itemBuilder: (context, index) {
                   return Container(
-                    margin: const EdgeInsets.only(right: 8),
+                    margin: const EdgeInsets.only(right: DesignTokens.spacing2),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                       child: FutureBuilder<String>(
                         future: _getPhotoPath(photoPaths[index]),
                         builder: (context, snapshot) {
@@ -590,7 +601,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     final completedCommands = ref.watch(completedCommandsProvider);
     
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(DesignTokens.componentPadding),
       children: [
         if (completedCommands.isEmpty)
           Center(
@@ -602,14 +613,14 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                   size: 64,
                   color: AppColors.getTextTertiaryColor(context),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: DesignTokens.componentPadding),
                 Text(
                   'No completed commands yet',
                   style: AppTypography.headline.copyWith(
                     color: AppColors.getTextTertiaryColor(context),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DesignTokens.spacing2),
                 Text(
                   'Completed commands will appear here',
                   style: AppTypography.body.copyWith(
@@ -629,7 +640,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     final failedCommands = ref.watch(failedCommandsProvider);
     
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(DesignTokens.componentPadding),
       children: [
         if (failedCommands.isEmpty)
           Center(
@@ -641,14 +652,14 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                   size: 64,
                   color: AppColors.getTextTertiaryColor(context),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: DesignTokens.componentPadding),
                 Text(
                   'No commands need review',
                   style: AppTypography.headline.copyWith(
                     color: AppColors.getTextTertiaryColor(context),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DesignTokens.spacing2),
                 Text(
                   'Failed commands will appear here for review',
                   style: AppTypography.body.copyWith(
@@ -671,9 +682,12 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     required List<String> actions,
   }) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(
+        horizontal: DesignTokens.componentPadding,
+        vertical: DesignTokens.spacing2,
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(DesignTokens.componentPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -682,12 +696,12 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               transcription,
               style: AppTypography.body,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DesignTokens.spacing3),
             
             // Entities
             ...entities,
             
-            const SizedBox(height: 16),
+            const SizedBox(height: DesignTokens.componentPadding),
             
             // Action buttons
             Wrap(
@@ -713,7 +727,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                     foregroundColor: buttonColor,
                     side: BorderSide(color: buttonColor),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                     ),
                   ),
                   child: Text(action),
@@ -756,11 +770,11 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     }
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: DesignTokens.spacing2),
+      padding: EdgeInsets.all(DesignTokens.spacing3),
       decoration: BoxDecoration(
         color: AppColors.getSecondaryBackgroundColor(context),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         border: Border.all(
           color: statusColor.withOpacity(0.3),
         ),
@@ -771,7 +785,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           Row(
             children: [
               Icon(statusIcon, color: statusColor, size: 16),
-              const SizedBox(width: 8),
+              const SizedBox(width: DesignTokens.spacing2),
               Text(
                 '$type → $target',
                 style: AppTypography.footnote.copyWith(
@@ -780,10 +794,13 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: DesignTokens.spacing1 + DesignTokens.spacing1,
+                  vertical: DesignTokens.spacing0 + DesignTokens.spacing0,
+                ),
                 decoration: BoxDecoration(
                   color: confidence > 0.7 ? AppColors.success : AppColors.warning,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
                 ),
                 child: Text(
                   '${(confidence * 100).round()}%',
@@ -796,12 +813,12 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: DesignTokens.spacing1),
           Text(
             content,
             style: AppTypography.callout,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: DesignTokens.spacing1),
           Text(
             reasoning,
             style: AppTypography.caption1.copyWith(
@@ -909,13 +926,13 @@ class _PhotoGalleryDialogState extends State<_PhotoGalleryDialog> {
             // Photo indicators
             if (widget.allPhotoPaths.length > 1)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(DesignTokens.componentPadding),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
                     widget.allPhotoPaths.length,
                     (index) => Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      margin: EdgeInsets.symmetric(horizontal: DesignTokens.spacing1),
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(

@@ -1,0 +1,573 @@
+{
+  "@@locale": "en",
+  "appTitle": "Finally Done",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings screen title"
+  },
+  
+  "home": "Home",
+  "@home": {
+    "description": "Home screen title"
+  },
+  
+  "missionControl": "Mission Control",
+  "@missionControl": {
+    "description": "Mission Control screen title"
+  },
+  
+  "tasks": "Tasks",
+  "@tasks": {
+    "description": "Tasks screen title"
+  },
+  
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile section title"
+  },
+  
+  "name": "Name",
+  "@name": {
+    "description": "Name field label"
+  },
+  
+  "speechRecognition": "Speech Recognition",
+  "@speechRecognition": {
+    "description": "Speech Recognition section title"
+  },
+  
+  "engine": "Engine",
+  "@engine": {
+    "description": "Engine selection label"
+  },
+  
+  "autoIosGemini": "Auto (iOS + Gemini)",
+  "@autoIosGemini": {
+    "description": "Auto engine option combining iOS and Gemini"
+  },
+  
+  "iosNative": "iOS Native",
+  "@iosNative": {
+    "description": "iOS native engine option"
+  },
+  
+  "geminiPro": "Gemini Pro",
+  "@geminiPro": {
+    "description": "Gemini Pro engine option"
+  },
+  
+  "confidenceThreshold": "Confidence Threshold",
+  "@confidenceThreshold": {
+    "description": "Confidence threshold label"
+  },
+  
+  "confidenceThresholdDescription": "Commands below this threshold will need manual review.",
+  "@confidenceThresholdDescription": {
+    "description": "Description for confidence threshold setting"
+  },
+  
+  "preferences": "Preferences",
+  "@preferences": {
+    "description": "Preferences section title"
+  },
+  
+  "hapticFeedback": "Haptic Feedback",
+  "@hapticFeedback": {
+    "description": "Haptic feedback setting label"
+  },
+  
+  "soundEffects": "Sound Effects",
+  "@soundEffects": {
+    "description": "Sound effects setting label"
+  },
+  
+  "connectedServices": "Connected Services",
+  "@connectedServices": {
+    "description": "Connected Services section title"
+  },
+  
+  "googleAccount": "Google Account",
+  "@googleAccount": {
+    "description": "Google Account integration title"
+  },
+  
+  "connectToGoogle": "Connect to access Tasks, Calendar, and Gmail",
+  "@connectToGoogle": {
+    "description": "Description for Google connection"
+  },
+  
+  "openingGoogleSignIn": "Opening Google Sign-In...",
+  "@openingGoogleSignIn": {
+    "description": "Loading message for Google Sign-In"
+  },
+  
+  "signedInAs": "Signed in as: {email}",
+  "@signedInAs": {
+    "description": "Signed in user message",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "user@example.com"
+      }
+    }
+  },
+  
+  "doYouWantToSignOut": "Do you want to sign out?",
+  "@doYouWantToSignOut": {
+    "description": "Sign out confirmation question"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  
+  "signOut": "Sign Out",
+  "@signOut": {
+    "description": "Sign out button text"
+  },
+  
+  "signedOutFromGoogle": "Signed out from Google",
+  "@signedOutFromGoogle": {
+    "description": "Success message after signing out"
+  },
+  
+  "connectedAs": "Connected as: {email}",
+  "@connectedAs": {
+    "description": "Success message after connecting",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "user@example.com"
+      }
+    }
+  },
+  
+  "googleSignInFailed": "Google Sign-In Failed",
+  "@googleSignInFailed": {
+    "description": "Error title for Google Sign-In failure"
+  },
+  
+  "googleSignInNotConfigured": "Google Sign-In is not configured properly. Please contact support or check your configuration.",
+  "@googleSignInNotConfigured": {
+    "description": "Error message for Google Sign-In configuration issues"
+  },
+  
+  "ok": "OK",
+  "@ok": {
+    "description": "OK button text"
+  },
+  
+  "error": "Error: {message}",
+  "@error": {
+    "description": "Generic error message",
+    "placeholders": {
+      "message": {
+        "type": "String",
+        "example": "Something went wrong"
+      }
+    }
+  },
+  
+  "pleaseConnectToGoogleFirst": "Please connect to Google first",
+  "@pleaseConnectToGoogleFirst": {
+    "description": "Message when trying to use Google services without connection"
+  },
+  
+  "disconnectService": "Disconnect {service}?",
+  "@disconnectService": {
+    "description": "Disconnect service confirmation title",
+    "placeholders": {
+      "service": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  
+  "disconnectServiceConfirmation": "Are you sure you want to disconnect from {service}?",
+  "@disconnectServiceConfirmation": {
+    "description": "Disconnect service confirmation message",
+    "placeholders": {
+      "service": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  
+  "disconnect": "Disconnect",
+  "@disconnect": {
+    "description": "Disconnect button text"
+  },
+  
+  "serviceDisconnected": "{service} disconnected",
+  "@serviceDisconnected": {
+    "description": "Success message after disconnecting service",
+    "placeholders": {
+      "service": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  
+  "serviceIntegration": "{service} Integration",
+  "@serviceIntegration": {
+    "description": "Service integration dialog title",
+    "placeholders": {
+      "service": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  
+  "connectToServiceDescription": "Connect to {service} to sync your data.",
+  "@connectToServiceDescription": {
+    "description": "Service integration dialog description",
+    "placeholders": {
+      "service": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  
+  "connect": "Connect",
+  "@connect": {
+    "description": "Connect button text"
+  },
+  
+  "done": "Done",
+  "@done": {
+    "description": "Done button text"
+  },
+  
+  "invalidCommandDeleted": "Invalid command (deleted)",
+  "@invalidCommandDeleted": {
+    "description": "Message for invalid or deleted commands"
+  },
+  
+  "goToSettings": "Go to Settings",
+  "@goToSettings": {
+    "description": "Button to navigate to settings"
+  },
+  
+  "comingSoon": "Coming soon",
+  "@comingSoon": {
+    "description": "Placeholder for features not yet implemented"
+  },
+  
+  "googleTasks": "Google Tasks",
+  "@googleTasks": {
+    "description": "Google Tasks screen title"
+  },
+  
+  "loadingTasks": "Loading tasks...",
+  "@loadingTasks": {
+    "description": "Loading message for tasks"
+  },
+  
+  "processing": "Processing",
+  "@processing": {
+    "description": "Processing status"
+  },
+  
+  "completed": "Completed",
+  "@completed": {
+    "description": "Completed status"
+  },
+  
+  "review": "Review",
+  "@review": {
+    "description": "Review status"
+  },
+  
+  "taskCompleted": "Task completed!",
+  "@taskCompleted": {
+    "description": "Success message when task is completed"
+  },
+  
+  "errorCompletingTask": "Error completing task: {error}",
+  "@errorCompletingTask": {
+    "description": "Error message when task completion fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+  
+  "tryAgain": "Try Again",
+  "@tryAgain": {
+    "description": "Try again button text"
+  },
+  
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button text"
+  },
+  
+  "audioFileNotFound": "Audio file not found",
+  "@audioFileNotFound": {
+    "description": "Error when audio file is missing"
+  },
+  
+  "playingAudio": "Playing audio...",
+  "@playingAudio": {
+    "description": "Status when starting audio playback"
+  },
+  
+  "audioPlaybackStarted": "Audio playback started",
+  "@audioPlaybackStarted": {
+    "description": "Confirmation when audio starts playing"
+  },
+  
+  "errorPlayingAudio": "Error playing audio: {error}",
+  "@errorPlayingAudio": {
+    "description": "Error message when audio playback fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "File not found"
+      }
+    }
+  },
+  
+  "commandDeletedSuccessfully": "Command deleted successfully",
+  "@commandDeletedSuccessfully": {
+    "description": "Success message when command is deleted"
+  },
+  
+  "errorDeletingCommand": "Error deleting command: {error}",
+  "@errorDeletingCommand": {
+    "description": "Error message when command deletion fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Database error"
+      }
+    }
+  },
+  
+  "photoCounter": "Photo {current} of {total}",
+  "@photoCounter": {
+    "description": "Photo gallery counter",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "1"
+      },
+      "total": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  
+  "failedToLoadImage": "Failed to load image",
+  "@failedToLoadImage": {
+    "description": "Error when image fails to load"
+  },
+  
+  "autoIosGemini": "Auto (iOS + Gemini)",
+  "@autoIosGemini": {
+    "description": "Auto engine option combining iOS and Gemini"
+  },
+  
+  "iosNative": "iOS Native",
+  "@iosNative": {
+    "description": "iOS native engine option"
+  },
+  
+  "geminiPro": "Gemini Pro",
+  "@geminiPro": {
+    "description": "Gemini Pro engine option"
+  },
+  
+  "confidencePercentage": "{percentage}%",
+  "@confidencePercentage": {
+    "description": "Confidence threshold percentage display",
+    "placeholders": {
+      "percentage": {
+        "type": "int",
+        "example": "85"
+      }
+    }
+  },
+  
+  "pleaseConnectToGoogleFirst": "Please connect to Google first",
+  "@pleaseConnectToGoogleFirst": {
+    "description": "Message when trying to use Google services without connection"
+  },
+  
+  "disconnectService": "Disconnect {service}?",
+  "@disconnectService": {
+    "description": "Disconnect service confirmation title",
+    "placeholders": {
+      "service": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  
+  "disconnectServiceConfirmation": "Are you sure you want to disconnect from {service}?",
+  "@disconnectServiceConfirmation": {
+    "description": "Disconnect service confirmation message",
+    "placeholders": {
+      "service": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  
+  "serviceDisconnected": "{service} disconnected",
+  "@serviceDisconnected": {
+    "description": "Success message after disconnecting service",
+    "placeholders": {
+      "service": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  
+  "errorGeneric": "Error: {error}",
+  "@errorGeneric": {
+    "description": "Generic error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Something went wrong"
+      }
+    }
+  },
+  
+  "appDescription": "AI-powered personal organization app that helps you capture and organize tasks, events, and notes through voice commands.",
+  "@appDescription": {
+    "description": "App description for about section"
+  },
+  
+  "helpAndSupport": "Help & Support",
+  "@helpAndSupport": {
+    "description": "Help and support dialog title"
+  },
+  
+  "helpAndSupportMessage": "For help and support, please contact us at support@finallydone.app",
+  "@helpAndSupportMessage": {
+    "description": "Help and support contact information"
+  },
+  
+  "close": "Close",
+  "@close": {
+    "description": "Close button text"
+  },
+  
+  "customize": "Customize",
+  "@customize": {
+    "description": "Customize button text"
+  },
+  
+  "iconWillBeSetAsAppIcon": "Icon will be set as app icon",
+  "@iconWillBeSetAsAppIcon": {
+    "description": "Confirmation message for icon selection"
+  },
+  
+  "customizationOptionsComingSoon": "Customization options coming soon",
+  "@customizationOptionsComingSoon": {
+    "description": "Message for features not yet available"
+  },
+  
+  "chooseColorVariant": "1. Choose your preferred color variant",
+  "@chooseColorVariant": {
+    "description": "Step 1 of icon customization instructions"
+  },
+  
+  "iconScalesAutomatically": "2. The icon automatically scales to any size",
+  "@iconScalesAutomatically": {
+    "description": "Step 2 of icon customization instructions"
+  },
+  
+  "worksOnAllPlatforms": "3. Works perfectly for iOS and Android",
+  "@worksOnAllPlatforms": {
+    "description": "Step 3 of icon customization instructions"
+  },
+  
+  "noExternalDependencies": "4. No external dependencies required",
+  "@noExternalDependencies": {
+    "description": "Step 4 of icon customization instructions"
+  },
+  
+  "canBeCustomizedFurther": "5. Can be customized further if needed",
+  "@canBeCustomizedFurther": {
+    "description": "Step 5 of icon customization instructions"
+  },
+  
+  "blue": "Blue",
+  "@blue": {
+    "description": "Blue color option"
+  },
+  
+  "green": "Green",
+  "@green": {
+    "description": "Green color option"
+  },
+  
+  "purple": "Purple",
+  "@purple": {
+    "description": "Purple color option"
+  },
+  
+  "orange": "Orange",
+  "@orange": {
+    "description": "Orange color option"
+  },
+  
+  "size32px": "32px",
+  "@size32px": {
+    "description": "32 pixel size label"
+  },
+  
+  "size64px": "64px",
+  "@size64px": {
+    "description": "64 pixel size label"
+  },
+  
+  "size128px": "128px",
+  "@size128px": {
+    "description": "128 pixel size label"
+  },
+  
+  "size256px": "256px",
+  "@size256px": {
+    "description": "256 pixel size label"
+  },
+  
+  "enterYourName": "Enter your name",
+  "@enterYourName": {
+    "description": "Name field placeholder"
+  },
+  
+  "chooseSpeechEngine": "Choose your preferred speech recognition engine",
+  "@chooseSpeechEngine": {
+    "description": "Speech engine selection description"
+  },
+  
+  "hapticFeedbackDescription": "Vibrate on button presses",
+  "@hapticFeedbackDescription": {
+    "description": "Haptic feedback setting description"
+  },
+  
+  "soundEffectsDescription": "Play success/error sounds",
+  "@soundEffectsDescription": {
+    "description": "Sound effects setting description"
+  }
+}

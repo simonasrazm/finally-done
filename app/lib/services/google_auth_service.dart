@@ -13,10 +13,47 @@ import 'package:flutter/services.dart';
 import '../utils/logger.dart';
 import '../utils/performance_monitor.dart';
 
+/// State for Google Authentication
+class GoogleAuthState {
+  final bool isAuthenticated;
+  final String? userEmail;
+  final String? userName;
+  final String? userId;
+  final Set<String> connectedServices;
+
+  const GoogleAuthState({
+    required this.isAuthenticated,
+    this.userEmail,
+    this.userName,
+    this.userId,
+    this.connectedServices = const {},
+  });
+
+  factory GoogleAuthState.initial() => const GoogleAuthState(
+    isAuthenticated: false,
+  );
+
+  GoogleAuthState copyWith({
+    bool? isAuthenticated,
+    String? userEmail,
+    String? userName,
+    String? userId,
+    Set<String>? connectedServices,
+  }) {
+    return GoogleAuthState(
+      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      userEmail: userEmail ?? this.userEmail,
+      userName: userName ?? this.userName,
+      userId: userId ?? this.userId,
+      connectedServices: connectedServices ?? this.connectedServices,
+    );
+  }
+}
+
 /// Google Authentication Service
 /// Handles USER authentication for Google services (Tasks, Calendar, Gmail)
 /// This is for the USER's personal Google account, not system APIs
-class GoogleAuthService {
+class GoogleAuthService extends StateNotifier<GoogleAuthState> {
   static const _storage = FlutterSecureStorage();
   static const String _accessTokenKey = 'user_google_access_token';
   static const String _refreshTokenKey = 'user_google_refresh_token';
@@ -24,6 +61,11 @@ class GoogleAuthService {
   static const String _userIdKey = 'user_google_id';
   static const String _userEmailKey = 'user_google_email';
   static const String _userNameKey = 'user_google_name';
+
+  GoogleAuthService() : super(GoogleAuthState.initial()) {
+    // Initialize from stored tokens on startup
+    _initializeFromStoredTokensAsync();
+  }
 
   // Google API scopes for USER's personal data
   // Request basic scopes first, then add service-specific scopes
@@ -61,10 +103,10 @@ class GoogleAuthService {
   String? get userName => _userName;
 
   /// Check if user is authenticated
-  bool get isAuthenticated => _authClient != null;
+  bool get isAuthenticated => state.isAuthenticated;
   
   /// Get list of connected services
-  Set<String> get connectedServices => Set.from(_connectedServices);
+  Set<String> get connectedServices => state.connectedServices;
   
   /// Check if a specific service is connected
   bool isServiceConnected(String service) => _connectedServices.contains(service);
@@ -74,47 +116,50 @@ class GoogleAuthService {
   
   /// Authenticate user with Google
   Future<bool> authenticate() async {
-    print('🔵 DEBUG: GoogleAuthService.authenticate() called!');
     try {
       Logger.info('🚀 Starting Google OAuth2 authentication for USER', tag: 'GOOGLE_AUTH');
 
       // Initialize GoogleSignIn only when user tries to authenticate
       Logger.info('🔧 Initializing GoogleSignIn...', tag: 'GOOGLE_AUTH');
-      print('🔵 DEBUG: About to call _ensureGoogleSignInInitialized()...');
       _ensureGoogleSignInInitialized();
-      print('🔵 DEBUG: _ensureGoogleSignInInitialized() completed');
       Logger.info('✅ GoogleSignIn initialized', tag: 'GOOGLE_AUTH');
+
+      // Check if user is already signed in first
+      final isAlreadySignedIn = await _googleSignIn!.isSignedIn();
+      
+      if (isAlreadySignedIn) {
+        final GoogleSignInAccount? googleUser = await _googleSignIn!.signInSilently();
+        
+        if (googleUser != null) {
+          // User is already signed in, set up the session
+          await _setupUserSession(googleUser);
+          Logger.info('✅ User already authenticated: ${googleUser.email}', tag: 'GOOGLE_AUTH');
+          return true;
+        }
+      }
 
       // Sign in with Google
       Logger.info('📱 Calling GoogleSignIn.signIn()...', tag: 'GOOGLE_AUTH');
-      print('🔵 DEBUG: About to call _googleSignIn!.signIn()...');
 
       // Start Sentry transaction to monitor this critical operation
       final transaction = Sentry.startTransaction('google.signin', 'auth');
       final span = transaction.startChild('google.signin.call');
 
       try {
-        // Add timeout to prevent infinite hanging
-        print('🔵 DEBUG: About to call _googleSignIn!.signIn() with 10s timeout...');
         
         // Use a Completer to detect if the call never returns
         final completer = Completer<GoogleSignInAccount?>();
         bool hasCompleted = false;
         
         // Use safe native method channel to avoid native exceptions
-        print('🔵 FLUTTER DEBUG: About to call safe native Google Sign-In...');
-        
         try {
           // Call our safe native method that catches exceptions
           const platform = MethodChannel('safe_google_sign_in');
           final result = await platform.invokeMethod('signIn');
           
-          print('🔵 FLUTTER DEBUG: Safe native Google Sign-In result: $result');
-          
           if (result['success'] == true) {
             // Native sign-in was successful, now get the account from Flutter SDK
             final GoogleSignInAccount? googleUser = await _googleSignIn!.signInSilently();
-            print('🔵 FLUTTER DEBUG: Flutter SDK signInSilently returned: ${googleUser?.email ?? "null"}');
             
             if (!hasCompleted) {
               hasCompleted = true;
@@ -123,7 +168,6 @@ class GoogleAuthService {
           } else {
             // Native sign-in failed with error
             final errorMessage = result['error'] ?? 'Unknown error';
-            print('🔵 FLUTTER DEBUG: Safe native Google Sign-In failed: $errorMessage');
             
             if (!hasCompleted) {
               hasCompleted = true;
@@ -131,9 +175,6 @@ class GoogleAuthService {
             }
           }
         } catch (e, stackTrace) {
-          print('🔵 FLUTTER DEBUG: Safe native Google Sign-In exception: $e');
-          print('🔵 FLUTTER DEBUG: Stack trace: $stackTrace');
-          
           // Don't send to Sentry here - Swift already handled it
           // Just complete the error for Flutter handling
           if (!hasCompleted) {
@@ -144,8 +185,6 @@ class GoogleAuthService {
         
         // Wait for the completer result
         final GoogleSignInAccount? googleUser = await completer.future;
-      
-        print('🔵 DEBUG: _googleSignIn!.signIn() returned: ${googleUser?.email ?? "null"}');
 
         if (googleUser == null) {
           // This could be user cancellation OR a configuration error
@@ -161,43 +200,8 @@ class GoogleAuthService {
 
         Logger.info('✅ Google sign-in successful for user: ${googleUser.email}', tag: 'GOOGLE_AUTH');
 
-        // Get authentication details
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-        if (googleAuth.accessToken == null) {
-          Logger.error('No access token received from Google', tag: 'GOOGLE_AUTH');
-          span.setData('error', 'no_access_token');
-          span.finish(status: const SpanStatus.internalError());
-          transaction.finish(status: const SpanStatus.internalError());
-          return false;
-        }
-
-        // Create authenticated client
-        _authClient = authenticatedClient(
-          http.Client(),
-          AccessCredentials(
-            AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
-            null, // Google Sign-In handles refresh internally
-            _basicScopes,
-          ),
-        );
-
-        // Store user information
-        _userId = googleUser.id;
-        _userEmail = googleUser.email;
-        _userName = googleUser.displayName;
-
-        // Store tokens securely
-        await _storeTokens(
-          AccessCredentials(
-            AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
-            null, // Google Sign-In handles refresh internally
-            _basicScopes,
-          ),
-          googleUser.id,
-          googleUser.email,
-          googleUser.displayName ?? '',
-        );
+        // Set up the user session
+        await _setupUserSession(googleUser);
 
         Logger.info('Successfully authenticated USER: ${googleUser.email}', tag: 'GOOGLE_AUTH');
         
@@ -209,8 +213,6 @@ class GoogleAuthService {
         return true;
       } catch (e, stackTrace) {
         // Error case - this should catch native exceptions
-        print('🔵 DEBUG: EXCEPTION CAUGHT in Google sign-in: $e');
-        print('🔵 DEBUG: Stack trace: $stackTrace');
         Logger.error('Google sign-in failed', tag: 'GOOGLE_AUTH', error: e, stackTrace: stackTrace);
         span.setData('error', e.toString());
         span.finish(status: const SpanStatus.internalError());
@@ -218,8 +220,6 @@ class GoogleAuthService {
         return false;
       }
     } catch (e, stackTrace) {
-      print('🔵 DEBUG: GoogleAuthService.authenticate() crashed: $e');
-      print('🔵 DEBUG: Stack trace: $stackTrace');
       Logger.error('GoogleAuthService.authenticate() crashed',
         tag: 'GOOGLE_AUTH',
         error: e,
@@ -229,20 +229,66 @@ class GoogleAuthService {
     }
   }
   
+  /// Set up user session after successful authentication
+  Future<void> _setupUserSession(GoogleSignInAccount googleUser) async {
+    
+    // Get authentication details
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+    if (googleAuth.accessToken == null) {
+      Logger.error('No access token received from Google', tag: 'GOOGLE_AUTH');
+      return;
+    }
+
+    // Create authenticated client
+    _authClient = authenticatedClient(
+      http.Client(),
+      AccessCredentials(
+        AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
+        null, // Google Sign-In handles refresh internally
+        _basicScopes,
+      ),
+    );
+
+    // Store user information
+    _userId = googleUser.id;
+    _userEmail = googleUser.email;
+    _userName = googleUser.displayName;
+
+    // Store tokens securely
+    await _storeTokens(
+      AccessCredentials(
+        AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
+        null, // Google Sign-In handles refresh internally
+        _basicScopes,
+      ),
+      googleUser.id,
+      googleUser.email,
+      googleUser.displayName ?? '',
+    );
+
+    Logger.info('Successfully set up user session for: ${googleUser.email}', tag: 'GOOGLE_AUTH');
+    
+    // Update state to reflect authentication
+    state = state.copyWith(
+      isAuthenticated: true,
+      userEmail: googleUser.email,
+      userName: googleUser.displayName,
+      userId: googleUser.id,
+    );
+  }
+
   /// Connect to additional Google services
   Future<bool> connectToService(String service) async {
     if (!_serviceScopes.containsKey(service)) {
-      print('🔵 DEBUG: Unknown service: $service');
       return false;
     }
     
     if (_connectedServices.contains(service)) {
-      print('🔵 DEBUG: Service $service already connected');
       return true;
     }
     
     try {
-      print('🔵 DEBUG: Connecting to service: $service');
       
       // Create new GoogleSignIn instance with additional scope
       final additionalScopes = [..._basicScopes, _serviceScopes[service]!];
@@ -251,14 +297,12 @@ class GoogleAuthService {
       // Sign in with additional scope
       final GoogleSignInAccount? googleUser = await serviceGoogleSignIn.signIn();
       if (googleUser == null) {
-        print('🔵 DEBUG: User cancelled service connection: $service');
         return false;
       }
       
       // Get authentication details
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       if (googleAuth.accessToken == null) {
-        print('🔵 DEBUG: No access token for service: $service');
         return false;
       }
       
@@ -266,7 +310,7 @@ class GoogleAuthService {
       _authClient = authenticatedClient(
         http.Client(),
         AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
           null,
           additionalScopes,
         ),
@@ -278,8 +322,8 @@ class GoogleAuthService {
       // Store updated tokens
       await _storeTokens(
         AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
-          null,
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
+          null, // Google Sign-In handles refresh internally
           additionalScopes,
         ),
         googleUser.id,
@@ -287,10 +331,8 @@ class GoogleAuthService {
         googleUser.displayName ?? '',
       );
       
-      print('🔵 DEBUG: Successfully connected to service: $service');
       return true;
     } catch (e, stackTrace) {
-      print('🔵 DEBUG: Failed to connect to service $service: $e');
       Logger.error('Failed to connect to service $service',
         tag: 'GOOGLE_AUTH',
         error: e,
@@ -300,26 +342,15 @@ class GoogleAuthService {
     }
   }
 
-  GoogleAuthService() {
-    // Lazy initialization - GoogleSignIn will be created only when needed
-    _googleSignIn = null;
-    
-    // Run background reconnection if tokens exist (non-blocking)
-    _initializeFromStoredTokensAsync();
-  }
   
   /// Initialize GoogleSignIn only when needed
   void _ensureGoogleSignInInitialized() {
-    print('🔵 DEBUG: _ensureGoogleSignInInitialized() called, _googleSignIn is null: ${_googleSignIn == null}');
     if (_googleSignIn == null) {
-      print('🔵 DEBUG: Creating new GoogleSignIn instance...');
-      print('🔵 DEBUG: Using scopes: $_basicScopes');
       _googleSignIn = GoogleSignIn(
         scopes: _basicScopes,
         // No clientId needed - users authenticate with their own accounts
         // This allows users to sign in with their personal Google accounts
       );
-      print('🔵 DEBUG: GoogleSignIn instance created successfully');
       
       // Check if user is already signed in - do this asynchronously to avoid blocking UI
       _checkExistingSession();
@@ -330,10 +361,8 @@ class GoogleAuthService {
     // This runs asynchronously and won't block the UI
     _googleSignIn!.isSignedIn().then((isSignedIn) {
       if (isSignedIn) {
-        print('🔵 DEBUG: User already signed in to Google');
         _googleSignIn!.signInSilently().then((account) {
           if (account != null) {
-            print('🔵 DEBUG: Silently signed in as: ${account.email}');
             _userEmail = account.email;
             _userName = account.displayName;
             _userId = account.id;
@@ -370,7 +399,7 @@ class GoogleAuthService {
       _userId = await _storage.read(key: _userIdKey);
       _userEmail = await _storage.read(key: _userEmailKey);
 
-      if (accessToken == null || refreshToken == null || expiryString == null) {
+      if (accessToken == null || expiryString == null) {
         Logger.info('No stored tokens found', tag: 'GOOGLE_AUTH');
         return false;
       }
@@ -378,7 +407,7 @@ class GoogleAuthService {
       final expiry = DateTime.parse(expiryString);
       if (expiry.isBefore(DateTime.now())) {
         Logger.info('Stored tokens expired, need refresh', tag: 'GOOGLE_AUTH');
-        return await _refreshTokens(refreshToken);
+        return await _refreshTokensSilently();
       }
 
       // Create auth client with stored tokens
@@ -389,6 +418,13 @@ class GoogleAuthService {
           refreshToken,
           _basicScopes,
         ),
+      );
+
+      // Update state to reflect successful authentication
+      state = state.copyWith(
+        isAuthenticated: true,
+        userEmail: _userEmail,
+        userId: _userId,
       );
 
       Logger.info('Successfully initialized from stored tokens', tag: 'GOOGLE_AUTH');
@@ -405,6 +441,69 @@ class GoogleAuthService {
 
 
   /// Refresh access tokens
+  /// Refresh tokens using Google Sign-In's silent sign-in
+  Future<bool> _refreshTokensSilently() async {
+    try {
+      Logger.info('Refreshing Google access tokens via silent sign-in', tag: 'GOOGLE_AUTH');
+      
+      // Ensure GoogleSignIn is initialized
+      _ensureGoogleSignInInitialized();
+      
+      // Use Google Sign-In to refresh tokens silently
+      final GoogleSignInAccount? googleUser = await _googleSignIn!.signInSilently();
+      if (googleUser == null) {
+        Logger.warning('Silent sign-in failed, user needs to re-authenticate', tag: 'GOOGLE_AUTH');
+        return false;
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      if (googleAuth.accessToken == null) {
+        Logger.error('No access token received during silent refresh', tag: 'GOOGLE_AUTH');
+        return false;
+      }
+
+      // Update auth client with new tokens
+      _authClient = authenticatedClient(
+        http.Client(),
+        AccessCredentials(
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
+          null, // Google Sign-In handles refresh internally
+          _basicScopes,
+        ),
+      );
+
+      // Store new tokens
+      await _storeTokens(
+        AccessCredentials(
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
+          null, // Google Sign-In handles refresh internally
+          _basicScopes,
+        ),
+        googleUser.id,
+        googleUser.email,
+        googleUser.displayName ?? '',
+      );
+
+      // Update state to reflect successful authentication
+      state = state.copyWith(
+        isAuthenticated: true,
+        userEmail: googleUser.email,
+        userName: googleUser.displayName,
+        userId: googleUser.id,
+      );
+
+      Logger.info('Successfully refreshed tokens via silent sign-in', tag: 'GOOGLE_AUTH');
+      return true;
+    } catch (e, stackTrace) {
+      Logger.error('Silent token refresh failed', 
+        tag: 'GOOGLE_AUTH', 
+        error: e, 
+        stackTrace: stackTrace
+      );
+      return false;
+    }
+  }
+
   Future<bool> _refreshTokens(String refreshToken) async {
     try {
       Logger.info('Refreshing Google access tokens', tag: 'GOOGLE_AUTH');
@@ -426,7 +525,7 @@ class GoogleAuthService {
       _authClient = authenticatedClient(
         http.Client(),
         AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
           null, // Google Sign-In handles refresh internally
           _basicScopes,
         ),
@@ -435,13 +534,21 @@ class GoogleAuthService {
       // Store new tokens
       await _storeTokens(
         AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().add(Duration(hours: 1))),
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
           null, // Google Sign-In handles refresh internally
           _basicScopes,
         ),
         googleUser.id,
         googleUser.email,
         googleUser.displayName ?? '',
+      );
+
+      // Update state to reflect successful authentication
+      state = state.copyWith(
+        isAuthenticated: true,
+        userEmail: googleUser.email,
+        userName: googleUser.displayName,
+        userId: googleUser.id,
       );
 
       Logger.info('Successfully refreshed tokens', tag: 'GOOGLE_AUTH');
@@ -504,6 +611,10 @@ class GoogleAuthService {
       _userId = null;
       _userEmail = null;
       _userName = null;
+      _connectedServices.clear();
+      
+      // Update state to reflect sign out
+      state = GoogleAuthState.initial();
       
       Logger.info('Successfully signed out USER', tag: 'GOOGLE_AUTH');
     } catch (e, stackTrace) {
@@ -557,12 +668,12 @@ class GoogleAuthService {
 }
 
 /// Provider for Google Auth Service
-final googleAuthServiceProvider = Provider<GoogleAuthService>((ref) {
+final googleAuthServiceProvider = StateNotifierProvider<GoogleAuthService, GoogleAuthState>((ref) {
   return GoogleAuthService();
 });
 
 /// Provider for authentication status
 final isGoogleAuthenticatedProvider = FutureProvider<bool>((ref) async {
-  final authService = ref.read(googleAuthServiceProvider);
+  final authService = ref.read(googleAuthServiceProvider.notifier);
   return await authService.initializeFromStoredTokens();
 });

@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'generated/app_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'dart:ui' show PlatformDispatcher;
-import 'dart:async';
 import 'package:finally_done/utils/retry_mechanism.dart';
-// import 'package:realm/realm.dart';  // TODO: Add back when implementing local storage
 
 import 'design_system/colors.dart';
 import 'design_system/typography.dart';
-import 'models/command.dart';
 import 'screens/home_screen.dart';
 import 'screens/mission_control_screen.dart';
 import 'screens/settings_screen.dart';
@@ -85,35 +82,25 @@ void main() async {
           ),
         );
 
+
         // Finish the main startup transaction
         appStartTransaction.finish(status: const SpanStatus.ok());
       },
     );
   
-        print('🏁 Sentry initialization completed');
-        
-        // Use retry mechanism to flush queued errors from Swift
-        print('🔵 SENTRY: Flushing queued errors with retry...');
-        const errorQueueChannel = MethodChannel('error_queue');
-        
-        await RetryMechanism.execute(
-          () async {
-            final result = await errorQueueChannel.invokeMethod('flushQueue');
-            final flushedCount = result['count'] as int;
-            
-            if (flushedCount == 0) {
-              throw Exception('No errors were flushed - SentrySDK may not be ready');
-            }
-            
-            print('🔵 SWIFT DEBUG: Successfully flushed $flushedCount errors to Sentry');
-          },
-          onRetry: (attempt, delaySeconds) {
-            print('🔵 SENTRY: Retry attempt $attempt in ${delaySeconds}s...');
-          },
-          onMaxRetriesReached: (totalAttempts) {
-            print('🔵 SENTRY: Max retries ($totalAttempts) reached, giving up on error queue flush');
-          },
-        );
+          // Use retry mechanism to flush queued errors from Swift
+          const errorQueueChannel = MethodChannel('error_queue');
+          
+          await RetryMechanism.execute(
+            () async {
+              final result = await errorQueueChannel.invokeMethod('flushQueue');
+              final flushedCount = result['count'] as int;
+              
+              if (flushedCount == 0) {
+                throw Exception('No errors were flushed - SentrySDK may not be ready');
+              }
+            },
+          );
       } catch (e, stackTrace) {
         // Continue without Sentry
         WidgetsFlutterBinding.ensureInitialized();
@@ -141,15 +128,8 @@ class FinallyDoneApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       
       // Localization
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en', 'US'),
-        Locale('lt', 'LT'),
-      ],
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       
       // Theme
       theme: _buildLightTheme(),
@@ -364,10 +344,10 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         items: [
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
-            label: 'Home',
+            label: AppLocalizations.of(context)!.home,
           ),
           BottomNavigationBarItem(
             icon: Consumer(
@@ -382,17 +362,17 @@ class _MainScreenState extends State<MainScreen> {
                 return _buildNotificationIcon(Icons.control_camera, failedCommands.length);
               },
             ),
-            label: 'Mission Control',
+            label: AppLocalizations.of(context)!.missionControl,
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.task_alt_outlined),
             activeIcon: Icon(Icons.task_alt),
-            label: 'Tasks',
+            label: AppLocalizations.of(context)!.tasks,
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
             activeIcon: Icon(Icons.settings),
-            label: 'Settings',
+            label: AppLocalizations.of(context)!.settings,
           ),
         ],
       ),
