@@ -469,6 +469,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   
   void _handleGoogleAuth(WidgetRef ref) async {
     print('🔵 DEBUG: _handleGoogleAuth called!');
+    
+    // 1. IMMEDIATE UI feedback - show loading dialog instantly
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Text('Opening Google Sign-In...'),
+          ],
+        ),
+      ),
+    );
+    
+    // 2. Force UI to render the dialog before any heavy work
+    await Future.delayed(Duration.zero);
+    
     try {
       print('🔵 DEBUG: Getting integration service...');
       final integrationService = ref.read(integrationServiceProvider);
@@ -504,22 +523,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           }
         }
       } else {
-        print('🔵 DEBUG: User not authenticated, showing loading dialog immediately...');
-        // Show loading dialog IMMEDIATELY for better UX
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => const AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 20),
-                Text('Opening Google Sign-In...'),
-              ],
-            ),
-          ),
-        );
-        print('🔵 DEBUG: Loading dialog shown, calling authenticate...');
+        print('🔵 DEBUG: User not authenticated, proceeding with authentication...');
         
         // Authenticate with timeout
         final success = await integrationService.authenticate().timeout(
@@ -557,9 +561,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Text('Google Sign-In Failed'),
                   ],
                 ),
-                content: const Text(
+                content: Text(
                   'Google Sign-In is not configured properly. Please contact support or check your configuration.',
-                  style: TextStyle(color: AppColors.textPrimary),
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.getTextPrimaryColor(context),
+                  ),
                 ),
                 actions: [
                   TextButton(
@@ -581,7 +587,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     }
   }
-
+  
   void _showServiceDialog(String service) {
     showDialog(
       context: context,

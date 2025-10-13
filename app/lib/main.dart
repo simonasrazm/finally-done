@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'dart:ui' show PlatformDispatcher;
 import 'dart:async';
+import 'package:finally_done/utils/retry_mechanism.dart';
 // import 'package:realm/realm.dart';  // TODO: Add back when implementing local storage
 
 import 'design_system/colors.dart';
@@ -17,9 +18,8 @@ import 'screens/settings_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'services/queue_service.dart';
 
-void main() async {
-        print('🚀 App starting...');
 
+void main() async {
         // Load environment variables
         try {
           await dotenv.load(fileName: ".env");
@@ -28,35 +28,28 @@ void main() async {
         }
 
         final sentryDsn = dotenv.env['SENTRY_DSN'];
-        print('🔧 Starting Sentry initialization...');
-  final sentryStopwatch = Stopwatch()..start();
   
   try {
-    // Add timeout to Sentry initialization to prevent hanging
-    await Future.any([
-      SentryFlutter.init(
+    // Initialize Sentry
+    await SentryFlutter.init(
       (options) {
-        print('🔧 Configuring Sentry options...');
-        options.dsn = sentryDsn; // Use loaded DSN
-        options.tracesSampleRate = 1.0; // Capture 100% of transactions for debugging
-        options.debug = true; // Enable debug mode
-        options.enableAutoPerformanceTracing = false; // Disable profiling to fix C++ compilation
-        options.enableAutoSessionTracking = true; // Enable session tracking
-        options.attachStacktrace = true; // Include stack traces
-        options.sendDefaultPii = false; // Don't send personal info
+        options.dsn = sentryDsn;
+        options.tracesSampleRate = 1.0;
+        options.debug = true; // Keep debug mode to see Sentry activity
+        options.enableAutoPerformanceTracing = false;
+        options.enableAutoSessionTracking = true;
+        options.attachStacktrace = true;
+        options.sendDefaultPii = false;
         
         // Session Replay Configuration
-        options.replay.sessionSampleRate = 1.0; // Capture 100% during testing
-        options.replay.onErrorSampleRate = 1.0; // Always capture on errors
-        // Note: maskAllText and maskAllImages are not available in current Flutter version
+        options.replay.sessionSampleRate = 1.0;
+        options.replay.onErrorSampleRate = 1.0;
         
         // Release tracking
-        options.release = 'finally-done@1.0.0+1'; // App version for tracking
-        options.dist = '1'; // Build number
-        print('✅ Sentry options configured');
+        options.release = 'finally-done@1.0.0+1';
+        options.dist = '1';
       },
       appRunner: () async {
-        sentryStopwatch.stop();
 
         // Start Sentry transaction for app startup performance (now that Sentry is ready)
         final appStartTransaction = Sentry.startTransaction(
@@ -95,13 +88,32 @@ void main() async {
         // Finish the main startup transaction
         appStartTransaction.finish(status: const SpanStatus.ok());
       },
-    ),
-      Future.delayed(Duration(seconds: 10), () {
-        throw TimeoutException('Sentry initialization timed out', Duration(seconds: 10));
-      })
-    ]);
+    );
   
         print('🏁 Sentry initialization completed');
+        
+        // Use retry mechanism to flush queued errors from Swift
+        print('🔵 SENTRY: Flushing queued errors with retry...');
+        const errorQueueChannel = MethodChannel('error_queue');
+        
+        await RetryMechanism.execute(
+          () async {
+            final result = await errorQueueChannel.invokeMethod('flushQueue');
+            final flushedCount = result['count'] as int;
+            
+            if (flushedCount == 0) {
+              throw Exception('No errors were flushed - SentrySDK may not be ready');
+            }
+            
+            print('🔵 SWIFT DEBUG: Successfully flushed $flushedCount errors to Sentry');
+          },
+          onRetry: (attempt, delaySeconds) {
+            print('🔵 SENTRY: Retry attempt $attempt in ${delaySeconds}s...');
+          },
+          onMaxRetriesReached: (totalAttempts) {
+            print('🔵 SENTRY: Max retries ($totalAttempts) reached, giving up on error queue flush');
+          },
+        );
       } catch (e, stackTrace) {
         // Continue without Sentry
         WidgetsFlutterBinding.ensureInitialized();
@@ -111,11 +123,11 @@ void main() async {
           DeviceOrientation.portraitDown,
         ]);
 
-        runApp(
-          const ProviderScope(
-            child: FinallyDoneApp(),
-          ),
-        );
+  runApp(
+    const ProviderScope(
+      child: FinallyDoneApp(),
+    ),
+  );
       }
 }
 
@@ -287,15 +299,15 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _screens = [
-      const HomeScreen(),
-      const MissionControlScreen(),
+    const HomeScreen(),
+    const MissionControlScreen(),
       TasksScreen(onNavigateToSettings: () {
         setState(() {
           _currentIndex = 3; // Settings tab
         });
       }),
-      const SettingsScreen(),
-    ];
+    const SettingsScreen(),
+  ];
   }
   
   int _getPendingCount() {
@@ -336,7 +348,7 @@ class _MainScreenState extends State<MainScreen> {
       ],
     );
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -55,9 +55,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<!-- GIDClientID commented out - Google Sign-In working without it -->
-	<!-- <key>GIDClientID</key>
-	<string>848873593637-553q92kqo93k2u814il7c2f0hd4oo86r.apps.googleusercontent.com</string> -->
+	<key>GIDClientID</key>
+	<string>848873593637-553q92kqo93k2u814il7c2f0hd4oo86r.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
