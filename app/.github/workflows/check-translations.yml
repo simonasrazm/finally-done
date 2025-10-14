@@ -1,0 +1,32 @@
+name: Check Translations
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  check-translations:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+    
+    - name: Install dependencies
+      run: flutter pub get
+    
+    - name: Check translations
+      run: |
+        echo "🔍 Checking for untranslated messages..."
+        flutter gen-l10n
+        dart scripts/check_translations.dart
+    
+    - name: Build app (with translation check)
+      run: flutter build apk --debug

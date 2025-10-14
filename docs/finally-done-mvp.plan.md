@@ -38,6 +38,9 @@ Cross-platform Flutter app to organize personal life (notes, events, tasks) with
 - Sync when online
 - Basic functionality works offline
 
+### 6. Other features (to refine)
+- quickly add to queue from the browser (eg after registration to Melga)
+
 ## Technical Architecture
 
 ### Frontend

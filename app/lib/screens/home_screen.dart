@@ -13,6 +13,7 @@ import '../services/nlp_service.dart';
 import '../services/queue_service.dart';
 import '../models/queued_command.dart';
 import '../utils/logger.dart';
+import '../generated/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -30,7 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   
   bool _isRecording = false;
   String _transcription = '';
-  String _status = 'Ready to record';
+  String _status = '';
   final TextEditingController _textController = TextEditingController();
   final List<String> _selectedPhotos = [];
   final ImagePicker _imagePicker = ImagePicker();
@@ -202,7 +203,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final parsedCommand = await nlpService.parseCommand(transcription);
       
       setState(() {
-        _status = 'Ready to record';
+        _status = AppLocalizations.of(context)!.readyToRecord;
         _isRecording = false;
       });
       
@@ -229,7 +230,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     
     setState(() {
       _isRecording = false;
-      _status = 'Ready to record';
+      _status = AppLocalizations.of(context)!.readyToRecord;
     });
     
     _pulseController.stop();
@@ -418,7 +419,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Finally Done'),
+        title: Text(
+          'Finally Done',
+          style: AppTypography.title1.copyWith(
+            color: AppColors.getTextPrimaryColor(context),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         backgroundColor: AppColors.getBackgroundColor(context),
         elevation: 0,
       ),
@@ -429,9 +436,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             children: [
               // Status text
               Text(
-                _status,
+                _status.isEmpty ? AppLocalizations.of(context)!.readyToRecord : _status,
                 style: AppTypography.headline.copyWith(
-                  color: _isRecording ? AppColors.error : AppColors.primary,
+                  color: _isRecording ? AppColors.error : AppColors.getTextPrimaryColor(context),
+                  fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -626,8 +634,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     Expanded(
                       child: TextField(
                         controller: _textController,
-                        decoration: const InputDecoration(
-                          hintText: 'Or type your command...',
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.orTypeYourCommand,
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
                         ),

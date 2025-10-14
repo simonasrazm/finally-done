@@ -300,4 +300,191 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get soundEffectsDescription => 'Play success/error sounds';
+
+  @override
+  String get taskCreated => 'Task created successfully';
+
+  @override
+  String get errorCreatingTask => 'Error creating task';
+
+  @override
+  String get deleteTask => 'Delete Task';
+
+  @override
+  String get deleteTaskConfirmation =>
+      'Are you sure you want to delete this task?';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get taskDeleted => 'Task deleted successfully';
+
+  @override
+  String get errorDeletingTask => 'Error deleting task';
+
+  @override
+  String get selectTaskList => 'Select a task list';
+
+  @override
+  String get addNewTask => 'Add a new task...';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get notConnectedToGoogle => 'Not Connected to Google';
+
+  @override
+  String get connectToGoogleToViewTasks =>
+      'Connect to Google in Settings to view and manage your tasks';
+
+  @override
+  String get errorLoadingTasks => 'Error Loading Tasks';
+
+  @override
+  String get noTasksFound => 'No Tasks Found';
+
+  @override
+  String get addYourFirstTask => 'Add your first task using the input above';
+
+  @override
+  String get hideCompleted => 'Hide Completed';
+
+  @override
+  String get showCompleted => 'Show Completed';
+
+  @override
+  String get integrations => 'Integrations';
+
+  @override
+  String get connectYourServices => 'Connect Your Services';
+
+  @override
+  String get integrationsDescription =>
+      'Connect to external services to enhance your productivity';
+
+  @override
+  String get manageServices => 'Manage Services';
+
+  @override
+  String get connecting => 'Connecting...';
+
+  @override
+  String get notConnected => 'Not Connected';
+
+  @override
+  String get connected => 'Connected';
+
+  @override
+  String successfullyConnected(String provider) {
+    return 'Successfully connected to $provider';
+  }
+
+  @override
+  String failedToConnect(String provider) {
+    return 'Failed to connect to $provider';
+  }
+
+  @override
+  String signedOut(String provider) {
+    return 'Signed out from $provider';
+  }
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get chooseLanguage => 'Choose your preferred language';
+
+  @override
+  String get readyToRecord => 'Ready to record';
+
+  @override
+  String get orTypeYourCommand => 'Or type your command...';
+
+  @override
+  String get items => 'items';
+
+  @override
+  String get queued => 'Queued';
+
+  @override
+  String get failed => 'Failed';
+
+  @override
+  String get scheduled => 'Scheduled';
+
+  @override
+  String get ago => 'ago';
+
+  @override
+  String get photos => 'Photos';
+
+  @override
+  String get noCompletedCommandsYet => 'No completed commands yet';
+
+  @override
+  String get completedCommandsWillAppearHere =>
+      'Completed commands will appear here';
+
+  @override
+  String get advanced => 'Advanced';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get getHelpUsingTheApp => 'Get help using the app';
+
+  @override
+  String get processingTab => 'Processing';
+
+  @override
+  String get completedTab => 'Completed';
+
+  @override
+  String get reviewTab => 'Review';
+
+  @override
+  String processingItems(int count) {
+    return 'Processing ($count items)';
+  }
+
+  @override
+  String scheduledTime(String time) {
+    return 'Scheduled: $time';
+  }
+
+  @override
+  String photosCount(int count) {
+    return 'Photos ($count)';
+  }
+
+  @override
+  String get play => 'Play';
+
+  @override
+  String get recorded => 'Recorded';
+
+  @override
+  String get transcribing => 'Transcribing';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get chooseTheme => 'Choose your preferred theme';
 }

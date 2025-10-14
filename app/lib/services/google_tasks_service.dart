@@ -3,54 +3,83 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as tasks;
 import 'package:googleapis_auth/auth_io.dart';
 import '../utils/logger.dart';
-import 'google_auth_service.dart';
+import 'integrations/integration_manager.dart';
+import 'integrations/google_integration_provider.dart';
+import 'connectors/connector_manager.dart';
+import 'connectors/google_tasks_connector.dart';
 
 /// Google Tasks Service
-/// Handles task management through Google Tasks API
+/// Handles task management through Google Tasks API using the new connector architecture
 class GoogleTasksService {
-  final AuthClient _authClient;
-  final tasks.TasksApi _tasksApi;
+  final IntegrationManager _integrationManager;
+  final ConnectorManager _connectorManager;
+  AuthClient _authClient;
+  late tasks.TasksApi _tasksApi;
 
-  GoogleTasksService(this._authClient) : _tasksApi = tasks.TasksApi(_authClient);
+  GoogleTasksService(this._integrationManager, this._connectorManager, this._authClient) {
+    _tasksApi = tasks.TasksApi(_authClient);
+  }
 
-  /// Get all task lists
+  /// Get all task lists using the new connector architecture
   Future<List<tasks.TaskList>> getTaskLists() async {
-    try {
-      Logger.info('Fetching Google task lists', tag: 'GOOGLE_TASKS');
+    // Try to use the new connector architecture first
+    final connector = _connectorManager.getConnector<GoogleTasksConnector>('google_tasks');
+    if (connector != null && connector.isInitialized) {
+      return await connector.getTaskLists();
+    }
+
+    // Fallback to legacy implementation
+    return await _getTaskListsLegacy();
+  }
+
+  /// Legacy implementation for getting task lists
+  Future<List<tasks.TaskList>> _getTaskListsLegacy() async {
+    return await _retryOperation(() async {
+      Logger.info('Fetching Google task lists (legacy)', tag: 'GOOGLE_TASKS');
+      
+      // Ensure valid authentication before making API call
+      final googleProvider = _integrationManager.getProvider('google') as GoogleIntegrationProvider?;
+      if (googleProvider != null) {
+        final isValid = await googleProvider.ensureValidAuthentication();
+        if (!isValid) {
+          throw Exception('Authentication expired and could not be refreshed');
+        }
+        // Update auth client reference
+        _authClient = googleProvider.authClient!;
+        _tasksApi = tasks.TasksApi(_authClient);
+      }
       
       final response = await _tasksApi.tasklists.list();
       final taskLists = response.items ?? [];
       
-      Logger.info('Retrieved ${taskLists.length} task lists', tag: 'GOOGLE_TASKS');
+      Logger.info('Retrieved ${taskLists.length} task lists (legacy)', tag: 'GOOGLE_TASKS');
       return taskLists;
-    } catch (e, stackTrace) {
-      Logger.error('Failed to fetch task lists', 
-        tag: 'GOOGLE_TASKS', 
-        error: e, 
-        stackTrace: stackTrace
-      );
-      rethrow;
-    }
+    }, 'fetch task lists');
   }
 
   /// Get tasks from a specific list
   Future<List<tasks.Task>> getTasks(String taskListId) async {
-    try {
+    return await _retryOperation(() async {
       Logger.info('Fetching tasks from list: $taskListId', tag: 'GOOGLE_TASKS');
+      
+      // Ensure valid authentication before making API call
+      final googleProvider = _integrationManager.getProvider('google') as GoogleIntegrationProvider?;
+      if (googleProvider != null) {
+        final isValid = await googleProvider.ensureValidAuthentication();
+        if (!isValid) {
+          throw Exception('Authentication expired and could not be refreshed');
+        }
+        // Update auth client reference
+        _authClient = googleProvider.authClient!;
+        _tasksApi = tasks.TasksApi(_authClient);
+      }
       
       final response = await _tasksApi.tasks.list(taskListId);
       final taskList = response.items ?? [];
       
       Logger.info('Retrieved ${taskList.length} tasks', tag: 'GOOGLE_TASKS');
       return taskList;
-    } catch (e, stackTrace) {
-      Logger.error('Failed to fetch tasks from list: $taskListId', 
-        tag: 'GOOGLE_TASKS', 
-        error: e, 
-        stackTrace: stackTrace
-      );
-      rethrow;
-    }
+    }, 'fetch tasks from list: $taskListId');
   }
 
   /// Create a new task
@@ -200,14 +229,66 @@ class GoogleTasksService {
       rethrow;
     }
   }
+
+  /// Retry operation with exponential backoff for network errors
+  Future<T> _retryOperation<T>(Future<T> Function() operation, String operationName) async {
+    int maxRetries = 3;
+    int retryCount = 0;
+    
+    while (retryCount < maxRetries) {
+      try {
+        return await operation();
+      } catch (e, stackTrace) {
+        retryCount++;
+        
+        // Check if this is a retryable error
+        if (_isRetryableError(e) && retryCount < maxRetries) {
+          final delay = Duration(milliseconds: 1000 * retryCount); // Exponential backoff
+          Logger.warning('Retrying $operationName (attempt $retryCount/$maxRetries) after ${delay.inMilliseconds}ms', 
+            tag: 'GOOGLE_TASKS');
+          await Future.delayed(delay);
+          continue;
+        }
+        
+        // Log the final error and rethrow
+        Logger.error('Failed to $operationName after $retryCount attempts', 
+          tag: 'GOOGLE_TASKS', 
+          error: e, 
+          stackTrace: stackTrace
+        );
+        rethrow;
+      }
+    }
+    
+    throw Exception('Max retries exceeded for $operationName');
+  }
+
+  /// Check if an error is retryable
+  bool _isRetryableError(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+    return errorString.contains('oserror') ||
+           errorString.contains('handshakeexception') ||
+           errorString.contains('socketexception') ||
+           errorString.contains('timeout') ||
+           errorString.contains('connection') ||
+           errorString.contains('network');
+  }
 }
 
 /// Provider for Google Tasks Service
 final googleTasksServiceProvider = Provider<GoogleTasksService?>((ref) {
-  final authService = ref.watch(googleAuthServiceProvider.notifier);
-  if (authService.isAuthenticated && authService.authClient != null) {
-    return GoogleTasksService(authService.authClient!);
+  final manager = ref.watch(integrationManagerProvider.notifier);
+  final connectorManager = ref.watch(connectorManagerProvider.notifier);
+  final googleProvider = manager.getProvider('google') as GoogleIntegrationProvider?;
+  
+  print('🔵 GOOGLE TASKS SERVICE: Provider called - isAuthenticated: ${googleProvider?.state.isAuthenticated}, authClient: ${googleProvider?.authClient != null}');
+  
+  if (googleProvider?.state.isAuthenticated == true && googleProvider?.authClient != null) {
+    print('🔵 GOOGLE TASKS SERVICE: Creating GoogleTasksService');
+    return GoogleTasksService(manager, connectorManager, googleProvider!.authClient!);
   }
+  
+  print('🔵 GOOGLE TASKS SERVICE: Returning null - not authenticated or no auth client');
   return null;
 });
 

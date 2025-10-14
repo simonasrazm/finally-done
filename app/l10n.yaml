@@ -4,3 +4,4 @@ output-localization-file: app_localizations.dart
 output-class: AppLocalizations
 output-dir: lib/generated
 preferred-supported-locales: [en, lt]
+untranslated-messages-file: untranslated_messages.json

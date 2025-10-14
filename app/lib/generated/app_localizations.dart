@@ -200,7 +200,7 @@ abstract class AppLocalizations {
   /// **'Sound Effects'**
   String get soundEffects;
 
-  /// Connected Services section title
+  /// Connected services section title
   ///
   /// In en, this message translates to:
   /// **'Connected Services'**
@@ -242,7 +242,7 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
-  /// Sign out button text
+  /// Sign out button
   ///
   /// In en, this message translates to:
   /// **'Sign Out'**
@@ -326,13 +326,13 @@ abstract class AppLocalizations {
   /// **'Connect to {service} to sync your data.'**
   String connectToServiceDescription(String service);
 
-  /// Connect button text
+  /// Connect button
   ///
   /// In en, this message translates to:
   /// **'Connect'**
   String get connect;
 
-  /// Done button text
+  /// Done status
   ///
   /// In en, this message translates to:
   /// **'Done'**
@@ -404,7 +404,7 @@ abstract class AppLocalizations {
   /// **'Try Again'**
   String get tryAgain;
 
-  /// Refresh button text
+  /// Refresh button tooltip
   ///
   /// In en, this message translates to:
   /// **'Refresh'**
@@ -613,6 +613,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play success/error sounds'**
   String get soundEffectsDescription;
+
+  /// Success message when a task is created
+  ///
+  /// In en, this message translates to:
+  /// **'Task created successfully'**
+  String get taskCreated;
+
+  /// Error message when task creation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error creating task'**
+  String get errorCreatingTask;
+
+  /// Title for delete task dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Task'**
+  String get deleteTask;
+
+  /// Confirmation message for task deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this task?'**
+  String get deleteTaskConfirmation;
+
+  /// Delete button label
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// Success message when a task is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Task deleted successfully'**
+  String get taskDeleted;
+
+  /// Error message when task deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting task'**
+  String get errorDeletingTask;
+
+  /// Hint text for task list selector
+  ///
+  /// In en, this message translates to:
+  /// **'Select a task list'**
+  String get selectTaskList;
+
+  /// Placeholder text for new task input
+  ///
+  /// In en, this message translates to:
+  /// **'Add a new task...'**
+  String get addNewTask;
+
+  /// Add button label
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// Title when not connected to Google
+  ///
+  /// In en, this message translates to:
+  /// **'Not Connected to Google'**
+  String get notConnectedToGoogle;
+
+  /// Description when not connected to Google
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Google in Settings to view and manage your tasks'**
+  String get connectToGoogleToViewTasks;
+
+  /// Title for error loading tasks
+  ///
+  /// In en, this message translates to:
+  /// **'Error Loading Tasks'**
+  String get errorLoadingTasks;
+
+  /// Title when no tasks are found
+  ///
+  /// In en, this message translates to:
+  /// **'No Tasks Found'**
+  String get noTasksFound;
+
+  /// Description when no tasks are found
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first task using the input above'**
+  String get addYourFirstTask;
+
+  /// Tooltip for hiding completed tasks
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Completed'**
+  String get hideCompleted;
+
+  /// Tooltip for showing completed tasks
+  ///
+  /// In en, this message translates to:
+  /// **'Show Completed'**
+  String get showCompleted;
+
+  /// Integrations section title
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get integrations;
+
+  /// Header for integrations screen
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Your Services'**
+  String get connectYourServices;
+
+  /// Description for integrations screen
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to external services to enhance your productivity'**
+  String get integrationsDescription;
+
+  /// Button to manage connected services
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Services'**
+  String get manageServices;
+
+  /// Loading state when connecting
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting...'**
+  String get connecting;
+
+  /// Status when not connected
+  ///
+  /// In en, this message translates to:
+  /// **'Not Connected'**
+  String get notConnected;
+
+  /// Status when connected
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connected;
+
+  /// Success message when connected to provider
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully connected to {provider}'**
+  String successfullyConnected(String provider);
+
+  /// Error message when connection fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to connect to {provider}'**
+  String failedToConnect(String provider);
+
+  /// Success message when signed out
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out from {provider}'**
+  String signedOut(String provider);
+
+  /// Language selection label
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// Language selection subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred language'**
+  String get chooseLanguage;
+
+  /// Main screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to record'**
+  String get readyToRecord;
+
+  /// Input field placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Or type your command...'**
+  String get orTypeYourCommand;
+
+  /// Items count
+  ///
+  /// In en, this message translates to:
+  /// **'items'**
+  String get items;
+
+  /// Queued status
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get queued;
+
+  /// Failed status
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failed;
+
+  /// Scheduled time prefix
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get scheduled;
+
+  /// Time ago suffix
+  ///
+  /// In en, this message translates to:
+  /// **'ago'**
+  String get ago;
+
+  /// Photos label
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get photos;
+
+  /// Empty completed commands message
+  ///
+  /// In en, this message translates to:
+  /// **'No completed commands yet'**
+  String get noCompletedCommandsYet;
+
+  /// Empty completed commands description
+  ///
+  /// In en, this message translates to:
+  /// **'Completed commands will appear here'**
+  String get completedCommandsWillAppearHere;
+
+  /// Advanced section title
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advanced;
+
+  /// About section title
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// Version label
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get version;
+
+  /// Help section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Get help using the app'**
+  String get getHelpUsingTheApp;
+
+  /// Processing tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get processingTab;
+
+  /// Completed tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completedTab;
+
+  /// Review tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get reviewTab;
+
+  /// Processing items count
+  ///
+  /// In en, this message translates to:
+  /// **'Processing ({count} items)'**
+  String processingItems(int count);
+
+  /// Scheduled time display
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled: {time}'**
+  String scheduledTime(String time);
+
+  /// Photos count display
+  ///
+  /// In en, this message translates to:
+  /// **'Photos ({count})'**
+  String photosCount(int count);
+
+  /// Play button label
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get play;
+
+  /// Recorded status
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded'**
+  String get recorded;
+
+  /// Transcribing status
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing'**
+  String get transcribing;
+
+  /// Unknown status
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// Tooltip for more options menu
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
+
+  /// Edit action text
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// Theme setting label
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// Theme setting subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred theme'**
+  String get chooseTheme;
 }
 
 class _AppLocalizationsDelegate

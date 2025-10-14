@@ -41,7 +41,13 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.missionControl),
+        title: Text(
+          AppLocalizations.of(context)!.missionControl,
+          style: AppTypography.title1.copyWith(
+            color: AppColors.getTextPrimaryColor(context),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         backgroundColor: AppColors.getBackgroundColor(context),
         elevation: 0,
         bottom: TabBar(
@@ -144,7 +150,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               ),
               const SizedBox(width: DesignTokens.spacing3),
               Text(
-                'PROCESSING (${processingCommands.length} items)',
+                AppLocalizations.of(context)!.processingItems(processingCommands.length),
                 style: AppTypography.headline.copyWith(
                   color: AppColors.getTextPrimaryColor(context),
                 ),
@@ -174,7 +180,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 ),
                 const SizedBox(height: DesignTokens.spacing2),
                 Text(
-                  'Scheduled commands will appear here',
+                  AppLocalizations.of(context)!.completedCommandsWillAppearHere,
                   style: AppTypography.footnote.copyWith(
                     color: AppColors.getTextTertiaryColor(context),
                   ),
@@ -300,7 +306,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           Row(
             children: [
               Text(
-                'Scheduled: ${_formatTime(createdAt)}',
+                AppLocalizations.of(context)!.scheduledTime(_formatTime(createdAt)),
                 style: AppTypography.footnote.copyWith(
                   color: AppColors.getTextTertiaryColor(context),
                 ),
@@ -332,7 +338,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                         ),
                         const SizedBox(width: DesignTokens.spacing1),
                         Text(
-                          'Play',
+                          AppLocalizations.of(context)!.play,
                           style: AppTypography.caption1.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w500,
@@ -350,7 +356,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           if (photoPaths.isNotEmpty) ...[
             const SizedBox(height: DesignTokens.spacing3),
             Text(
-              'Photos (${photoPaths.length})',
+              AppLocalizations.of(context)!.photosCount(photoPaths.length),
               style: AppTypography.footnote.copyWith(
                 color: AppColors.getTextSecondaryColor(context),
                 fontWeight: FontWeight.w600,
@@ -566,19 +572,19 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   String _getStatusText(String status) {
     switch (status) {
       case 'queued':
-        return 'QUEUED';
+        return AppLocalizations.of(context)!.queued;
       case 'recorded':
-        return 'RECORDED';
+        return AppLocalizations.of(context)!.recorded;
       case 'transcribing':
-        return 'TRANSCRIBING';
+        return AppLocalizations.of(context)!.transcribing;
       case 'processing':
-        return 'PROCESSING';
+        return AppLocalizations.of(context)!.processingTab;
       case 'completed':
-        return 'DONE';
+        return AppLocalizations.of(context)!.done;
       case 'failed':
-        return 'FAILED';
+        return AppLocalizations.of(context)!.failed;
       default:
-        return 'UNKNOWN';
+        return AppLocalizations.of(context)!.unknown;
     }
   }
   
@@ -615,14 +621,14 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 ),
                 const SizedBox(height: DesignTokens.componentPadding),
                 Text(
-                  'No completed commands yet',
+                  AppLocalizations.of(context)!.noCompletedCommandsYet,
                   style: AppTypography.headline.copyWith(
                     color: AppColors.getTextTertiaryColor(context),
                   ),
                 ),
                 const SizedBox(height: DesignTokens.spacing2),
                 Text(
-                  'Completed commands will appear here',
+                  AppLocalizations.of(context)!.completedCommandsWillAppearHere,
                   style: AppTypography.body.copyWith(
                     color: AppColors.getTextTertiaryColor(context),
                   ),

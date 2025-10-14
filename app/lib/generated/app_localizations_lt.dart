@@ -18,7 +18,7 @@ class AppLocalizationsLt extends AppLocalizations {
   String get home => 'Pagrindinis';
 
   @override
-  String get missionControl => 'Misijos valdymas';
+  String get missionControl => 'Valdymo centras';
 
   @override
   String get tasks => 'Užduotys';
@@ -146,7 +146,7 @@ class AppLocalizationsLt extends AppLocalizations {
   String get connect => 'Prisijungti';
 
   @override
-  String get done => 'Baigta';
+  String get done => 'Atlikta';
 
   @override
   String get invalidCommandDeleted => 'Netinkama užduotis (ištrinta)';
@@ -241,7 +241,7 @@ class AppLocalizationsLt extends AppLocalizations {
   String get close => 'Uždaryti';
 
   @override
-  String get customize => 'Tinkinti';
+  String get customize => 'Detaliau';
 
   @override
   String get iconWillBeSetAsAppIcon =>
@@ -304,4 +304,191 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get soundEffectsDescription => 'Grojti sėkmės/klaidos garsus';
+
+  @override
+  String get taskCreated => 'Užduotis sėkmingai sukurta';
+
+  @override
+  String get errorCreatingTask => 'Klaida kuriant užduotį';
+
+  @override
+  String get deleteTask => 'Ištrinti užduotį';
+
+  @override
+  String get deleteTaskConfirmation => 'Ar tikrai norite ištrinti šią užduotį?';
+
+  @override
+  String get delete => 'Ištrinti';
+
+  @override
+  String get taskDeleted => 'Užduotis sėkmingai ištrinta';
+
+  @override
+  String get errorDeletingTask => 'Klaida ištrinant užduotį';
+
+  @override
+  String get selectTaskList => 'Pasirinkite užduočių sąrašą';
+
+  @override
+  String get addNewTask => 'Pridėti naują užduotį...';
+
+  @override
+  String get add => 'Pridėti';
+
+  @override
+  String get notConnectedToGoogle => 'Neprisijungta prie Google';
+
+  @override
+  String get connectToGoogleToViewTasks =>
+      'Prisijunkite prie Google nustatymuose, kad galėtumėte peržiūrėti ir valdyti savo užduotis';
+
+  @override
+  String get errorLoadingTasks => 'Klaida įkeliant užduotis';
+
+  @override
+  String get noTasksFound => 'Užduočių nerasta';
+
+  @override
+  String get addYourFirstTask =>
+      'Pridėkite savo pirmąją užduotį naudodami aukščiau esantį lauką';
+
+  @override
+  String get hideCompleted => 'Slėpti užbaigtas';
+
+  @override
+  String get showCompleted => 'Rodyti užbaigtas';
+
+  @override
+  String get integrations => 'Integracijos';
+
+  @override
+  String get connectYourServices => 'Prijunkite savo paslaugas';
+
+  @override
+  String get integrationsDescription =>
+      'Prijunkite prie išorinių paslaugų, kad pagerintumėte savo produktyvumą';
+
+  @override
+  String get manageServices => 'Valdyti paslaugas';
+
+  @override
+  String get connecting => 'Jungiamasi';
+
+  @override
+  String get notConnected => 'Neprisijungta';
+
+  @override
+  String get connected => 'Prisijungta';
+
+  @override
+  String successfullyConnected(String provider) {
+    return 'Sėkmingai prisijungta prie $provider';
+  }
+
+  @override
+  String failedToConnect(String provider) {
+    return 'Nepavyko prisijungti prie $provider';
+  }
+
+  @override
+  String signedOut(String provider) {
+    return 'Atsijungta nuo $provider';
+  }
+
+  @override
+  String get language => 'Kalba';
+
+  @override
+  String get chooseLanguage => 'Pasirinkite pageidaujamą kalbą';
+
+  @override
+  String get readyToRecord => 'Įrašyk komandą';
+
+  @override
+  String get orTypeYourCommand => 'Arba įveskite savo komandą...';
+
+  @override
+  String get items => 'elementai';
+
+  @override
+  String get queued => 'Eilėje';
+
+  @override
+  String get failed => 'Nepavyko';
+
+  @override
+  String get scheduled => 'Suplanuota';
+
+  @override
+  String get ago => 'prieš';
+
+  @override
+  String get photos => 'Nuotraukos';
+
+  @override
+  String get noCompletedCommandsYet => 'Dar nėra užbaigtų komandų';
+
+  @override
+  String get completedCommandsWillAppearHere =>
+      'Užbaigtos komandos pasirodys čia';
+
+  @override
+  String get advanced => 'papildomi';
+
+  @override
+  String get about => 'Apie';
+
+  @override
+  String get version => 'Versija';
+
+  @override
+  String get getHelpUsingTheApp => 'Gaukite pagalbą naudodami programą';
+
+  @override
+  String get processingTab => 'Apdorojama';
+
+  @override
+  String get completedTab => 'Baigta';
+
+  @override
+  String get reviewTab => 'Peržiūra';
+
+  @override
+  String processingItems(int count) {
+    return 'Apdorojami elementai: ($count)';
+  }
+
+  @override
+  String scheduledTime(String time) {
+    return 'Įrašyta: $time';
+  }
+
+  @override
+  String photosCount(int count) {
+    return 'Nuotraukos ($count)';
+  }
+
+  @override
+  String get play => 'Groti';
+
+  @override
+  String get recorded => 'Įrašyta';
+
+  @override
+  String get transcribing => 'Verčiama';
+
+  @override
+  String get unknown => 'Nežinoma';
+
+  @override
+  String get moreOptions => 'Daugiau parinkčių';
+
+  @override
+  String get edit => 'Redaguoti';
+
+  @override
+  String get theme => 'Aplinkos režimas';
+
+  @override
+  String get chooseTheme => 'Pasirinkite norimą režimą';
 }

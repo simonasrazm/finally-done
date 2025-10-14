@@ -81,6 +81,55 @@ class DesignTokens {
   static const double radiusLg = 12.0;
   static const double radius2xl = 24.0;
 
+  // ============================================================================
+  // BORDER TOKENS
+  // ============================================================================
+  
+  /// Border widths
+  static const double borderWidth1 = 1.0;
+  static const double borderWidth2 = 2.0;
+  static const double borderWidth3 = 3.0;
+
+  // ============================================================================
+  // ELEVATION TOKENS
+  // ============================================================================
+  
+  /// Material elevation levels
+  static const double elevation0 = 0.0;
+  static const double elevation1 = 1.0;
+  static const double elevation2 = 2.0;
+  static const double elevation4 = 4.0;
+  static const double elevation8 = 8.0;
+  static const double elevation16 = 16.0;
+
+  // ============================================================================
+  // OPACITY TOKENS
+  // ============================================================================
+  
+  /// Opacity values for overlays and transparency
+  static const double opacity10 = 0.1;
+  static const double opacity20 = 0.2;
+  static const double opacity30 = 0.3;
+  static const double opacity40 = 0.4;
+  static const double opacity50 = 0.5;
+  static const double opacity60 = 0.6;
+  static const double opacity70 = 0.7;
+  static const double opacity80 = 0.8;
+  static const double opacity90 = 0.9;
+  static const double opacity100 = 1.0;
+
+  // ============================================================================
+  // TIMING TOKENS
+  // ============================================================================
+  
+  /// Animation and delay durations
+  static const int delayShort = 500;        // 500ms - short delays
+  static const int delayMedium = 1000;      // 1s - medium delays
+  static const int delayLong = 2000;        // 2s - long delays
+  
+  static const int animationFast = 150;     // 150ms - fast animations
+  static const int animationNormal = 300;   // 300ms - normal animations
+  static const int animationSlow = 500;     // 500ms - slow animations
 
 }
 

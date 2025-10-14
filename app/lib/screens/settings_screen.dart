@@ -8,7 +8,8 @@ import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
 import '../services/speech_service.dart';
 import '../services/integration_service.dart';
-import '../services/google_auth_service.dart';
+import '../providers/language_provider.dart';
+import '../providers/theme_provider.dart';
 import '../generated/app_localizations.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -37,13 +38,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.settings),
-        backgroundColor: AppColors.getBackgroundColor(context),
-        elevation: 0,
-      ),
-      body: ListView(
+    return ListView(
         children: [
           // Profile Section
           _buildSection(
@@ -71,80 +66,74 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
           
-          // Connected Services Section
-          _buildSection(
-            title: AppLocalizations.of(context)!.connectedServices,
-            children: [
-              Consumer(
-                builder: (context, ref, child) {
-                  final authState = ref.watch(googleAuthServiceProvider);
-                  
-                  return _buildGoogleIntegrationTile(
-                    isAuthenticated: authState.isAuthenticated,
-                    userEmail: authState.userEmail,
-                    connectedServices: authState.connectedServices,
-                    onTap: () => _handleGoogleAuth(ref),
-                  );
-                },
-              ),
-              // Individual Google Services
-              Consumer(
-                builder: (context, ref, child) {
-                  final integrationService = ref.watch(integrationServiceProvider);
-                  
-                  
-                  return Column(
-                    children: [
-                      _buildGoogleServiceTile(
-                        icon: Icons.task_alt,
-                        title: AppLocalizations.of(context)!.googleTasks,
-                        isConnected: integrationService.isTasksConnected,
-                        onTap: () => _handleGoogleServiceConnection(ref, 'tasks'),
-                      ),
-                      _buildGoogleServiceTile(
-                        icon: Icons.calendar_today,
-                        title: 'Google Calendar',
-                        isConnected: integrationService.isCalendarConnected,
-                        onTap: () => _handleGoogleServiceConnection(ref, 'calendar'),
-                      ),
-                      _buildGoogleServiceTile(
-                        icon: Icons.email,
-                        title: 'Gmail',
-                        isConnected: integrationService.isGmailConnected,
-                        onTap: () => _handleGoogleServiceConnection(ref, 'gmail'),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              _buildServiceTile(
-                icon: Icons.note_alt,
-                title: 'Evernote',
-                subtitle: 'Coming soon',
-                isConnected: false,
-                onTap: () => _showServiceDialog('Evernote'),
-              ),
-              _buildServiceTile(
-                icon: Icons.notes,
-                title: 'Apple Notes',
-                subtitle: 'Coming soon',
-                isConnected: false,
-                onTap: () => _showServiceDialog('Apple Notes'),
-              ),
-              _buildServiceTile(
-                icon: Icons.alarm,
-                title: 'Custom Alarms',
-                subtitle: 'Coming soon',
-                isConnected: false,
-                onTap: () => _showServiceDialog('Custom Alarms'),
-              ),
-            ],
-          ),
           
           // Preferences Section
           _buildSection(
             title: AppLocalizations.of(context)!.preferences,
             children: [
+              _buildListTile(
+                leading: const Icon(Icons.language),
+                title: AppLocalizations.of(context)!.language,
+                subtitle: AppLocalizations.of(context)!.chooseLanguage,
+                trailing: Consumer(
+                  builder: (context, ref, child) {
+                    final languageState = ref.watch(languageProvider);
+                    final languageNotifier = ref.read(languageProvider.notifier);
+                    
+                    return DropdownButton<Locale>(
+                      value: languageState.locale,
+                      onChanged: (Locale? newLocale) {
+                        if (newLocale != null) {
+                          languageNotifier.changeLanguage(newLocale);
+                        }
+                      },
+                      items: languageNotifier.availableLanguages.map((lang) {
+                        return DropdownMenuItem<Locale>(
+                          value: Locale(lang['code']),
+                          child: Text('${lang['flag']} ${lang['name']}'),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
+              _buildListTile(
+                leading: const Icon(Icons.palette_outlined),
+                title: AppLocalizations.of(context)!.theme,
+                subtitle: AppLocalizations.of(context)!.chooseTheme,
+                trailing: Consumer(
+                  builder: (context, ref, child) {
+                    final themeState = ref.watch(themeProvider);
+                    final themeNotifier = ref.read(themeProvider.notifier);
+                    
+                    return DropdownButton<AppThemeMode>(
+                      value: themeState.mode,
+                      onChanged: (AppThemeMode? newMode) {
+                        if (newMode != null) {
+                          themeNotifier.changeThemeMode(newMode);
+                        }
+                      },
+                      items: themeNotifier.availableModes.map((modeData) {
+                        final mode = modeData['mode'] as AppThemeMode;
+                        return DropdownMenuItem<AppThemeMode>(
+                          value: mode,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                modeData['icon'] as IconData,
+                                size: DesignTokens.iconSm,
+                              ),
+                              SizedBox(width: DesignTokens.spacing2),
+                              Text(modeData['name'] as String),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
               _buildListTile(
                 leading: const Icon(Icons.psychology),
                 title: AppLocalizations.of(context)!.speechRecognition,
@@ -203,24 +192,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           
           // Advanced Section
           _buildSection(
-            title: 'Advanced',
+            title: AppLocalizations.of(context)!.advanced,
             children: [
               _buildListTile(
                 leading: const Icon(Icons.info_outline),
-                title: 'About',
-                subtitle: 'Version 1.0.0',
+                title: AppLocalizations.of(context)!.about,
+                subtitle: '${AppLocalizations.of(context)!.version} 1.0.0',
                 onTap: () => _showAboutDialog(),
               ),
               _buildListTile(
                 leading: const Icon(Icons.help_outline),
-                title: 'Help & Support',
-                subtitle: 'Get help using the app',
+                title: AppLocalizations.of(context)!.helpAndSupport,
+                subtitle: AppLocalizations.of(context)!.getHelpUsingTheApp,
                 onTap: () => _showHelpDialog(),
               ),
             ],
           ),
         ],
-      ),
     );
   }
   
@@ -241,7 +229,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Text(
             title.toUpperCase(),
             style: AppTypography.sectionHeader.copyWith(
-              color: AppColors.getTextSecondaryColor(context),
+              color: AppColors.getTextPrimaryColor(context),
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -294,6 +283,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
   
+  /*
   Widget _buildGoogleIntegrationTile({
     required bool isAuthenticated,
     String? userEmail,
@@ -344,6 +334,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
   
+  
   String _buildConnectedServicesText(String? userEmail, Set<String> connectedServices) {
     final List<String> serviceNames = [];
     
@@ -358,101 +349,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return 'Connected as: $userEmail\n$servicesText';
   }
   
-  Widget _buildGoogleServiceTile({
-    required IconData icon,
-    required String title,
-    required bool isConnected,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isConnected ? AppColors.primary : AppColors.getTextSecondaryColor(context),
-        size: 24,
-      ),
-      title: Text(
-        title,
-        style: AppTypography.body.copyWith(
-          color: AppColors.getTextPrimaryColor(context),
-          fontWeight: isConnected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      subtitle: Text(
-        isConnected ? 'Connected' : 'Not connected',
-        style: AppTypography.footnote.copyWith(
-          color: isConnected ? AppColors.success : AppColors.getTextSecondaryColor(context),
-        ),
-      ),
-      trailing: Icon(
-        isConnected ? Icons.check_circle : Icons.circle_outlined,
-        color: isConnected ? AppColors.success : AppColors.textTertiary,
-        size: 20,
-      ),
-      onTap: onTap,
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: DesignTokens.componentPadding,
-        vertical: DesignTokens.spacing1,
-      ),
-    );
-  }
-  
-  void _handleGoogleServiceConnection(WidgetRef ref, String service) async {
-    try {
-      final integrationService = ref.read(integrationServiceProvider);
-      
-      if (!integrationService.isAuthenticated) {
-        // User needs to authenticate first
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please connect to Google first')),
-        );
-        return;
-      }
-      
-      if (integrationService.isServiceConnected(service)) {
-        // Service is already connected - show disconnect option
-        final shouldDisconnect = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Disconnect $service?'),
-            content: Text('Are you sure you want to disconnect from $service?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Disconnect'),
-              ),
-            ],
-          ),
-        );
-        
-        if (shouldDisconnect == true) {
-          // TODO: Implement service disconnection
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$service disconnected')),
-          );
-        }
-      } else {
-        // Connect to service
-        final success = await integrationService.connectToService(service);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(success ? '$service connected successfully' : 'Failed to connect to $service'),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
+  */
 
   Widget _buildServiceTile({
     required IconData icon,
@@ -485,6 +382,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
   
+  /*
   void _handleGoogleAuth(WidgetRef ref) async {
     
     // 1. IMMEDIATE UI feedback - show loading dialog instantly
@@ -665,6 +563,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
+  */
+  
   
   void _showConfidenceDialog() {
     showDialog(

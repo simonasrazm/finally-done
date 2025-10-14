@@ -11,9 +11,11 @@ import 'design_system/colors.dart';
 import 'design_system/typography.dart';
 import 'screens/home_screen.dart';
 import 'screens/mission_control_screen.dart';
-import 'screens/settings_screen.dart';
+import 'screens/settings_tabs_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'services/queue_service.dart';
+import 'providers/language_provider.dart';
+import 'providers/theme_provider.dart';
 
 
 void main() async {
@@ -118,11 +120,14 @@ void main() async {
       }
 }
 
-class FinallyDoneApp extends StatelessWidget {
+class FinallyDoneApp extends ConsumerWidget {
   const FinallyDoneApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentLocale = ref.watch(currentLocaleProvider);
+    final currentThemeMode = ref.watch(currentFlutterThemeModeProvider);
+    
     return MaterialApp(
       title: 'Finally Done',
       debugShowCheckedModeBanner: false,
@@ -130,11 +135,12 @@ class FinallyDoneApp extends StatelessWidget {
       // Localization
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      locale: currentLocale,
       
       // Theme
       theme: _buildLightTheme(),
       darkTheme: _buildDarkTheme(),
-      themeMode: ThemeMode.system,
+      themeMode: currentThemeMode,
       
       // Home
       home: const MainScreen(),
@@ -286,7 +292,7 @@ class _MainScreenState extends State<MainScreen> {
           _currentIndex = 3; // Settings tab
         });
       }),
-    const SettingsScreen(),
+        const SettingsTabsScreen(),
   ];
   }
   

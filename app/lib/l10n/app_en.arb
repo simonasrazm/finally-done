@@ -569,5 +569,302 @@
   "soundEffectsDescription": "Play success/error sounds",
   "@soundEffectsDescription": {
     "description": "Sound effects setting description"
+  },
+  "taskCreated": "Task created successfully",
+  "@taskCreated": {
+    "description": "Success message when a task is created"
+  },
+  "errorCreatingTask": "Error creating task",
+  "@errorCreatingTask": {
+    "description": "Error message when task creation fails"
+  },
+  "deleteTask": "Delete Task",
+  "@deleteTask": {
+    "description": "Title for delete task dialog"
+  },
+  "deleteTaskConfirmation": "Are you sure you want to delete this task?",
+  "@deleteTaskConfirmation": {
+    "description": "Confirmation message for task deletion"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button label"
+  },
+  "taskDeleted": "Task deleted successfully",
+  "@taskDeleted": {
+    "description": "Success message when a task is deleted"
+  },
+  "errorDeletingTask": "Error deleting task",
+  "@errorDeletingTask": {
+    "description": "Error message when task deletion fails"
+  },
+  "selectTaskList": "Select a task list",
+  "@selectTaskList": {
+    "description": "Hint text for task list selector"
+  },
+  "addNewTask": "Add a new task...",
+  "@addNewTask": {
+    "description": "Placeholder text for new task input"
+  },
+  "add": "Add",
+  "@add": {
+    "description": "Add button label"
+  },
+  "notConnectedToGoogle": "Not Connected to Google",
+  "@notConnectedToGoogle": {
+    "description": "Title when not connected to Google"
+  },
+  "connectToGoogleToViewTasks": "Connect to Google in Settings to view and manage your tasks",
+  "@connectToGoogleToViewTasks": {
+    "description": "Description when not connected to Google"
+  },
+  "errorLoadingTasks": "Error Loading Tasks",
+  "@errorLoadingTasks": {
+    "description": "Title for error loading tasks"
+  },
+  "noTasksFound": "No Tasks Found",
+  "@noTasksFound": {
+    "description": "Title when no tasks are found"
+  },
+  "addYourFirstTask": "Add your first task using the input above",
+  "@addYourFirstTask": {
+    "description": "Description when no tasks are found"
+  },
+  "hideCompleted": "Hide Completed",
+  "@hideCompleted": {
+    "description": "Tooltip for hiding completed tasks"
+  },
+  "showCompleted": "Show Completed",
+  "@showCompleted": {
+    "description": "Tooltip for showing completed tasks"
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button tooltip"
+  },
+  "integrations": "Integrations",
+  "@integrations": {
+    "description": "Integrations section title"
+  },
+  "connectYourServices": "Connect Your Services",
+  "@connectYourServices": {
+    "description": "Header for integrations screen"
+  },
+  "integrationsDescription": "Connect to external services to enhance your productivity",
+  "@integrationsDescription": {
+    "description": "Description for integrations screen"
+  },
+  "connectedServices": "Connected Services",
+  "@connectedServices": {
+    "description": "Connected services section title"
+  },
+  "manageServices": "Manage Services",
+  "@manageServices": {
+    "description": "Button to manage connected services"
+  },
+  "signOut": "Sign Out",
+  "@signOut": {
+    "description": "Sign out button"
+  },
+  "connect": "Connect",
+  "@connect": {
+    "description": "Connect button"
+  },
+  "connecting": "Connecting...",
+  "@connecting": {
+    "description": "Loading state when connecting"
+  },
+  "notConnected": "Not Connected",
+  "@notConnected": {
+    "description": "Status when not connected"
+  },
+  "connected": "Connected",
+  "@connected": {
+    "description": "Status when connected"
+  },
+  "successfullyConnected": "Successfully connected to {provider}",
+  "@successfullyConnected": {
+    "description": "Success message when connected to provider",
+    "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  "failedToConnect": "Failed to connect to {provider}",
+  "@failedToConnect": {
+    "description": "Error message when connection fails",
+    "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  "signedOut": "Signed out from {provider}",
+  "@signedOut": {
+    "description": "Success message when signed out",
+    "placeholders": {
+      "provider": {
+        "type": "String",
+        "example": "Google"
+      }
+    }
+  },
+  "done": "Done",
+  "@done": {
+    "description": "Done button"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language selection label"
+  },
+  "chooseLanguage": "Choose your preferred language",
+  "@chooseLanguage": {
+    "description": "Language selection subtitle"
+  },
+  "readyToRecord": "Ready to record",
+  "@readyToRecord": {
+    "description": "Main screen subtitle"
+  },
+  "orTypeYourCommand": "Or type your command...",
+  "@orTypeYourCommand": {
+    "description": "Input field placeholder"
+  },
+  "processing": "Processing",
+  "@processing": {
+    "description": "Processing status"
+  },
+  "items": "items",
+  "@items": {
+    "description": "Items count"
+  },
+  "queued": "Queued",
+  "@queued": {
+    "description": "Queued status"
+  },
+  "failed": "Failed",
+  "@failed": {
+    "description": "Failed status"
+  },
+  "scheduled": "Scheduled",
+  "@scheduled": {
+    "description": "Scheduled time prefix"
+  },
+  "ago": "ago",
+  "@ago": {
+    "description": "Time ago suffix"
+  },
+  "photos": "Photos",
+  "@photos": {
+    "description": "Photos label"
+  },
+  "noCompletedCommandsYet": "No completed commands yet",
+  "@noCompletedCommandsYet": {
+    "description": "Empty completed commands message"
+  },
+  "completedCommandsWillAppearHere": "Completed commands will appear here",
+  "@completedCommandsWillAppearHere": {
+    "description": "Empty completed commands description"
+  },
+  "advanced": "Advanced",
+  "@advanced": {
+    "description": "Advanced section title"
+  },
+  "about": "About",
+  "@about": {
+    "description": "About section title"
+  },
+  "version": "Version",
+  "@version": {
+    "description": "Version label"
+  },
+  "getHelpUsingTheApp": "Get help using the app",
+  "@getHelpUsingTheApp": {
+    "description": "Help section subtitle"
+  },
+  "processingTab": "Processing",
+  "@processingTab": {
+    "description": "Processing tab label"
+  },
+  "completedTab": "Completed",
+  "@completedTab": {
+    "description": "Completed tab label"
+  },
+  "reviewTab": "Review",
+  "@reviewTab": {
+    "description": "Review tab label"
+  },
+  "processingItems": "Processing ({count} items)",
+  "@processingItems": {
+    "description": "Processing items count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scheduledTime": "Scheduled: {time}",
+  "@scheduledTime": {
+    "description": "Scheduled time display",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "photosCount": "Photos ({count})",
+  "@photosCount": {
+    "description": "Photos count display",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "play": "Play",
+  "@play": {
+    "description": "Play button label"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button label"
+  },
+  "recorded": "Recorded",
+  "@recorded": {
+    "description": "Recorded status"
+  },
+  "transcribing": "Transcribing",
+  "@transcribing": {
+    "description": "Transcribing status"
+  },
+  "done": "Done",
+  "@done": {
+    "description": "Done status"
+  },
+  "failed": "Failed",
+  "@failed": {
+    "description": "Failed status"
+  },
+  "unknown": "Unknown",
+  "@unknown": {
+    "description": "Unknown status"
+  },
+  "moreOptions": "More options",
+  "@moreOptions": {
+    "description": "Tooltip for more options menu"
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit action text"
+  },
+  "theme": "Theme",
+  "@theme": {
+    "description": "Theme setting label"
+  },
+  "chooseTheme": "Choose your preferred theme",
+  "@chooseTheme": {
+    "description": "Theme setting subtitle"
   }
 }
