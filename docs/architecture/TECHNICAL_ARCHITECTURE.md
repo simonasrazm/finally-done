@@ -11,19 +11,29 @@ This document provides a comprehensive overview of the technical architecture, d
 │  Flutter UI Layer (Dart)                                       │
 │  ├── Screens (Home, Settings, Mission Control, Tasks)         │
 │  ├── Widgets (Custom components, design system)               │
+│  ├── Localization (Multi-language support)                    │
+│  ├── Theme Management (Dynamic theming)                       │
 │  └── State Management (Riverpod StateNotifier)                │
 ├─────────────────────────────────────────────────────────────────┤
 │  Service Layer (Dart)                                          │
-│  ├── GoogleAuthService (OAuth2, token management)             │
-│  ├── IntegrationService (Google APIs coordination)            │
+│  ├── Integration Manager (Multi-provider coordination)        │
+│  ├── Connector Manager (Service lifecycle management)         │
+│  ├── Network Service (Retry logic, auth refresh)              │
 │  ├── SpeechService (Voice recording, transcription)           │
 │  ├── NLPService (Command interpretation)                      │
 │  └── QueueService (Offline command management)                │
 ├─────────────────────────────────────────────────────────────────┤
+│  Connector Layer (Dart)                                        │
+│  ├── Base Connector (Abstract connector class)                │
+│  ├── Google Tasks Connector (Google Tasks API)                │
+│  ├── Apple Notes Connector (iOS Notes integration)            │
+│  ├── Evernote Connector (Evernote API)                        │
+│  └── Future Connectors (Calendar, Gmail, etc.)                │
+├─────────────────────────────────────────────────────────────────┤
 │  Data Layer                                                     │
 │  ├── RealmDB (Local storage, offline-first)                   │
 │  ├── Flutter Secure Storage (Token storage)                   │
-│  └── Google APIs (Tasks, Calendar, Gmail)                     │
+│  └── External APIs (Google, Apple, Evernote)                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  Native iOS Layer (Swift)                                      │
 │  ├── AppDelegate (App lifecycle, error handling)              │
@@ -34,6 +44,8 @@ This document provides a comprehensive overview of the technical architecture, d
 │  External Services                                              │
 │  ├── Sentry (Error monitoring, performance tracking)          │
 │  ├── Google Cloud APIs (Tasks, Calendar, Gmail)               │
+│  ├── Apple APIs (Notes, Calendar)                             │
+│  ├── Evernote API (Notes, Notebooks)                          │
 │  └── AI/LLM Services (Command interpretation)                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -82,9 +94,81 @@ User Action → Service Method → State Update → UI Rebuild
   onTap() → authenticate() → state = newState → Consumer rebuilds
 ```
 
-## Google Integration Architecture
+## Connector Architecture
 
-### OAuth2 Flow
+### Multi-Provider Integration System
+
+The app uses a scalable connector architecture that supports multiple service providers:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Connector Architecture                       │
+├─────────────────────────────────────────────────────────────────┤
+│  Integration Manager                                           │
+│  ├── Provider Registration (Google, Apple, Evernote)          │
+│  ├── State Management (Authentication, services)              │
+│  └── Service Coordination (Multi-provider operations)         │
+├─────────────────────────────────────────────────────────────────┤
+│  Connector Manager                                             │
+│  ├── Lifecycle Management (Initialize, dispose)               │
+│  ├── Connector Registry (Available connectors)                │
+│  └── Error Handling (Centralized error recovery)              │
+├─────────────────────────────────────────────────────────────────┤
+│  Network Service                                               │
+│  ├── Retry Logic (Exponential backoff)                        │
+│  ├── Authentication Refresh (Token renewal)                   │
+│  └── Error Classification (Retryable vs fatal)                │
+├─────────────────────────────────────────────────────────────────┤
+│  Base Connector (Abstract)                                    │
+│  ├── Common Network Logic (Shared retry, auth)                │
+│  ├── Error Handling (Standardized error recovery)             │
+│  └── Lifecycle Management (Initialize, dispose)               │
+├─────────────────────────────────────────────────────────────────┤
+│  Specific Connectors                                           │
+│  ├── GoogleTasksConnector (Google Tasks API)                  │
+│  ├── AppleNotesConnector (iOS Notes)                          │
+│  ├── EvernoteConnector (Evernote API)                         │
+│  └── Future Connectors (Calendar, Gmail, etc.)                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Base Connector Implementation
+
+```dart
+abstract class BaseConnector {
+  final String id;
+  final String integrationProviderId;
+  final NetworkService _networkService;
+  final IntegrationManager _integrationManager;
+
+  BaseConnector({
+    required this.id,
+    required this.integrationProviderId,
+    required NetworkService networkService,
+    required IntegrationManager integrationManager,
+  });
+
+  // Common network operations with retry logic
+  Future<T> execute<T>(Future<T> Function() operation, String operationName) {
+    return _networkService.execute(
+      operation,
+      operationName,
+      onAuthRefreshNeeded: () async {
+        final provider = _integrationManager.getProvider(integrationProviderId);
+        return await provider?.ensureValidAuthentication() ?? false;
+      },
+    );
+  }
+
+  // Lifecycle management
+  Future<void> initialize();
+  void dispose();
+}
+```
+
+### Google Integration Details
+
+#### OAuth2 Flow
 
 ```
 ┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
@@ -103,18 +187,26 @@ User Action → Service Method → State Update → UI Rebuild
 └─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
 ```
 
-### Service Architecture
+#### Service Architecture
 
 ```dart
-// Service Hierarchy
-IntegrationService
-├── GoogleAuthService (OAuth2, token management)
+// New Integration Architecture
+IntegrationManager
+├── GoogleIntegrationProvider (OAuth2, token management)
 │   ├── GoogleSignIn (Native iOS integration)
 │   ├── Token Storage (Flutter Secure Storage)
+│   ├── Service Management (Tasks, Calendar, Gmail toggles)
 │   └── State Management (Riverpod StateNotifier)
-├── GoogleTasksService (Tasks API)
-├── GoogleCalendarService (Calendar API) [Future]
-└── GoogleGmailService (Gmail API) [Future]
+├── AppleNotesIntegrationProvider (iOS Notes)
+├── EvernoteIntegrationProvider (Evernote API)
+└── Future Providers (Microsoft, Fantastical, etc.)
+
+ConnectorManager
+├── GoogleTasksConnector (Google Tasks API)
+├── GoogleCalendarConnector (Google Calendar API)
+├── AppleNotesConnector (iOS Notes)
+├── EvernoteConnector (Evernote API)
+└── Future Connectors (Gmail, etc.)
 ```
 
 ### Token Management
@@ -285,6 +377,92 @@ onTap: () {
 // Pre-warming for first-tap responsiveness
 void _preWarmCriticalWidgets() {
   // Create off-screen widgets to compile shaders
+}
+```
+
+## Localization Architecture
+
+### Multi-Language Support
+
+The app supports multiple languages with instant switching and build validation:
+
+```dart
+// Language Provider
+class LanguageNotifier extends StateNotifier<LanguageState> {
+  LanguageNotifier() : super(LanguageState(locale: const Locale('en'))) {
+    _loadPreferredLanguage();
+  }
+
+  Future<void> changeLanguage(Locale newLocale) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('preferredLanguageCode', newLocale.languageCode);
+    state = state.copyWith(locale: newLocale);
+  }
+}
+
+// Usage in UI
+Text(AppLocalizations.of(context)!.readyToRecord)
+```
+
+### Translation System
+
+- **ARB Files**: `app_en.arb` and `app_lt.arb` for translations
+- **Build Validation**: Automatic checking for missing translations
+- **CI/CD Integration**: Build fails if translations are incomplete
+- **Developer Tools**: VS Code tasks, Git hooks, Makefile integration
+
+### Supported Languages
+
+- ✅ **English**: Complete translation coverage
+- ✅ **Lithuanian**: Complete translation coverage
+- 🔄 **Future Languages**: Easy to add new languages
+
+## Theme Architecture
+
+### Dynamic Theme System
+
+The app supports system/light/dark themes with persistence:
+
+```dart
+// Theme Provider
+class ThemeNotifier extends StateNotifier<ThemeState> {
+  ThemeNotifier() : super(ThemeState(mode: AppThemeMode.system)) {
+    _loadPreferredThemeMode();
+  }
+
+  Future<void> changeThemeMode(AppThemeMode newMode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('preferredThemeMode', newMode.toString().split('.').last);
+    state = state.copyWith(mode: newMode);
+  }
+}
+
+// Usage in MaterialApp
+MaterialApp(
+  themeMode: currentThemeMode,
+  theme: _buildLightTheme(),
+  darkTheme: _buildDarkTheme(),
+)
+```
+
+### Design Token System
+
+Consistent styling through design tokens:
+
+```dart
+class DesignTokens {
+  // Spacing
+  static const double spacing1 = 4.0;
+  static const double spacing2 = 8.0;
+  static const double spacing3 = 12.0;
+  
+  // Colors
+  static const Color primary = Color(0xFF007AFF);
+  static const Color background = Color(0xFFFFFFFF);
+  
+  // Typography
+  static const TextStyle title1 = TextStyle(fontSize: 28, fontWeight: FontWeight.w600);
+  static const TextStyle body = TextStyle(fontSize: 16, fontWeight: FontWeight.normal);
 }
 ```
 
