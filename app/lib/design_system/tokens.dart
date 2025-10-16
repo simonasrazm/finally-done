@@ -126,10 +126,12 @@ class DesignTokens {
   static const int delayShort = 500;        // 500ms - short delays
   static const int delayMedium = 1000;      // 1s - medium delays
   static const int delayLong = 2000;        // 2s - long delays
+  static const int delayPolling = 250;      // 250ms - polling/retry delays
   
   static const int animationFast = 150;     // 150ms - fast animations
   static const int animationNormal = 300;   // 300ms - normal animations
   static const int animationSlow = 500;     // 500ms - slow animations
+  static const int animationSmooth = 600;   // 600ms - smooth list transitions
 
 }
 

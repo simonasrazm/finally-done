@@ -31,6 +31,7 @@ app/ios/ServiceDefinitions.json
 app/ios/Runner/GeneratedPluginRegistrant.*
 
 # Environment files
+app/.env
 app/.env.local
 app/.env.production
 

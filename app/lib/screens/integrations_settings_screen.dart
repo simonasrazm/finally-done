@@ -13,13 +13,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     final integrationStates = ref.watch(integrationManagerProvider);
     final manager = ref.watch(integrationManagerProvider.notifier);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.integrations),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: ListView(
+    return ListView(
         padding: EdgeInsets.all(DesignTokens.layoutPadding),
         children: [
           // Header
@@ -56,7 +50,6 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
 
           SizedBox(height: DesignTokens.sectionSpacing),
         ],
-      ),
     );
   }
 

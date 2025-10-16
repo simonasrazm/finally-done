@@ -106,6 +106,7 @@
   "notConnectedToGoogle": "Neprisijungta prie Google",
   "connectToGoogleToViewTasks": "Prisijunkite prie Google nustatymuose, kad galėtumėte peržiūrėti ir valdyti savo užduotis",
   "errorLoadingTasks": "Klaida įkeliant užduotis",
+  "errorLoadingTasksDescription": "Nepavyko įkelti jūsų užduočių. Patikrinkite interneto ryšį ir bandykite dar kartą.",
   "noTasksFound": "Užduočių nerasta",
   "addYourFirstTask": "Pridėkite savo pirmąją užduotį naudodami aukščiau esantį lauką",
   "hideCompleted": "Slėpti užbaigtas",
@@ -158,5 +159,15 @@
   "moreOptions": "Daugiau parinkčių",
   "edit": "Redaguoti",
   "theme": "Aplinkos režimas",
-  "chooseTheme": "Pasirinkite norimą režimą"
+  "chooseTheme": "Pasirinkite norimą režimą",
+  "saveAndExecute": "Išsaugoti ir vykdyti",
+  "transcriptionRetryFailed": "Vertimo pakartotinis bandymas nepavyko. Bandykite dar kartą arba redaguokite tekstą rankiniu būdu.",
+  "showMore": "Rodyti daugiau",
+  "showLess": "Rodyti mažiau",
+  "taskUncompleted": "Užduotis pažymėta kaip nebaigta",
+  "failedToUncompleteTask": "Nepavyko pažymėti užduoties kaip nebaigtos",
+  "overdue": "{days}d vėluoja",
+  "today": "Šiandien",
+  "tomorrow": "Rytoj",
+  "daysFromNow": "{days}d"
 }

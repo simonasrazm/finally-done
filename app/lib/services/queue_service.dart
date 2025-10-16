@@ -23,6 +23,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
     }
   }
 
+
   Future<void> _loadCommandsFromRealm() async {
     try {
       final commands = _realmService.getAllCommands();
@@ -33,6 +34,9 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
       
       // Clean up commands with missing audio files BEFORE setting state
       final cleanedCommands = await _cleanupMissingAudioFiles(commands);
+      
+      
+      
       state = cleanedCommands;
       
     } catch (e) {
@@ -149,15 +153,12 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
   }
 
   List<QueuedCommandRealm> get queuedCommands {
-    for (var cmd in state) {
-    }
-    
     // Show ALL commands for now (no filtering)
     return state..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
   }
 
   List<QueuedCommandRealm> get processingCommands =>
-      state.where((cmd) => cmd.status == CommandStatus.processing.name).toList()
+      state.where((cmd) => !cmd.failed && !cmd.actionNeeded && cmd.status != CommandStatus.completed.name).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
 
   List<QueuedCommandRealm> get completedCommands => 
@@ -165,7 +166,11 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
 
   List<QueuedCommandRealm> get failedCommands => 
-      state.where((cmd) => cmd.status == CommandStatus.failed.name).toList()
+      state.where((cmd) => cmd.failed).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
+
+  List<QueuedCommandRealm> get reviewCommands => 
+      state.where((cmd) => cmd.failed || cmd.actionNeeded).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
 
   void addCommand(QueuedCommandRealm command) {
@@ -217,6 +222,91 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
     }
   }
 
+  void updateCommandFailed(String id, bool failed) {
+    try {
+      // Update in Realm
+      _realmService.updateCommandFailed(id, failed);
+      
+      // Update state
+      state = state.map((cmd) {
+        if (cmd.id == id) {
+          return cmd.copyWithRealm(failed: failed);
+        }
+        return cmd;
+      }).toList();
+      
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  void updateCommandErrorMessage(String id, String? errorMessage) {
+    try {
+      // Update in Realm
+      _realmService.updateCommandErrorMessage(id, errorMessage);
+      
+      // Update state
+      state = state.map((cmd) {
+        if (cmd.id == id) {
+          return cmd.copyWithRealm(errorMessage: errorMessage);
+        }
+        return cmd;
+      }).toList();
+      
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  void updateCommandActionNeeded(String id, bool actionNeeded) {
+    try {
+      // Update in Realm
+      _realmService.updateCommandActionNeeded(id, actionNeeded);
+      
+      // Update state
+      state = state.map((cmd) {
+        if (cmd.id == id) {
+          return cmd.copyWithRealm(actionNeeded: actionNeeded);
+        }
+        return cmd;
+      }).toList();
+      
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  void retryCommand(String id) {
+    try {
+      final command = state.firstWhere((cmd) => cmd.id == id);
+      
+      // Only retry transcribing commands
+      if (command.status == 'transcribing' && command.failed) {
+        // Clear failed flag and error message, keep status as transcribing
+        updateCommandFailed(id, false);
+        updateCommandErrorMessage(id, null);
+      } else {
+        // For other cases, determine new status based on command type
+        CommandStatus newStatus;
+        if (command.audioPath != null) {
+          // Audio command - move to transcribing
+          newStatus = CommandStatus.transcribing;
+        } else {
+          // Text command - move to queued
+          newStatus = CommandStatus.queued;
+        }
+        
+        // Update status and clear failed flag
+        updateCommandStatus(id, newStatus);
+        updateCommandFailed(id, false);
+        updateCommandErrorMessage(id, null);
+      }
+      
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   void removeCommand(String id) {
     try {
       Logger.info('Removing command from queue: $id', tag: 'QUEUE');
@@ -252,6 +342,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
     }
   }
 
+
   @override
   void dispose() {
     _realmService.close();
@@ -264,6 +355,7 @@ final queueProvider = StateNotifierProvider<QueueNotifier, List<QueuedCommandRea
 final queuedCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
   try {
     final commands = ref.watch(queueProvider);
+    
     // Apply filtering and sorting to the watched commands
     final sortedCommands = commands
       ..sort((a, b) {
@@ -293,7 +385,7 @@ final processingCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
     final filtered = commands
       .where((cmd) {
         try {
-          return cmd.status == CommandStatus.processing.name;
+          return !cmd.failed && !cmd.actionNeeded && cmd.status != CommandStatus.completed.name;
         } catch (e) {
           Logger.warning('Skipping invalid command in processingCommandsProvider: $e', tag: 'PROVIDER');
           return false;
@@ -314,6 +406,38 @@ final processingCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
       tag: 'PROVIDER', 
       error: e, 
       stackTrace: stackTrace
+    );
+    return [];
+  }
+});
+
+final reviewCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
+  try {
+    final commands = ref.watch(queueProvider);
+    final filtered = commands
+      .where((cmd) {
+        try {
+          return cmd.failed || cmd.actionNeeded;
+        } catch (e) {
+          Logger.warning('Skipping invalid command in reviewCommandsProvider: $e', tag: 'PROVIDER');
+          return false;
+        }
+      })
+      .toList()
+      ..sort((a, b) {
+        try {
+          return b.createdAt.compareTo(a.createdAt);
+        } catch (e) {
+          Logger.warning('Error sorting commands in reviewCommandsProvider: $e', tag: 'PROVIDER');
+          return 0;
+        }
+      });
+    
+    return filtered;
+  } catch (e) {
+    Logger.error('Error in reviewCommandsProvider',
+      tag: 'PROVIDER',
+      error: e,
     );
     return [];
   }
@@ -357,7 +481,7 @@ final failedCommandsProvider = Provider<List<QueuedCommandRealm>>((ref) {
     final filtered = commands
       .where((cmd) {
         try {
-          return cmd.status == CommandStatus.failed.name;
+          return cmd.failed;
         } catch (e) {
           // If we can't access the command properties, skip it
           Logger.warning('Skipping invalid command in failedCommandsProvider: $e', tag: 'PROVIDER');

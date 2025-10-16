@@ -692,6 +692,12 @@ abstract class AppLocalizations {
   /// **'Error Loading Tasks'**
   String get errorLoadingTasks;
 
+  /// No description provided for @errorLoadingTasksDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load your tasks. Please check your internet connection and try again.'**
+  String get errorLoadingTasksDescription;
+
   /// Title when no tasks are found
   ///
   /// In en, this message translates to:
@@ -955,6 +961,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose your preferred theme'**
   String get chooseTheme;
+
+  /// Button text for saving and executing a command
+  ///
+  /// In en, this message translates to:
+  /// **'Save and Execute'**
+  String get saveAndExecute;
+
+  /// Error message when transcription retry fails
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription retry failed. Please try again or edit the text manually.'**
+  String get transcriptionRetryFailed;
+
+  /// Button text to expand error message
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get showMore;
+
+  /// Button text to collapse error message
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get showLess;
+
+  /// Success message when a task is marked as not completed
+  ///
+  /// In en, this message translates to:
+  /// **'Task marked as not completed'**
+  String get taskUncompleted;
+
+  /// Error message when uncompleting a task fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to uncomplete task'**
+  String get failedToUncompleteTask;
+
+  /// Overdue task indicator
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d overdue'**
+  String overdue(int days);
+
+  /// Task due today
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// Task due tomorrow
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get tomorrow;
+
+  /// Task due in X days
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String daysFromNow(int days);
 }
 
 class _AppLocalizationsDelegate

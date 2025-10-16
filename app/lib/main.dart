@@ -6,6 +6,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'dart:ui' show PlatformDispatcher;
 import 'package:finally_done/utils/retry_mechanism.dart';
+import 'package:newrelic_mobile/newrelic_mobile.dart';
+import 'package:newrelic_mobile/newrelic_navigation_observer.dart';
+import 'package:newrelic_mobile/config.dart';
+import 'dart:io';
 
 import 'design_system/colors.dart';
 import 'design_system/typography.dart';
@@ -16,6 +20,7 @@ import 'screens/tasks_screen.dart';
 import 'services/queue_service.dart';
 import 'providers/language_provider.dart';
 import 'providers/theme_provider.dart';
+import 'utils/sentry_performance.dart';
 
 
 void main() async {
@@ -25,6 +30,32 @@ void main() async {
         } catch (e) {
           // Continue with defaults
         }
+
+        // Initialize New Relic (official setup)
+        var appToken = "";
+        final newRelicToken = dotenv.env['NEW_RELIC_TOKEN'];
+        
+        if (newRelicToken != null && newRelicToken.isNotEmpty) {
+          appToken = newRelicToken;
+        } else {
+          return; // Exit early if no token
+        }
+
+        Config config = Config(
+          accessToken: appToken,
+          analyticsEventEnabled: true,
+          networkErrorRequestEnabled: true,
+          networkRequestEnabled: true,
+          crashReportingEnabled: true,
+          interactionTracingEnabled: true,
+          httpResponseBodyCaptureEnabled: true,
+          loggingEnabled: false, // Disable verbose logging in release mode
+          webViewInstrumentation: true,
+          printStatementAsEventsEnabled: false, // Disable print statements as events
+          httpInstrumentationEnabled: true,
+        );
+
+        await NewrelicMobile.instance.startAgent(config);
 
         final sentryDsn = dotenv.env['SENTRY_DSN'];
   
@@ -51,10 +82,12 @@ void main() async {
       appRunner: () async {
 
         // Start Sentry transaction for app startup performance (now that Sentry is ready)
-        final appStartTransaction = Sentry.startTransaction(
+        final appStartTransaction = sentryPerformance.startTransaction(
           'app.startup',
           'app.lifecycle',
         );
+
+        // New Relic will automatically track app startup
 
         WidgetsFlutterBinding.ensureInitialized();
 
@@ -86,7 +119,9 @@ void main() async {
 
 
         // Finish the main startup transaction
-        appStartTransaction.finish(status: const SpanStatus.ok());
+        sentryPerformance.finishTransaction('app.startup');
+        
+        // New Relic automatically tracks app startup completion
       },
     );
   
@@ -131,6 +166,9 @@ class FinallyDoneApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Finally Done',
       debugShowCheckedModeBanner: false,
+      
+      // New Relic Navigation Tracking
+      navigatorObservers: [NewRelicNavigationObserver()],
       
       // Localization
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -345,9 +383,24 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          // Track screen navigation performance
+          final screenNames = ['home', 'mission_control', 'tasks', 'settings'];
+          final screenName = screenNames[index];
+          
+          sentryPerformance.monitorTransaction(
+            'screen.navigation',
+            PerformanceOps.screenNavigation,
+            () async {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            data: {
+              'from_screen': screenNames[_currentIndex],
+              'to_screen': screenName,
+              'navigation_type': 'bottom_nav',
+            },
+          );
         },
         items: [
           BottomNavigationBarItem(

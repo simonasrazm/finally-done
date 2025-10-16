@@ -9,7 +9,6 @@ void main() {
       expect(CommandStatus.queued.name, 'queued');
       expect(CommandStatus.processing.name, 'processing');
       expect(CommandStatus.completed.name, 'completed');
-      expect(CommandStatus.failed.name, 'failed');
     });
     
     test('QueuedCommandRealm constructor', () {
@@ -41,14 +40,14 @@ void main() {
       expect(statuses, contains('queued'));
       expect(statuses, contains('processing'));
       expect(statuses, contains('completed'));
-      expect(statuses, contains('failed'));
+      // CommandStatus.failed was removed from the enum
       
       // Test logical flow order
       expect(statuses.indexOf('recorded'), lessThan(statuses.indexOf('transcribing')));
       expect(statuses.indexOf('transcribing'), lessThan(statuses.indexOf('queued')));
       expect(statuses.indexOf('queued'), lessThan(statuses.indexOf('processing')));
       expect(statuses.indexOf('processing'), lessThan(statuses.indexOf('completed')));
-      expect(statuses.indexOf('processing'), lessThan(statuses.indexOf('failed')));
+      // CommandStatus.failed was removed from the enum
     });
   });
 }

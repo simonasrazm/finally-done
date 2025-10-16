@@ -346,6 +346,10 @@ class AppLocalizationsLt extends AppLocalizations {
   String get errorLoadingTasks => 'Klaida įkeliant užduotis';
 
   @override
+  String get errorLoadingTasksDescription =>
+      'Nepavyko įkelti jūsų užduočių. Patikrinkite interneto ryšį ir bandykite dar kartą.';
+
+  @override
   String get noTasksFound => 'Užduočių nerasta';
 
   @override
@@ -491,4 +495,40 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get chooseTheme => 'Pasirinkite norimą režimą';
+
+  @override
+  String get saveAndExecute => 'Išsaugoti ir vykdyti';
+
+  @override
+  String get transcriptionRetryFailed =>
+      'Vertimo pakartotinis bandymas nepavyko. Bandykite dar kartą arba redaguokite tekstą rankiniu būdu.';
+
+  @override
+  String get showMore => 'Rodyti daugiau';
+
+  @override
+  String get showLess => 'Rodyti mažiau';
+
+  @override
+  String get taskUncompleted => 'Užduotis pažymėta kaip nebaigta';
+
+  @override
+  String get failedToUncompleteTask =>
+      'Nepavyko pažymėti užduoties kaip nebaigtos';
+
+  @override
+  String overdue(int days) {
+    return '${days}d vėluoja';
+  }
+
+  @override
+  String get today => 'Šiandien';
+
+  @override
+  String get tomorrow => 'Rytoj';
+
+  @override
+  String daysFromNow(int days) {
+    return '${days}d';
+  }
 }

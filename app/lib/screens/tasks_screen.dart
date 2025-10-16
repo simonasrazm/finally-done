@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
 import '../providers/tasks_provider.dart';
 import '../services/integration_service.dart';
+import '../services/integrations/integration_manager.dart';
+import '../utils/sentry_performance.dart';
 import '../generated/app_localizations.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
@@ -17,19 +20,64 @@ class TasksScreen extends ConsumerStatefulWidget {
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends ConsumerState<TasksScreen> {
+class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingObserver {
   String? _selectedTaskListId;
   final TextEditingController _newTaskController = TextEditingController();
   bool _showCompleted = false;
+  DateTime? _lastAppResumeCall;
+  
+  // Animation state management
+  final Set<String> _completingTasks = <String>{};
+  final Set<String> _uncompletingTasks = <String>{};
+  final Set<String> _removingTasks = <String>{};
+  final Set<String> _addingTasks = <String>{};
+  
+  // AnimatedList key for smooth transitions
+  final GlobalKey<AnimatedListState> _animatedListKey = GlobalKey<AnimatedListState>();
 
   @override
   void initState() {
     super.initState();
-    _initializeTaskList();
+    WidgetsBinding.instance.addObserver(this);
+    
+    // Track screen load performance
+    sentryPerformance.monitorTransaction(
+      PerformanceTransactions.screenTasks,
+      PerformanceOps.screenLoad,
+      () async {
+        await _initializeTaskList();
+      },
+      data: {
+        'screen': 'tasks',
+        'has_task_initialization': true,
+      },
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // When user returns to the app, refresh tasks and check connectivity
+    if (state == AppLifecycleState.resumed) {
+      final now = DateTime.now();
+      
+      // Debounce multiple rapid app resume calls (within 1 second)
+      if (_lastAppResumeCall != null && 
+          now.difference(_lastAppResumeCall!).inMilliseconds < 1000) {
+        return;
+      }
+      
+      _lastAppResumeCall = now;
+      
+      // Only call refreshTasks - it handles both task fetching and connectivity
+      ref.read(tasksProvider.notifier).refreshTasks();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _newTaskController.dispose();
     super.dispose();
   }
@@ -67,11 +115,145 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
   Future<void> _completeTask(String taskId) async {
-    await ref.read(tasksProvider.notifier).completeTask(taskId);
+    // Add to completing set and update UI
+    setState(() {
+      _completingTasks.add(taskId);
+    });
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.taskCompleted)),
+    // Monitor task completion performance
+    final transaction = Sentry.startTransaction(
+      'task.complete',
+      'ui.interaction',
+      bindToScope: true,
     );
+    
+    try {
+      final success = await ref.read(tasksProvider.notifier).completeTask(taskId);
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.taskCompleted)),
+        );
+        
+        // Handle animation based on view mode
+        if (!_showCompleted) {
+          // In "incomplete only" mode: animate task out, then remove with animation
+          await Future.delayed(Duration(milliseconds: DesignTokens.animationSmooth)); // Let slide animation complete
+          // Remove task with animated list animation
+          _removeTaskWithAnimation(taskId);
+        } else {
+          // In "all items" mode: update state immediately for checkbox animation
+          ref.read(tasksProvider.notifier).updateTaskStatusLocally(taskId, 'completed');
+          await Future.delayed(Duration(milliseconds: DesignTokens.animationNormal)); // Let checkbox animation complete
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to complete task'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      // Always remove from completing set and update UI
+      setState(() {
+        _completingTasks.remove(taskId);
+      });
+      
+      // Finish Sentry transaction
+      transaction.setData('view_mode', _showCompleted ? 'all_items' : 'incomplete_only');
+      transaction.setData('animation_duration', _showCompleted ? 200 : 300);
+      transaction.finish(status: const SpanStatus.ok());
+    }
+  }
+
+  Future<void> _uncompleteTask(String taskId) async {
+    // Add to uncompleting set and update UI
+    setState(() {
+      _uncompletingTasks.add(taskId);
+    });
+    
+    // Monitor task uncompletion performance
+    final transaction = Sentry.startTransaction(
+      'task.uncomplete',
+      'ui.interaction',
+      bindToScope: true,
+    );
+    
+    try {
+      final success = await ref.read(tasksProvider.notifier).uncompleteTask(taskId);
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.taskUncompleted)),
+        );
+        
+        // Handle animation based on view mode
+        if (!_showCompleted) {
+          // In "incomplete only" mode: animate task in, then add with animation
+          await Future.delayed(Duration(milliseconds: DesignTokens.animationSmooth)); // Let slide animation complete
+          // Add task with animated list animation
+          _addTaskWithAnimation(taskId);
+        } else {
+          // In "all items" mode: update state immediately for checkbox animation
+          ref.read(tasksProvider.notifier).updateTaskStatusLocally(taskId, 'needsAction');
+          await Future.delayed(Duration(milliseconds: DesignTokens.animationNormal)); // Let checkbox animation complete
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.failedToUncompleteTask),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      // Always remove from uncompleting set and update UI
+      setState(() {
+        _uncompletingTasks.remove(taskId);
+      });
+      
+      // Finish Sentry transaction
+      transaction.setData('view_mode', _showCompleted ? 'all_items' : 'incomplete_only');
+      transaction.setData('animation_duration', _showCompleted ? 200 : 300);
+      transaction.finish(status: const SpanStatus.ok());
+    }
+  }
+
+  void _removeTaskWithAnimation(String taskId) async {
+    // Add to removing set to trigger height animation
+    setState(() {
+      _removingTasks.add(taskId);
+    });
+    
+    // Wait for the height collapse animation to complete
+    await Future.delayed(Duration(milliseconds: DesignTokens.animationSmooth));
+    
+    // Update the state to actually remove the task from the list
+    ref.read(tasksProvider.notifier).updateTaskStatusLocally(taskId, 'completed');
+    
+    // Remove from removing set
+    setState(() {
+      _removingTasks.remove(taskId);
+    });
+  }
+
+  void _addTaskWithAnimation(String taskId) async {
+    // Update the state first to add the task back
+    ref.read(tasksProvider.notifier).updateTaskStatusLocally(taskId, 'needsAction');
+    
+    // Add to adding set to trigger fade-in animation
+    setState(() {
+      _addingTasks.add(taskId);
+    });
+    
+    // Wait for the fade-in animation to complete
+    await Future.delayed(Duration(milliseconds: DesignTokens.animationSmooth));
+    
+    // Remove from adding set
+    setState(() {
+      _addingTasks.remove(taskId);
+    });
   }
 
   Future<void> _deleteTask(String taskId) async {
@@ -106,6 +288,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget build(BuildContext context) {
     final integrationService = ref.watch(integrationServiceProvider);
     final tasksState = ref.watch(tasksProvider);
+    // Only watch taskListsProvider when we need to show the task list selector
     final taskListsAsync = ref.watch(taskListsProvider);
 
     return Scaffold(
@@ -334,6 +517,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
   Widget _buildErrorView(String error) {
+    // Log technical error to Sentry and console
+    
     return Center(
       child: Padding(
         padding: EdgeInsets.all(DesignTokens.componentPadding),
@@ -353,14 +538,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             ),
             SizedBox(height: DesignTokens.spacing2),
             Text(
-              error,
+              AppLocalizations.of(context)!.errorLoadingTasksDescription,
               style: AppTypography.body.copyWith(color: AppColors.getTextSecondaryColor(context)),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: DesignTokens.sectionSpacing),
             ElevatedButton.icon(
               onPressed: () {
-                ref.read(tasksProvider.notifier).refreshTasks();
+                ref.read(tasksProvider.notifier).retryTasks();
               },
               icon: const Icon(Icons.refresh),
               label: Text(AppLocalizations.of(context)!.tryAgain),
@@ -411,33 +596,85 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget _buildTasksList(TasksState tasksState) {
     final tasksToShow = _showCompleted ? tasksState.tasks : tasksState.incompleteTasks;
     
+    // Use a stable key to prevent unnecessary rebuilds
+    final listKey = ValueKey('tasks_list_${_showCompleted ? 'all' : 'incomplete'}_${tasksToShow.length}');
+    
     return RefreshIndicator(
+      key: listKey,
       onRefresh: () => ref.read(tasksProvider.notifier).refreshTasks(),
-      child: ListView.builder(
-        padding: EdgeInsets.symmetric(
-          horizontal: DesignTokens.componentPadding,
-          vertical: DesignTokens.spacing1,
-        ),
-        itemCount: tasksToShow.length,
-        itemBuilder: (context, index) {
-          final task = tasksToShow[index];
-          final isCompleted = task.status == 'completed';
-          final hasAdditionalContent = task.notes?.isNotEmpty == true || task.due != null;
-          
-          return Column(
-            children: [
-              _buildCompactTaskItem(task, isCompleted),
-              if (index < tasksToShow.length - 1)
-                Divider(
-                  height: hasAdditionalContent ? DesignTokens.spacing1 : DesignTokens.spacing0,
-                  thickness: 0.5,
-                  color: AppColors.separatorOpaque.withOpacity(DesignTokens.opacity20),
-                  indent: DesignTokens.spacing8, // Align with content
-                ),
-            ],
-          );
-        },
+      child: _showCompleted 
+        ? _buildAnimatedList(tasksToShow) // Use AnimatedList for "all items" view
+        : _buildRegularList(tasksToShow), // Use regular ListView for "incomplete only" view
+    );
+  }
+
+  Widget _buildAnimatedList(List<google_tasks.Task> tasks) {
+    return AnimatedList(
+      key: _animatedListKey,
+      padding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.componentPadding,
+        vertical: DesignTokens.spacing1,
       ),
+      initialItemCount: tasks.length,
+      itemBuilder: (context, index, animation) {
+        if (index >= tasks.length) return SizedBox.shrink();
+        
+        final task = tasks[index];
+        final isCompleted = task.status == 'completed';
+        final hasAdditionalContent = task.notes?.isNotEmpty == true || task.due != null;
+        
+        return SlideTransition(
+          position: animation.drive(
+            Tween<Offset>(begin: Offset(1, 0), end: Offset.zero)
+                .chain(CurveTween(curve: Curves.easeOutCubic)),
+          ),
+          child: FadeTransition(
+            opacity: animation,
+            child: Column(
+              key: ValueKey('task_item_${task.id}'),
+              children: [
+                _buildCompactTaskItem(task, isCompleted),
+                if (index < tasks.length - 1)
+                  Divider(
+                    height: hasAdditionalContent ? DesignTokens.spacing1 : DesignTokens.spacing0,
+                    thickness: 0.5,
+                    color: AppColors.separatorOpaque.withOpacity(DesignTokens.opacity20),
+                    indent: DesignTokens.spacing8, // Align with content
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRegularList(List<google_tasks.Task> tasks) {
+    return ListView.builder(
+      padding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.componentPadding,
+        vertical: DesignTokens.spacing1,
+      ),
+      itemCount: tasks.length,
+      itemBuilder: (context, index) {
+        final task = tasks[index];
+        final isCompleted = task.status == 'completed';
+        final hasAdditionalContent = task.notes?.isNotEmpty == true || task.due != null;
+        
+        return Column(
+          key: ValueKey('task_item_${task.id}'),
+          children: [
+            _buildCompactTaskItem(task, isCompleted),
+            if (index < tasks.length - 1)
+              Divider(
+                height: hasAdditionalContent ? DesignTokens.spacing1 : DesignTokens.spacing0,
+                thickness: 0.5,
+                color: AppColors.separatorOpaque.withOpacity(DesignTokens.opacity20),
+                indent: DesignTokens.spacing8, // Align with content
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -445,8 +682,44 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     // Determine if task has additional content (notes or due date)
     final hasAdditionalContent = task.notes?.isNotEmpty == true || task.due != null;
     
-    return InkWell(
-      onTap: isCompleted ? null : () => _completeTask(task.id!),
+    // Check if this task is currently being animated
+    final isCompleting = _completingTasks.contains(task.id);
+    final isUncompleting = _uncompletingTasks.contains(task.id);
+    final isRemoving = _removingTasks.contains(task.id);
+    final isAdding = _addingTasks.contains(task.id);
+    final isAnimating = isCompleting || isUncompleting || isRemoving || isAdding;
+    
+    return AnimatedOpacity(
+      opacity: isAdding ? 0.0 : 1.0, // Fade in when adding
+      duration: Duration(milliseconds: DesignTokens.animationSmooth),
+      curve: Curves.easeInOutCubic,
+      child: AnimatedContainer(
+        key: ValueKey('task_container_${task.id}'),
+        duration: Duration(milliseconds: DesignTokens.animationSmooth), // Smooth list transitions
+        curve: Curves.easeInOutCubic, // Smoother curve
+        height: isRemoving ? 0 : null, // Collapse height when removing
+        transform: isCompleting && !_showCompleted 
+            ? Matrix4.translationValues(MediaQuery.of(context).size.width, 0, 0)
+            : isUncompleting && !_showCompleted
+                ? Matrix4.translationValues(-MediaQuery.of(context).size.width, 0, 0)
+                : Matrix4.identity(),
+      child: InkWell(
+      onTap: () {
+        if (task.id != null && task.id!.isNotEmpty) {
+          if (isCompleted) {
+            _uncompleteTask(task.id!);
+          } else {
+            _completeTask(task.id!);
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: Task ID is missing'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: DesignTokens.spacing3,
@@ -461,7 +734,22 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             // Checkbox
             Checkbox(
               value: isCompleted,
-              onChanged: isCompleted ? null : (value) => _completeTask(task.id!),
+              onChanged: (value) {
+                if (task.id != null && task.id!.isNotEmpty) {
+                  if (isCompleted) {
+                    _uncompleteTask(task.id!);
+                  } else {
+                    _completeTask(task.id!);
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: Task ID is missing'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
               activeColor: AppColors.primary,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               visualDensity: VisualDensity.compact,
@@ -594,7 +882,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ],
         ),
       ),
-    );
+    ),
+    ),
+  );
   }
 
   Widget _buildProviderIndicator() {
@@ -634,13 +924,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final difference = due.difference(now).inDays;
     
     if (difference < 0) {
-      return '${-difference}d overdue';
+      return AppLocalizations.of(context)!.overdue(-difference);
     } else if (difference == 0) {
-      return 'Today';
+      return AppLocalizations.of(context)!.today;
     } else if (difference == 1) {
-      return 'Tomorrow';
+      return AppLocalizations.of(context)!.tomorrow;
     } else if (difference <= 7) {
-      return '${difference}d';
+      return AppLocalizations.of(context)!.daysFromNow(difference);
     } else {
       return '${due.day}/${due.month}';
     }

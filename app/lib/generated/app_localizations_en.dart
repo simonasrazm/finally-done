@@ -343,6 +343,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorLoadingTasks => 'Error Loading Tasks';
 
   @override
+  String get errorLoadingTasksDescription =>
+      'Unable to load your tasks. Please check your internet connection and try again.';
+
+  @override
   String get noTasksFound => 'No Tasks Found';
 
   @override
@@ -487,4 +491,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseTheme => 'Choose your preferred theme';
+
+  @override
+  String get saveAndExecute => 'Save and Execute';
+
+  @override
+  String get transcriptionRetryFailed =>
+      'Transcription retry failed. Please try again or edit the text manually.';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String get taskUncompleted => 'Task marked as not completed';
+
+  @override
+  String get failedToUncompleteTask => 'Failed to uncomplete task';
+
+  @override
+  String overdue(int days) {
+    return '${days}d overdue';
+  }
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get tomorrow => 'Tomorrow';
+
+  @override
+  String daysFromNow(int days) {
+    return '${days}d';
+  }
 }

@@ -8,8 +8,11 @@ import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
 import '../services/queue_service.dart';
+import '../services/speech_service.dart';
 import '../models/queued_command.dart';
 import '../utils/logger.dart';
+import '../utils/sentry_performance.dart';
+import '../utils/thumbnail_service.dart';
 import '../generated/app_localizations.dart';
 
 class MissionControlScreen extends ConsumerStatefulWidget {
@@ -24,10 +27,25 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   late TabController _tabController;
   final AudioPlayer _audioPlayer = AudioPlayer();
   
+  // Track which commands are currently being retried
+  final Set<String> _retryingCommands = <String>{};
+  
   @override
   void initState() {
     super.initState();
+    
+    // Track screen load performance
+    sentryPerformance.monitorTransaction(
+      PerformanceTransactions.screenMissionControl,
+      PerformanceOps.screenLoad,
+      () async {
     _tabController = TabController(length: 3, vsync: this);
+      },
+      data: {
+        'screen': 'mission_control',
+        'has_tab_controller': true,
+      },
+    );
   }
   
   @override
@@ -78,8 +96,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                   return Stack(
                     children: [
                       Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                           Icon(Icons.rate_review_outlined, size: 16),
                           Text(AppLocalizations.of(context)!.review, style: TextStyle(fontSize: 10)),
                         ],
@@ -128,8 +146,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   
   Widget _buildProcessingTab() {
     final allCommands = ref.watch(queuedCommandsProvider);
-    // Filter out failed commands - they should only appear in Review tab
-    final processingCommands = allCommands.where((cmd) => cmd.status != CommandStatus.failed.name).toList();
+    // Show all commands except failed ones (they go to Review tab)
+    final processingCommands = allCommands.where((cmd) => !cmd.failed).toList();
     
     return ListView(
       padding: EdgeInsets.all(DesignTokens.componentPadding),
@@ -181,12 +199,12 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 const SizedBox(height: DesignTokens.spacing2),
                 Text(
                   AppLocalizations.of(context)!.completedCommandsWillAppearHere,
-                  style: AppTypography.footnote.copyWith(
-                    color: AppColors.getTextTertiaryColor(context),
-                  ),
-                ),
-              ],
+            style: AppTypography.footnote.copyWith(
+              color: AppColors.getTextTertiaryColor(context),
             ),
+          ),
+              ],
+        ),
           )
         else
           ...processingCommands.map((command) => _buildQueuedCommandCard(command)),
@@ -265,6 +283,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Status badge
                   Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: DesignTokens.spacing2,
@@ -282,75 +301,194 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: DesignTokens.spacing2),
-                GestureDetector(
-                  onTap: () => _deleteCommand(command.id),
-                    child: Container(
-                      padding: EdgeInsets.all(DesignTokens.spacing1 + DesignTokens.spacing1),
+                  
+                  // Failed flag indicator (only show if failed)
+                  if (command.failed) ...[
+                    const SizedBox(width: DesignTokens.spacing1),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: DesignTokens.spacing1,
+                        vertical: DesignTokens.spacing0,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.error.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
                       ),
-                      child: Icon(
-                        Icons.delete_outline,
-                        size: 16,
-                        color: AppColors.error,
+                      child: Text(
+                        'FAILED',
+                        style: AppTypography.caption1.copyWith(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 8,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
+                  
+                  // Action needed flag indicator (only show if action needed)
+                  if (command.actionNeeded) ...[
+                    const SizedBox(width: DesignTokens.spacing1),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: DesignTokens.spacing1,
+                        vertical: DesignTokens.spacing0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+                      ),
+                      child: Text(
+                        'ACTION NEEDED',
+                        style: AppTypography.caption1.copyWith(
+                          color: AppColors.warning,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ],
           ),
+          
+          // Error message display (show user-friendly message based on status)
+          if (command.failed && commandStatus == 'transcribing') ...[
+            const SizedBox(height: DesignTokens.spacing2),
+            _buildExpandableErrorMessage(AppLocalizations.of(context)!.transcriptionRetryFailed),
+          ],
+          
           const SizedBox(height: DesignTokens.spacing2),
-          Row(
-            children: [
-              Text(
-                AppLocalizations.of(context)!.scheduledTime(_formatTime(createdAt)),
-                style: AppTypography.footnote.copyWith(
-                  color: AppColors.getTextTertiaryColor(context),
-                ),
+        Row(
+          children: [
+            Text(
+              AppLocalizations.of(context)!.scheduledTime(_formatTime(createdAt)),
+              style: AppTypography.footnote.copyWith(
+                color: AppColors.getTextTertiaryColor(context),
               ),
-              if (audioPath != null && audioPath.isNotEmpty) ...[
-                const SizedBox(width: DesignTokens.componentPadding),
-                GestureDetector(
-                  onTap: () {
-                    if (audioPath != null) {
-                      _playAudio(audioPath);
-                    }
-                  },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: DesignTokens.spacing2,
-                      vertical: DesignTokens.spacing1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.play_arrow,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: DesignTokens.spacing1),
-                        Text(
-                          AppLocalizations.of(context)!.play,
-                          style: AppTypography.caption1.copyWith(
+            ),
+            
+            // Action buttons (grouped on the left)
+            const SizedBox(width: DesignTokens.componentPadding),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Play button (for audio commands)
+                if (audioPath != null && audioPath.isNotEmpty) ...[
+                  GestureDetector(
+                    onTap: () {
+                      if (audioPath != null) {
+                        _playAudio(audioPath);
+                      }
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: DesignTokens.spacing2,
+                        vertical: DesignTokens.spacing1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+      children: [
+                          Icon(
+                            Icons.play_arrow,
+                            size: 14,
                             color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: DesignTokens.spacing1),
+                          Text(
+                            AppLocalizations.of(context)!.play,
+                            style: AppTypography.caption1.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: DesignTokens.spacing2),
+                ],
+                
+                // Retry button (only for transcribing + failed commands)
+                if (command.failed && commandStatus == 'transcribing') ...[
+                  GestureDetector(
+                    onTap: _retryingCommands.contains(command.id) 
+                        ? null 
+                        : () => _retryTranscription(command.id),
+                    child: Container(
+                      padding: EdgeInsets.all(DesignTokens.spacing1),
+                      decoration: BoxDecoration(
+                        color: _retryingCommands.contains(command.id)
+                            ? AppColors.primary.withOpacity(0.1)
+                            : AppColors.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                      ),
+                      child: _retryingCommands.contains(command.id)
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                              ),
+                            )
+                          : Icon(
+                              Icons.refresh_outlined,
+                              size: 16,
+                              color: AppColors.success,
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: DesignTokens.spacing2),
+                ],
+                
+                // Edit button (tab-specific logic)
+                if (_shouldShowEditButton(command, commandStatus)) ...[
+                  GestureDetector(
+                    onTap: () => _editTranscription(command.id, transcription ?? commandText),
+                    child: Container(
+                      padding: EdgeInsets.all(DesignTokens.spacing1),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                      ),
+                      child: Icon(
+                        Icons.edit_outlined,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: DesignTokens.spacing2),
+                ],
               ],
-            ],
-          ),
+            ),
+            
+            // Spacer to push delete button to the right
+            const Spacer(),
+            
+            // Delete button (positioned on the far right)
+            GestureDetector(
+              onTap: () => _deleteCommand(command.id),
+              child: Container(
+                padding: EdgeInsets.all(DesignTokens.spacing1),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                ),
+                child: Icon(
+                  Icons.delete_outline,
+                  size: 16,
+                  color: AppColors.error,
+                ),
+              ),
+            ),
+          ],
+        ),
           
           // Photo attachments
           if (photoPaths.isNotEmpty) ...[
@@ -373,12 +511,12 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                     margin: const EdgeInsets.only(right: DesignTokens.spacing2),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                      child: FutureBuilder<String>(
-                        future: _getPhotoPath(photoPaths[index]),
+                      child: FutureBuilder<String?>(
+                        future: _getThumbnailPath(photoPaths[index]),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             return GestureDetector(
-                              onTap: () => _showPhotoPreview(snapshot.data!, photoPaths),
+                              onTap: () async => _showPhotoPreview(await _getPhotoPath(photoPaths[index]), photoPaths),
                               child: Image.file(
                                 File(snapshot.data!),
                                 width: 80,
@@ -419,13 +557,10 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     try {
       // Convert filename to full path
       final fullPath = await _getFullAudioPath(audioPath);
-      print('🎵 PLAY: Input audioPath: "$audioPath"');
-      print('🎵 PLAY: Converted to fullPath: "$fullPath"');
       
       // Check if file exists first
       final file = File(fullPath);
       if (!await file.exists()) {
-        print('🎵 PLAY: Audio file does not exist: $fullPath');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Audio file not found'),
@@ -455,7 +590,6 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       );
       
     } catch (e) {
-      print('🎵 PLAY ERROR: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error playing audio: $e'),
@@ -473,6 +607,11 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   Future<String> _getPhotoPath(String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     return '${directory.path}/photos/$fileName';
+  }
+
+  Future<String?> _getThumbnailPath(String fileName) async {
+    final photoPath = await _getPhotoPath(fileName);
+    return await ThumbnailService.getThumbnailPath(photoPath);
   }
 
   void _showPhotoPreview(String photoPath, List<String> allPhotoPaths) {
@@ -514,7 +653,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         }
       }
       
-      // Delete associated photo files
+      // Delete associated photo files and thumbnails
       for (final photoPath in photoPaths) {
         final fullPhotoPath = await _getPhotoPath(photoPath);
         final photoFile = File(fullPhotoPath);
@@ -522,6 +661,9 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           await photoFile.delete();
           Logger.debug('Removed photo file: $fullPhotoPath', tag: 'DELETE');
         }
+        
+        // Also delete thumbnail
+        await ThumbnailService.deleteThumbnail(fullPhotoPath);
       }
       
       // Show success message
@@ -549,7 +691,250 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     }
   }
 
+  bool _shouldShowEditButton(QueuedCommandRealm command, String commandStatus) {
+    // Get current tab index
+    final currentTabIndex = _tabController?.index ?? 0;
+    
+    // If command is failed or actionNeeded, it should always have edit button (Review tab logic)
+    if (command.failed || command.actionNeeded) {
+      return true;
+    }
+    
+    // For other commands, check tab context
+    switch (currentTabIndex) {
+      case 0: // Processing tab
+        // Only show edit button for queued commands
+        return commandStatus == 'queued';
+      case 1: // Completed tab
+        // No edit button for completed commands
+        return false;
+      case 2: // Review tab
+        // This should not happen since failed/actionNeeded is handled above
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  void _editTranscription(String id, String currentTranscription) {
+    // Get current tab index to determine behavior
+    final currentTabIndex = _tabController?.index ?? 0;
+    final isReviewTab = currentTabIndex == 2;
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final controller = TextEditingController(text: currentTranscription);
+        
+        return AlertDialog(
+          title: Text('Edit Transcription'),
+          content: TextField(
+            controller: controller,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Enter transcription text...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newTranscription = controller.text.trim();
+                if (newTranscription.isNotEmpty && newTranscription != currentTranscription) {
+                  // Update transcription
+                  ref.read(queueProvider.notifier).updateCommandTranscription(id, newTranscription);
+                  
+                  if (isReviewTab) {
+                    // Review tab: Save and Execute functionality
+                    // Clear failed flag and error message
+                    ref.read(queueProvider.notifier).updateCommandFailed(id, false);
+                    ref.read(queueProvider.notifier).updateCommandErrorMessage(id, null);
+                    
+                    // Move to queued status for processing
+                    ref.read(queueProvider.notifier).updateCommandStatus(id, CommandStatus.queued);
+                    
+                    // Show success message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Transcription updated and queued for processing'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  } else {
+                    // Processing tab: Just save
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Transcription updated successfully'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                }
+                Navigator.of(context).pop();
+              },
+              child: Text(isReviewTab 
+                ? AppLocalizations.of(context)!.saveAndExecute 
+                : 'Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _retryTranscription(String id) async {
+    // Add to retrying set and update UI
+    setState(() {
+      _retryingCommands.add(id);
+    });
+    
+    try {
+      // Get the command to retry
+      final allCommands = ref.read(queueProvider);
+      final command = allCommands.firstWhere((cmd) => cmd.id == id);
+      
+      if (command.audioPath == null || command.audioPath!.isEmpty) {
+        throw Exception('No audio file found for this command');
+      }
+      
+      // Show loading message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Retrying transcription...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      
+      // Get full audio path
+      final fullAudioPath = await _getFullAudioPath(command.audioPath!);
+      
+      // Process the specific audio file with Gemini (same as after recording)
+      final speechService = ref.read(speechServiceProvider);
+      String transcription = await speechService.processAudioFile(fullAudioPath);
+      
+      // Update transcription and status
+      ref.read(queueProvider.notifier).updateCommandTranscription(id, transcription);
+      ref.read(queueProvider.notifier).updateCommandStatus(id, CommandStatus.queued);
+      
+      // Clear failed flag and error message on success
+      ref.read(queueProvider.notifier).updateCommandFailed(id, false);
+      ref.read(queueProvider.notifier).updateCommandErrorMessage(id, null);
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transcription retry completed!'),
+          backgroundColor: AppColors.success,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      
+    } catch (e) {
+      // Store technical error for backend analysis, but show user-friendly message in UI
+      ref.read(queueProvider.notifier).updateCommandErrorMessage(id, e.toString());
+      ref.read(queueProvider.notifier).updateCommandFailed(id, true);
+      
+      // Show user-friendly error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.transcriptionRetryFailed),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      
+    } finally {
+      // Always remove from retrying set and update UI
+      setState(() {
+        _retryingCommands.remove(id);
+      });
+    }
+  }
+
+
+
   
+  Widget _buildExpandableErrorMessage(String errorMessage) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        const int maxLength = 100;
+        final bool isLong = errorMessage.length > maxLength;
+        final bool isExpanded = _expandedErrorMessages[errorMessage] ?? false;
+        
+        return Container(
+          padding: EdgeInsets.all(DesignTokens.spacing2),
+          decoration: BoxDecoration(
+            color: AppColors.error.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+            border: Border.all(
+              color: AppColors.error.withOpacity(0.3),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 16,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(width: DesignTokens.spacing2),
+                  Expanded(
+                    child: Text(
+                      isLong && !isExpanded 
+                        ? '${errorMessage.substring(0, maxLength)}...'
+                        : errorMessage,
+                      style: AppTypography.caption1.copyWith(
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (isLong) ...[
+                const SizedBox(height: DesignTokens.spacing1),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _expandedErrorMessages[errorMessage] = !isExpanded;
+                    });
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        isExpanded ? Icons.expand_less : Icons.expand_more,
+                        size: 16,
+                        color: AppColors.error.withOpacity(0.7),
+                      ),
+                      const SizedBox(width: DesignTokens.spacing1),
+                      Text(
+                        isExpanded ? AppLocalizations.of(context)!.showLess : AppLocalizations.of(context)!.showMore,
+                        style: AppTypography.caption1.copyWith(
+                          color: AppColors.error.withOpacity(0.7),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Track expanded state for each error message
+  final Map<String, bool> _expandedErrorMessages = {};
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'queued':
@@ -643,12 +1028,12 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   }
   
   Widget _buildReviewTab() {
-    final failedCommands = ref.watch(failedCommandsProvider);
+    final reviewCommands = ref.watch(reviewCommandsProvider);
     
     return ListView(
       padding: EdgeInsets.all(DesignTokens.componentPadding),
       children: [
-        if (failedCommands.isEmpty)
+        if (reviewCommands.isEmpty)
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -667,7 +1052,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
                 ),
                 const SizedBox(height: DesignTokens.spacing2),
                 Text(
-                  'Failed commands will appear here for review',
+                  'Failed commands and items needing action will appear here',
                   style: AppTypography.body.copyWith(
                     color: AppColors.getTextTertiaryColor(context),
                   ),
@@ -676,7 +1061,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
             ),
           )
         else
-          ...failedCommands.map((command) => _buildQueuedCommandCard(command)),
+          ...reviewCommands.map((command) => _buildQueuedCommandCard(command)),
       ],
     );
   }

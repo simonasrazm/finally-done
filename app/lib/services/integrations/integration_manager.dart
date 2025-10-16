@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:newrelic_mobile/newrelic_mobile.dart';
 import 'integration_provider.dart';
 import 'google_integration_provider.dart';
 import 'apple_notes_integration_provider.dart';
 import 'evernote_integration_provider.dart';
+import '../../utils/sentry_performance.dart';
 
 /// Manages all integration providers and their services
 class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderState>> {
@@ -12,50 +14,62 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
 
   IntegrationManager() : super({}) {
     print('🔵 INTEGRATION MANAGER: Constructor called');
-    // Defer heavy initialization to avoid blocking UI - use post frame callback for lightest load
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    
+    // Initialize providers immediately with "not connected" state
+    _initializeProvidersImmediately();
+    
+    // Then initialize them properly in the background (no delay)
+    Future.microtask(() {
       print('🔵 INTEGRATION MANAGER: _initializeProviders called');
       _initializeProviders();
     });
   }
-
-  void _initializeProviders() async {
-    print('🔵 INTEGRATION MANAGER: _initializeProviders starting');
-    // Add a small delay to spread out initialization work
-    await Future.delayed(Duration(milliseconds: 50));
-    // Register all available integration providers
+  
+  void _initializeProvidersImmediately() {
+    // Create providers immediately with "not connected" state so UI can show them
     _providers['google'] = GoogleIntegrationProvider();
-    print('🔵 INTEGRATION MANAGER: GoogleIntegrationProvider created');
     _providers['apple_notes'] = AppleNotesIntegrationProvider();
     _providers['evernote'] = EvernoteIntegrationProvider();
     
-    // Initialize states for all providers
+    // Set initial states for all providers
     for (final providerId in _providers.keys) {
-      print('🔵 INTEGRATION MANAGER: Updating state for provider: $providerId');
       _updateProviderState(providerId);
     }
     
-    // Wait a bit for Google provider to initialize, then update its state again
-    Future.delayed(Duration(milliseconds: 100), () {
-      print('🔵 INTEGRATION MANAGER: Updating Google state after initialization');
-      _updateProviderState('google');
+    print('🔵 INTEGRATION MANAGER: Providers created immediately for UI display');
+  }
+
+  void _initializeProviders() async {
+    print('🔵 INTEGRATION MANAGER: _initializeProviders starting - initializing providers');
+    
+    // Initialize all providers in parallel (non-blocking)
+    final futures = _providers.entries.map((entry) async {
+      final providerId = entry.key;
+      final provider = entry.value;
+      
+      print('🔵 INTEGRATION MANAGER: Initializing provider: $providerId');
+      
+      try {
+        // Call the provider's initialization method
+        await provider.initialize();
+        print('🔵 INTEGRATION MANAGER: Successfully initialized provider: $providerId');
+      } catch (e) {
+        print('🔵 INTEGRATION MANAGER: Error initializing provider $providerId: $e');
+      }
+      
+      // Update the state after initialization
+      _updateProviderState(providerId);
     });
     
-    // Set up periodic state updates for Google provider to catch state changes
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_providers['google'] != null) {
-        final googleState = _providers['google']!.state;
-        final currentState = state['google'];
-        if (currentState == null || currentState.isAuthenticated != googleState.isAuthenticated) {
-          print('🔵 INTEGRATION MANAGER: Google state changed, updating...');
-          _updateProviderState('google');
-        }
-      }
-    });
+    // Wait for all providers to initialize in parallel
+    await Future.wait(futures);
     
     print('🔵 INTEGRATION MANAGER: _initializeProviders completed');
   }
 
+  /// Check if initialization is complete
+  bool get isInitialized => _providers.isNotEmpty;
+  
   /// Get all available providers
   List<IntegrationProvider> get availableProviders => _providers.values.toList();
 

@@ -13,6 +13,7 @@ import '../services/nlp_service.dart';
 import '../services/queue_service.dart';
 import '../models/queued_command.dart';
 import '../utils/logger.dart';
+import '../utils/sentry_performance.dart';
 import '../generated/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -40,14 +41,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     
-    // Pulse animation for recording button
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
+    // Track screen load performance
+    sentryPerformance.monitorTransaction(
+      PerformanceTransactions.screenHome,
+      PerformanceOps.screenLoad,
+      () async {
+        // Pulse animation for recording button
+        _pulseController = AnimationController(
+          duration: const Duration(milliseconds: DesignTokens.delayMedium),
+          vsync: this,
+        );
+        _pulseAnimation = Tween<double>(
+          begin: 1.0,
+          end: 1.1,
     ).animate(CurvedAnimation(
       parent: _pulseController,
       curve: Curves.easeInOut,
@@ -55,7 +61,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     
     // Scale animation for button press
     _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: DesignTokens.animationFast),
       vsync: this,
     );
     _scaleAnimation = Tween<double>(
@@ -65,6 +71,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       parent: _scaleController,
       curve: Curves.easeInOut,
     ));
+      },
+      data: {
+        'screen': 'home',
+        'has_animations': true,
+      },
+    );
   }
   
   @override
@@ -300,7 +312,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         );
         // Store ID before any potential Realm operations
         final commandId = command.id;
-        queueNotifier.updateCommandStatus(commandId, CommandStatus.failed);
+        queueNotifier.updateCommandErrorMessage(commandId, 'Audio processing failed: ${e.toString()}');
+        queueNotifier.updateCommandFailed(commandId, true);
       } catch (updateError) {
         print('🎤 BACKGROUND: Failed to update command status: $updateError');
         // If we can't update the status, at least log the error

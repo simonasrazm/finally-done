@@ -11,6 +11,8 @@ part of 'queued_command.dart';
 // ignore_for_file: type=lint
 class QueuedCommandRealm extends _QueuedCommandRealm
     with RealmEntity, RealmObjectBase, RealmObject {
+  static var _defaultsSet = false;
+
   QueuedCommandRealm(
     String id,
     String text,
@@ -20,7 +22,15 @@ class QueuedCommandRealm extends _QueuedCommandRealm
     Iterable<String> photoPaths = const [],
     String? transcription,
     String? errorMessage,
+    bool failed = false,
+    bool actionNeeded = false,
   }) {
+    if (!_defaultsSet) {
+      _defaultsSet = RealmObjectBase.setDefaults<QueuedCommandRealm>({
+        'failed': false,
+        'actionNeeded': false,
+      });
+    }
     RealmObjectBase.set(this, 'id', id);
     RealmObjectBase.set(this, 'text', text);
     RealmObjectBase.set(this, 'audioPath', audioPath);
@@ -30,6 +40,8 @@ class QueuedCommandRealm extends _QueuedCommandRealm
     RealmObjectBase.set(this, 'createdAt', createdAt);
     RealmObjectBase.set(this, 'transcription', transcription);
     RealmObjectBase.set(this, 'errorMessage', errorMessage);
+    RealmObjectBase.set(this, 'failed', failed);
+    RealmObjectBase.set(this, 'actionNeeded', actionNeeded);
   }
 
   QueuedCommandRealm._();
@@ -84,6 +96,18 @@ class QueuedCommandRealm extends _QueuedCommandRealm
       RealmObjectBase.set(this, 'errorMessage', value);
 
   @override
+  bool get failed => RealmObjectBase.get<bool>(this, 'failed') as bool;
+  @override
+  set failed(bool value) => RealmObjectBase.set(this, 'failed', value);
+
+  @override
+  bool get actionNeeded =>
+      RealmObjectBase.get<bool>(this, 'actionNeeded') as bool;
+  @override
+  set actionNeeded(bool value) =>
+      RealmObjectBase.set(this, 'actionNeeded', value);
+
+  @override
   Stream<RealmObjectChanges<QueuedCommandRealm>> get changes =>
       RealmObjectBase.getChanges<QueuedCommandRealm>(this);
 
@@ -106,6 +130,8 @@ class QueuedCommandRealm extends _QueuedCommandRealm
       'createdAt': createdAt.toEJson(),
       'transcription': transcription.toEJson(),
       'errorMessage': errorMessage.toEJson(),
+      'failed': failed.toEJson(),
+      'actionNeeded': actionNeeded.toEJson(),
     };
   }
 
@@ -128,6 +154,8 @@ class QueuedCommandRealm extends _QueuedCommandRealm
           photoPaths: fromEJson(ejson['photoPaths'], defaultValue: const []),
           transcription: fromEJson(ejson['transcription']),
           errorMessage: fromEJson(ejson['errorMessage']),
+          failed: fromEJson(ejson['failed'], defaultValue: false),
+          actionNeeded: fromEJson(ejson['actionNeeded'], defaultValue: false),
         ),
       _ => raiseInvalidEJson(ejson),
     };
@@ -147,6 +175,8 @@ class QueuedCommandRealm extends _QueuedCommandRealm
       SchemaProperty('createdAt', RealmPropertyType.timestamp),
       SchemaProperty('transcription', RealmPropertyType.string, optional: true),
       SchemaProperty('errorMessage', RealmPropertyType.string, optional: true),
+      SchemaProperty('failed', RealmPropertyType.bool),
+      SchemaProperty('actionNeeded', RealmPropertyType.bool),
     ]);
   }();
 

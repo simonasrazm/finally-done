@@ -5,7 +5,7 @@ part 'queued_command.realm.dart';
 /// Realm database model for storing user commands
 /// 
 /// This table stores all user commands (voice/text) that are queued for processing.
-/// Commands flow through different statuses: queued → transcribing → processing → completed/failed
+/// Commands flow through different statuses: queued → transcribing → processing → completed
 @RealmModel()
 class _QueuedCommandRealm {
   /// Primary key - unique identifier for each command
@@ -21,7 +21,7 @@ class _QueuedCommandRealm {
   /// List of photo file paths attached to this command
   List<String> photoPaths = [];
 
-  /// Current processing status: queued, transcribing, transcribed, processing, completed, failed
+  /// Current processing status: queued, transcribing, transcribed, processing, completed
   late String status;
   
   /// When the command was created by user
@@ -30,8 +30,14 @@ class _QueuedCommandRealm {
   /// Transcribed text from audio (null if not voice input or not yet transcribed)
   String? transcription;
 
-  /// Error message if status is failed (null if not failed)
+  /// Error message if command has failed (null if not failed)
   String? errorMessage;
+
+  /// Failed flag - indicates if this command has failed (separate from status)
+  bool failed = false;
+
+  /// Action needed flag - indicates if this command needs user attention
+  bool actionNeeded = false;
 
   // Helper method for creating copies
   _QueuedCommandRealm copyWith({
@@ -43,6 +49,8 @@ class _QueuedCommandRealm {
     DateTime? createdAt,
     String? transcription,
     String? errorMessage,
+    bool? failed,
+    bool? actionNeeded,
   }) {
     final newCommand = _QueuedCommandRealm();
     newCommand.id = id ?? this.id;
@@ -53,6 +61,8 @@ class _QueuedCommandRealm {
     newCommand.createdAt = createdAt ?? this.createdAt;
     newCommand.transcription = transcription ?? this.transcription;
     newCommand.errorMessage = errorMessage ?? this.errorMessage;
+    newCommand.failed = failed ?? this.failed;
+    newCommand.actionNeeded = actionNeeded ?? this.actionNeeded;
     return newCommand;
   }
 }
@@ -68,6 +78,8 @@ extension QueuedCommandRealmExtension on QueuedCommandRealm {
     DateTime? createdAt,
     String? transcription,
     String? errorMessage,
+    bool? failed,
+    bool? actionNeeded,
   }) {
     // Create a new instance using the constructor from the generated class
     final newCommand = QueuedCommandRealm(
@@ -79,6 +91,8 @@ extension QueuedCommandRealmExtension on QueuedCommandRealm {
       photoPaths: photoPaths ?? this.photoPaths,
       transcription: transcription ?? this.transcription,
       errorMessage: errorMessage ?? this.errorMessage,
+      failed: failed ?? this.failed,
+      actionNeeded: actionNeeded ?? this.actionNeeded,
     );
     return newCommand;
   }
@@ -87,13 +101,13 @@ extension QueuedCommandRealmExtension on QueuedCommandRealm {
 /// Command status enum
 /// 
 /// Logical flow:
-/// Voice: recorded → transcribing → queued → processing → completed/failed
-/// Text:  queued → processing → completed/failed
+/// Voice: recorded → transcribing → queued → processing → completed
+/// Text:  queued → processing → completed
+/// Note: Failed state is now handled by the 'failed' flag, not status
 enum CommandStatus {
   recorded,         // Audio recorded, waiting for transcription
   transcribing,     // Audio being transcribed by AI
   queued,           // Ready to process (text input or transcribed audio)
   processing,       // Being processed by agent
-  completed,        // Successfully executed
-  failed,           // Failed to execute
+  completed        // Successfully executed
 }

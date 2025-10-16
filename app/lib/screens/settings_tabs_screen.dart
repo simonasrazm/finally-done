@@ -4,6 +4,7 @@ import '../design_system/tokens.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../generated/app_localizations.dart';
+import '../utils/sentry_performance.dart';
 import 'settings_screen.dart';
 import 'integrations_settings_screen.dart';
 
@@ -21,7 +22,20 @@ class _SettingsTabsScreenState extends ConsumerState<SettingsTabsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    
+    // Track screen load performance
+    sentryPerformance.monitorTransaction(
+      PerformanceTransactions.screenSettings,
+      PerformanceOps.screenLoad,
+      () async {
+        _tabController = TabController(length: 2, vsync: this);
+      },
+      data: {
+        'screen': 'settings',
+        'has_tab_controller': true,
+        'tab_count': 2,
+      },
+    );
   }
 
   @override

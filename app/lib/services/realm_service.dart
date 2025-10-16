@@ -14,10 +14,13 @@ class RealmService {
 
   void _initializeRealm() {
     try {
-      // SCHEMA VERSION HISTORY:
-      // v0: Initial schema (id, text, audioPath, status, createdAt, transcription)
-      // v1: Added photoPaths (List<String>)
-      // v2: Added errorMessage (String?) + status renames (audioRecorded→recorded, transcribed→queued)
+  // SCHEMA VERSION HISTORY:
+  // v0: Initial schema (id, text, audioPath, status, createdAt, transcription)
+  // v1: Added photoPaths (List<String>)
+  // v2: Added errorMessage (String?) + status renames (audioRecorded→recorded, transcribed→queued)
+  // v3: (intermediate version - not used in production)
+  // v4: Added failed flag (bool) - separate from status
+  // v5: Added actionNeeded flag (bool) - indicates if command needs user attention
       final config = Configuration.local([
         QueuedCommandRealm.schema,
       ], schemaVersion: MigrationManager.currentVersion, migrationCallback: MigrationManager.migrate);
@@ -73,7 +76,7 @@ class RealmService {
   /// Get failed commands
   List<QueuedCommandRealm> getFailedCommands() {
     try {
-      final realmCommands = _realm.query<QueuedCommandRealm>('status == "failed"');
+      final realmCommands = _realm.query<QueuedCommandRealm>('failed == true');
       return realmCommands.toList();
     } catch (e) {
       return [];
@@ -128,6 +131,50 @@ class RealmService {
       if (realmCommand != null) {
         _realm.write(() {
           realmCommand.audioPath = audioPath;
+        });
+      } else {
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Update command failed flag
+  void updateCommandFailed(String id, bool failed) {
+    try {
+      final realmCommand = _realm.find<QueuedCommandRealm>(id);
+      if (realmCommand != null) {
+        _realm.write(() {
+          realmCommand.failed = failed;
+        });
+      } else {
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Update command error message
+  void updateCommandErrorMessage(String id, String? errorMessage) {
+    try {
+      final realmCommand = _realm.find<QueuedCommandRealm>(id);
+      if (realmCommand != null) {
+        _realm.write(() {
+          realmCommand.errorMessage = errorMessage;
+        });
+      } else {
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  void updateCommandActionNeeded(String id, bool actionNeeded) {
+    try {
+      final realmCommand = _realm.find<QueuedCommandRealm>(id);
+      if (realmCommand != null) {
+        _realm.write(() {
+          realmCommand.actionNeeded = actionNeeded;
         });
       } else {
       }

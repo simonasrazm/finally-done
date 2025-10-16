@@ -12,12 +12,14 @@ import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/services.dart';
 import '../../utils/logger.dart';
-import '../../utils/performance_monitor.dart';
+import '../../utils/sentry_performance.dart';
+import '../../design_system/tokens.dart';
 import 'integration_provider.dart';
 
 /// Google-specific integration provider
 class GoogleIntegrationProvider extends IntegrationProvider {
-  static const _storage = FlutterSecureStorage();
+  static FlutterSecureStorage? _storage;
+  static FlutterSecureStorage get storage => _storage ??= const FlutterSecureStorage();
   static const String _accessTokenKey = 'google_access_token';
   static const String _refreshTokenKey = 'google_refresh_token';
   static const String _tokenExpiryKey = 'google_token_expiry';
@@ -34,11 +36,11 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     displayName: 'Google',
     icon: 'google', // Icon identifier
     description: 'Connect to Google services like Tasks, Calendar, and Gmail',
-  ) {
-    // Defer initialization to avoid blocking UI during construction
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeFromStoredTokensAsync();
-    });
+  );
+
+  @override
+  Future<void> initialize() async {
+    await _initializeFromStoredTokensAsync();
   }
 
   /// Initialize from stored tokens asynchronously
@@ -46,7 +48,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     print('🔵 GOOGLE INTEGRATION: _initializeFromStoredTokensAsync called');
     Logger.info('GoogleIntegrationProvider: _initializeFromStoredTokensAsync called', tag: 'GOOGLE_INTEGRATION');
     // Add a small delay to spread out initialization work
-    await Future.delayed(Duration(milliseconds: 100));
+    await Future.delayed(Duration(milliseconds: DesignTokens.animationFast));
     await _initializeFromStoredTokens();
   }
 
@@ -77,37 +79,74 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
   @override
   Future<bool> authenticate() async {
-    try {
-      Logger.info('🚀 Starting Google authentication', tag: 'GOOGLE_INTEGRATION');
-      
-      state = state.copyWith(isConnecting: true);
-      
-      _ensureGoogleSignInInitialized();
-      
-      // Check if already signed in
-      final isAlreadySignedIn = await _googleSignIn!.isSignedIn();
-      if (isAlreadySignedIn) {
-        final GoogleSignInAccount? googleUser = await _googleSignIn!.signInSilently();
-        if (googleUser != null) {
-          await _setupUserSession(googleUser);
+    return await sentryPerformance.monitorTransaction(
+      PerformanceTransactions.authGoogleSignIn,
+      PerformanceOps.authSignIn,
+      () async {
+        try {
+          Logger.info('🚀 Starting Google authentication', tag: 'GOOGLE_INTEGRATION');
+          
+          state = state.copyWith(isConnecting: true);
+          
+          await sentryPerformance.monitorOperation(
+            PerformanceTransactions.authGoogleSignIn,
+            'google_signin_init',
+            PerformanceOps.authCheck,
+            () async {
+              _ensureGoogleSignInInitialized();
+            },
+          );
+          
+          // Check if already signed in
+          final isAlreadySignedIn = await _googleSignIn!.isSignedIn();
+          if (isAlreadySignedIn) {
+            final GoogleSignInAccount? googleUser = await sentryPerformance.monitorOperation(
+              PerformanceTransactions.authGoogleSignIn,
+              'google_signin_silent',
+              PerformanceOps.authSignIn,
+              () async => await _googleSignIn!.signInSilently(),
+            );
+            if (googleUser != null) {
+              await sentryPerformance.monitorOperation(
+                PerformanceTransactions.authGoogleSignIn,
+                'google_setup_session',
+                PerformanceOps.authSignIn,
+                () async => await _setupUserSession(googleUser),
+              );
+              return true;
+            }
+          }
+
+          // Sign in with Google
+          final GoogleSignInAccount? googleUser = await sentryPerformance.monitorOperation(
+            PerformanceTransactions.authGoogleSignIn,
+            'google_signin_interactive',
+            PerformanceOps.authSignIn,
+            () async => await _googleSignIn!.signIn(),
+          );
+          if (googleUser == null) {
+            state = state.copyWith(isConnecting: false);
+            return false;
+          }
+
+          await sentryPerformance.monitorOperation(
+            PerformanceTransactions.authGoogleSignIn,
+            'google_setup_session',
+            PerformanceOps.authSignIn,
+            () async => await _setupUserSession(googleUser),
+          );
           return true;
+        } catch (e, stackTrace) {
+          Logger.error('Google authentication failed', tag: 'GOOGLE_INTEGRATION', error: e, stackTrace: stackTrace);
+          state = state.copyWith(isConnecting: false);
+          return false;
         }
-      }
-
-      // Sign in with Google
-      final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
-      if (googleUser == null) {
-        state = state.copyWith(isConnecting: false);
-        return false;
-      }
-
-      await _setupUserSession(googleUser);
-      return true;
-    } catch (e, stackTrace) {
-      Logger.error('Google authentication failed', tag: 'GOOGLE_INTEGRATION', error: e, stackTrace: stackTrace);
-      state = state.copyWith(isConnecting: false);
-      return false;
-    }
+      },
+      data: {
+        'provider': 'google',
+        'auth_type': 'oauth2',
+      },
+    );
   }
 
   @override
@@ -242,13 +281,13 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       await _googleSignIn?.signOut();
       
       // Clear stored data
-      await _storage.delete(key: _accessTokenKey);
-      await _storage.delete(key: _refreshTokenKey);
-      await _storage.delete(key: _tokenExpiryKey);
-      await _storage.delete(key: _userIdKey);
-      await _storage.delete(key: _userEmailKey);
-      await _storage.delete(key: _userNameKey);
-      await _storage.delete(key: _connectedServicesKey);
+      await storage.delete(key: _accessTokenKey);
+      await storage.delete(key: _refreshTokenKey);
+      await storage.delete(key: _tokenExpiryKey);
+      await storage.delete(key: _userIdKey);
+      await storage.delete(key: _userEmailKey);
+      await storage.delete(key: _userNameKey);
+      await storage.delete(key: _connectedServicesKey);
       
       // Clear client and reset state
       _authClient?.close();
@@ -281,7 +320,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     }
 
     // Check if token is expired
-    final tokenExpiryStr = await _storage.read(key: _tokenExpiryKey);
+    final tokenExpiryStr = await storage.read(key: _tokenExpiryKey);
     if (tokenExpiryStr != null) {
       try {
         final tokenExpiry = DateTime.parse(tokenExpiryStr);
@@ -328,10 +367,10 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     print('🔵 GOOGLE INTEGRATION: _initializeFromStoredTokens called');
     Logger.info('GoogleIntegrationProvider: _initializeFromStoredTokens called', tag: 'GOOGLE_INTEGRATION');
     try {
-      final accessToken = await _storage.read(key: _accessTokenKey);
-      final userEmail = await _storage.read(key: _userEmailKey);
-      final userName = await _storage.read(key: _userNameKey);
-      final userId = await _storage.read(key: _userIdKey);
+      final accessToken = await storage.read(key: _accessTokenKey);
+      final userEmail = await storage.read(key: _userEmailKey);
+      final userName = await storage.read(key: _userNameKey);
+      final userId = await storage.read(key: _userIdKey);
       final connectedServices = await _getStoredConnectedServices();
       
       Logger.info('GoogleIntegrationProvider: Stored data check - accessToken: ${accessToken != null ? "EXISTS" : "NULL"}, userEmail: ${userEmail ?? "NULL"}', tag: 'GOOGLE_INTEGRATION');
@@ -341,7 +380,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         Logger.info('GoogleIntegrationProvider: Found valid stored tokens, setting up authentication', tag: 'GOOGLE_INTEGRATION');
         
         // Check if token is expired
-        final tokenExpiryStr = await _storage.read(key: _tokenExpiryKey);
+        final tokenExpiryStr = await storage.read(key: _tokenExpiryKey);
         DateTime? tokenExpiry;
         if (tokenExpiryStr != null) {
           try {
@@ -371,7 +410,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         }
         
         // Get fresh token after potential refresh
-        final freshAccessToken = await _storage.read(key: _accessTokenKey);
+        final freshAccessToken = await storage.read(key: _accessTokenKey);
         if (freshAccessToken == null) {
           Logger.warning('GoogleIntegrationProvider: No access token after refresh', tag: 'GOOGLE_INTEGRATION');
           return;
@@ -467,25 +506,25 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
   /// Store authentication tokens
   Future<void> _storeTokens(String accessToken, List<String> scopes) async {
-    await _storage.write(key: _accessTokenKey, value: accessToken);
-    await _storage.write(key: _tokenExpiryKey, value: DateTime.now().toUtc().add(Duration(hours: 1)).toIso8601String());
+    await storage.write(key: _accessTokenKey, value: accessToken);
+    await storage.write(key: _tokenExpiryKey, value: DateTime.now().toUtc().add(Duration(hours: 1)).toIso8601String());
   }
 
   /// Store user information
   Future<void> _storeUserInfo(String userId, String userEmail, String userName) async {
-    await _storage.write(key: _userIdKey, value: userId);
-    await _storage.write(key: _userEmailKey, value: userEmail);
-    await _storage.write(key: _userNameKey, value: userName);
+    await storage.write(key: _userIdKey, value: userId);
+    await storage.write(key: _userEmailKey, value: userEmail);
+    await storage.write(key: _userNameKey, value: userName);
   }
 
   /// Store connected services
   Future<void> _storeConnectedServices(List<String> serviceIds) async {
-    await _storage.write(key: _connectedServicesKey, value: serviceIds.join(','));
+    await storage.write(key: _connectedServicesKey, value: serviceIds.join(','));
   }
 
   /// Get stored connected services
   Future<List<String>> _getStoredConnectedServices() async {
-    final stored = await _storage.read(key: _connectedServicesKey);
+    final stored = await storage.read(key: _connectedServicesKey);
     return stored?.split(',') ?? [];
   }
 
@@ -531,13 +570,13 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
   /// Clear all stored authentication data
   Future<void> _clearStoredData() async {
-    await _storage.delete(key: _accessTokenKey);
-    await _storage.delete(key: _refreshTokenKey);
-    await _storage.delete(key: _tokenExpiryKey);
-    await _storage.delete(key: _userIdKey);
-    await _storage.delete(key: _userEmailKey);
-    await _storage.delete(key: _userNameKey);
-    await _storage.delete(key: _connectedServicesKey);
+    await storage.delete(key: _accessTokenKey);
+    await storage.delete(key: _refreshTokenKey);
+    await storage.delete(key: _tokenExpiryKey);
+    await storage.delete(key: _userIdKey);
+    await storage.delete(key: _userEmailKey);
+    await storage.delete(key: _userNameKey);
+    await storage.delete(key: _connectedServicesKey);
     
     _authClient?.close();
     _authClient = null;

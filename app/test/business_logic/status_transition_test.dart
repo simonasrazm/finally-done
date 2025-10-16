@@ -22,19 +22,10 @@ void main() {
       }
     });
     
-    test('Voice command flow - can fail at any stage', () {
-      // Test that voice commands can fail from any processing state
-      final processingStates = [
-        CommandStatus.recorded,
-        CommandStatus.transcribing,
-        CommandStatus.queued,
-        CommandStatus.processing,
-      ];
-      
-      for (final state in processingStates) {
-        expect(_isValidTransition(state, CommandStatus.failed), isTrue,
-          reason: 'Voice command should be able to fail from $state');
-      }
+    test('Voice command flow - can complete from processing state', () {
+      // Test that voice commands can complete from processing state
+      expect(_isValidTransition(CommandStatus.processing, CommandStatus.completed), isTrue,
+        reason: 'Voice command should be able to complete from processing state');
     });
     
     test('Text command flow - valid transitions', () {
@@ -54,17 +45,10 @@ void main() {
       }
     });
     
-    test('Text command flow - can fail at any stage', () {
-      // Test that text commands can fail from any processing state
-      final processingStates = [
-        CommandStatus.queued,
-        CommandStatus.processing,
-      ];
-      
-      for (final state in processingStates) {
-        expect(_isValidTransition(state, CommandStatus.failed), isTrue,
-          reason: 'Text command should be able to fail from $state');
-      }
+    test('Text command flow - can complete from processing state', () {
+      // Test that text commands can complete from processing state
+      expect(_isValidTransition(CommandStatus.processing, CommandStatus.completed), isTrue,
+        reason: 'Text command should be able to complete from processing state');
     });
     
     
@@ -77,12 +61,11 @@ void main() {
       // Can't go from completed to anything else (terminal state)
       expect(_isValidTransition(CommandStatus.completed, CommandStatus.processing), isFalse);
       expect(_isValidTransition(CommandStatus.completed, CommandStatus.queued), isFalse);
-      expect(_isValidTransition(CommandStatus.completed, CommandStatus.failed), isFalse);
+      // Note: CommandStatus.failed was removed from the enum
+      // Completed commands cannot transition to other states
       
-      // Can't go from failed to processing states (terminal state)
-      expect(_isValidTransition(CommandStatus.failed, CommandStatus.processing), isFalse);
-      expect(_isValidTransition(CommandStatus.failed, CommandStatus.queued), isFalse);
-      expect(_isValidTransition(CommandStatus.failed, CommandStatus.completed), isFalse);
+      // Note: CommandStatus.failed was removed from the enum
+      // All terminal states (completed) cannot transition to other states
     });
     
     test('Status validation - required fields', () {
@@ -144,16 +127,11 @@ void main() {
 /// Business logic: Check if status transition is valid
 bool _isValidTransition(CommandStatus from, CommandStatus to) {
   // Terminal states - no transitions allowed
-  if (from == CommandStatus.completed || from == CommandStatus.failed) {
+  if (from == CommandStatus.completed) {
     return false;
   }
   
-  // Can always transition to failed from any processing state
-  if (to == CommandStatus.failed) {
-    return true;
-  }
-  
-  // Define valid transitions (excluding failed, which is handled above)
+  // Define valid transitions
   final validTransitions = {
     CommandStatus.recorded: [CommandStatus.transcribing],
     CommandStatus.transcribing: [CommandStatus.queued],
@@ -186,8 +164,7 @@ bool _isValidCommand(QueuedCommandRealm command) {
              (command.transcription != null && command.transcription!.isNotEmpty);
       
     case CommandStatus.completed:
-    case CommandStatus.failed:
-      // Terminal states - any content is valid
+      // Terminal state - any content is valid
       return true;
   }
 }

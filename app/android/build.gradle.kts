@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.newrelic.agent.android:agent-gradle-plugin:6.11.1")
+    }
+}
+
 allprojects {
     repositories {
         google()

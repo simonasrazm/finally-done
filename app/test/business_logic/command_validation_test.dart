@@ -94,25 +94,25 @@ void main() {
     });
     
     test('Error message validation', () {
-      // Valid failed command with error message
-      final validFailedCommand = QueuedCommandRealm(
+      // Valid completed command with error message
+      final validCompletedCommand = QueuedCommandRealm(
         'test-id',
         'Test command',
-        CommandStatus.failed.name,
+        CommandStatus.completed.name,
         DateTime.now(),
         errorMessage: 'API timeout',
       );
-      expect(_validateCommand(validFailedCommand), isEmpty);
+      expect(_validateCommand(validCompletedCommand), isEmpty);
       
-      // Failed command without error message (still valid, but not ideal)
-      final failedCommandWithoutError = QueuedCommandRealm(
+      // Completed command without error message (still valid, but not ideal)
+      final completedCommandWithoutError = QueuedCommandRealm(
         'test-id',
         'Test command',
-        CommandStatus.failed.name,
+        CommandStatus.completed.name,
         DateTime.now(),
         errorMessage: null,
       );
-      expect(_validateCommand(failedCommandWithoutError), isEmpty);
+      expect(_validateCommand(completedCommandWithoutError), isEmpty);
     });
     
     test('ID validation', () {
@@ -193,7 +193,7 @@ List<String> _validateCommand(QueuedCommandRealm command) {
       break;
       
     case CommandStatus.completed:
-    case CommandStatus.failed:
+    // CommandStatus.failed was removed from the enum
       // Terminal states - no additional validation needed
       break;
   }

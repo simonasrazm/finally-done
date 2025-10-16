@@ -416,9 +416,30 @@ class SpeechService {
       
     } catch (e) {
       print('🎤 GEMINI PRO: Error processing audio - $e');
-      throw Exception('Failed to process audio: $e');
+      throw Exception('Audio processing failed. Please try again.');
     }
   }
+
+  /// Process a specific audio file with Gemini (for retry functionality)
+  Future<String> processAudioFile(String audioPath) async {
+    try {
+      // Get API key from environment
+      final apiKey = dotenv.env['GEMINI_API_KEY'];
+      if (apiKey == null || apiKey.isEmpty) {
+        throw Exception('Gemini API key not found. Please add GEMINI_API_KEY to .env file');
+      }
+
+      print('🎤 GEMINI PRO: Processing specific audio file: $audioPath');
+      print('🎤 GEMINI PRO: Sending audio to Gemini...');
+      
+      return await _processAudioWithGemini(audioPath, apiKey);
+      
+    } catch (e) {
+      print('🎤 GEMINI PRO: Error processing audio file - $e');
+      throw Exception('Audio processing failed. Please try again.');
+    }
+  }
+
 
   /// Record raw audio for Gemini processing
   Future<String> _recordRawAudio() async {

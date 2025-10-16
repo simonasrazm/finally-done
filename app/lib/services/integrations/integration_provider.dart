@@ -118,6 +118,12 @@ abstract class IntegrationProvider extends StateNotifier<IntegrationProviderStat
   /// Get list of available services for this provider
   List<IntegrationService> get availableServices;
 
+  /// Initialize the provider (check for stored tokens, etc.)
+  Future<void> initialize() async {
+    // Default implementation does nothing
+    // Subclasses can override to perform initialization
+  }
+
   /// Authenticate with the provider (basic authentication)
   Future<bool> authenticate();
 

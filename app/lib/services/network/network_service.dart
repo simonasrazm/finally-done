@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart';
 import '../../utils/logger.dart';
+import '../../design_system/tokens.dart';
 
 /// Centralized network service for handling common connectivity challenges
 /// Provides retry logic, authentication refresh, and error handling for all connectors
@@ -13,7 +14,7 @@ class NetworkService {
 
   /// Default retry configuration
   static const int defaultMaxRetries = 3;
-  static const Duration defaultBaseDelay = Duration(milliseconds: 1000);
+  static const Duration defaultBaseDelay = Duration(milliseconds: DesignTokens.delayMedium);
   static const Duration defaultMaxDelay = Duration(seconds: 10);
 
   /// Execute an operation with retry logic and error handling
@@ -187,14 +188,14 @@ class NetworkConfig {
   /// Configuration for critical operations (more retries)
   static const NetworkConfig criticalConfig = NetworkConfig(
     maxRetries: 5,
-    baseDelay: Duration(milliseconds: 500),
+    baseDelay: Duration(milliseconds: DesignTokens.delayShort),
     maxDelay: Duration(seconds: 15),
   );
   
   /// Configuration for quick operations (fewer retries)
   static const NetworkConfig quickConfig = NetworkConfig(
     maxRetries: 2,
-    baseDelay: Duration(milliseconds: 500),
+    baseDelay: Duration(milliseconds: DesignTokens.delayShort),
     maxDelay: Duration(seconds: 5),
   );
 }

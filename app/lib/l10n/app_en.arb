@@ -619,6 +619,7 @@
     "description": "Description when not connected to Google"
   },
   "errorLoadingTasks": "Error Loading Tasks",
+  "errorLoadingTasksDescription": "Unable to load your tasks. Please check your internet connection and try again.",
   "@errorLoadingTasks": {
     "description": "Title for error loading tasks"
   },
@@ -866,5 +867,57 @@
   "chooseTheme": "Choose your preferred theme",
   "@chooseTheme": {
     "description": "Theme setting subtitle"
+  },
+  "saveAndExecute": "Save and Execute",
+  "@saveAndExecute": {
+    "description": "Button text for saving and executing a command"
+  },
+  "transcriptionRetryFailed": "Transcription retry failed. Please try again or edit the text manually.",
+  "@transcriptionRetryFailed": {
+    "description": "Error message when transcription retry fails"
+  },
+  "showMore": "Show more",
+  "@showMore": {
+    "description": "Button text to expand error message"
+  },
+  "showLess": "Show less",
+  "@showLess": {
+    "description": "Button text to collapse error message"
+  },
+  "taskUncompleted": "Task marked as not completed",
+  "@taskUncompleted": {
+    "description": "Success message when a task is marked as not completed"
+  },
+  "failedToUncompleteTask": "Failed to uncomplete task",
+  "@failedToUncompleteTask": {
+    "description": "Error message when uncompleting a task fails"
+  },
+  "overdue": "{days}d overdue",
+  "@overdue": {
+    "description": "Overdue task indicator",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "Number of days overdue"
+      }
+    }
+  },
+  "today": "Today",
+  "@today": {
+    "description": "Task due today"
+  },
+  "tomorrow": "Tomorrow",
+  "@tomorrow": {
+    "description": "Task due tomorrow"
+  },
+  "daysFromNow": "{days}d",
+  "@daysFromNow": {
+    "description": "Task due in X days",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "Number of days from now"
+      }
+    }
   }
 }

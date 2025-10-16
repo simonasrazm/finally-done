@@ -16,7 +16,6 @@ extension AppDelegate {
     
     // Check if Sentry is ready, otherwise queue the error
     if SentrySDK.isEnabled {
-      NSLog("🔵 SWIFT DEBUG: Reporting error directly to SentrySDK")
       SentrySDK.capture(error: error) { scope in
         scope.setTag(value: "native_swift", key: "source")
         scope.setTag(value: "ios", key: "platform")
@@ -28,7 +27,6 @@ extension AppDelegate {
         ], key: "swift_error")
       }
     } else {
-      NSLog("🔵 SWIFT DEBUG: Sentry not ready, queuing error")
       errorQueue.append(error)
     }
   }
@@ -41,13 +39,10 @@ extension AppDelegate {
     }
     
     func flushErrorQueue() -> Int {
-        NSLog("🔵 SWIFT DEBUG: Flushing \(errorQueue.count) queued errors to Sentry")
-        NSLog("🔵 SWIFT DEBUG: Sentry isEnabled: \(SentrySDK.isEnabled)")
         
         // Only flush if Sentry is actually ready
         if SentrySDK.isEnabled {
             let errorCount = errorQueue.count
-            NSLog("🔵 SWIFT DEBUG: Sending \(errorCount) queued errors to Sentry...")
             
             // Send each queued error directly to SentrySDK
             for error in errorQueue {
@@ -64,10 +59,8 @@ extension AppDelegate {
                 }
             }
             errorQueue.removeAll()
-            NSLog("🔵 SWIFT DEBUG: Successfully sent \(errorCount) errors to Sentry")
             return errorCount
         } else {
-            NSLog("🔵 SWIFT DEBUG: Sentry not ready, keeping \(errorQueue.count) errors in queue")
             return 0
         }
     }
@@ -81,14 +74,12 @@ extension AppDelegate {
   
   // Safe Google Sign-In wrapper that catches native exceptions
   func safeGoogleSignIn(completion: @escaping (Bool, String?) -> Void) {
-    NSLog("🔵 SWIFT DEBUG: Starting safe Google Sign-In...")
     
     // Wrap the entire operation in a try-catch to capture any native exceptions
     do {
              // Check if Google Sign-In is properly configured
              guard let configuration = GIDSignIn.sharedInstance.configuration else {
                let error = "Google Sign-In configuration missing - GIDClientID not found"
-               NSLog("🔴 SWIFT ERROR: \(error)")
                
                // Create a simple error - code is mandatory for NSError
                let nsError = NSError(domain: "ConfigurationError", code: -1001, userInfo: [
@@ -102,38 +93,26 @@ extension AppDelegate {
         return
       }
       
-      NSLog("🔵 SWIFT DEBUG: Google Sign-In configuration found: \(configuration.clientID)")
       
       // This is where the native exception would be thrown
       // We need to catch it at the native level
       GIDSignIn.sharedInstance.signIn(withPresenting: UIApplication.shared.windows.first?.rootViewController ?? UIViewController()) { result, error in
         if let error = error {
-          NSLog("🔴 SWIFT ERROR: Google Sign-In failed: \(error.localizedDescription)")
-          NSLog("🔴 SWIFT ERROR: Error type: \(type(of: error))")
-          NSLog("🔴 SWIFT ERROR: Error description: \(error.localizedDescription)")
           
           // Convert to NSError to get domain and code
           let nsError = error as NSError
-          NSLog("🔴 SWIFT ERROR: Error domain: \(nsError.domain)")
-          NSLog("🔴 SWIFT ERROR: Error code: \(nsError.code)")
-          NSLog("🔴 SWIFT ERROR: Error userInfo: \(nsError.userInfo)")
           
           // Report the actual Google SDK error with full context
           self.reportError(error, context: "Google Sign-In authentication")
           completion(false, error.localizedDescription)
         } else if let result = result {
-          NSLog("🔵 SWIFT DEBUG: Google Sign-In successful: \(result.user.userID ?? "unknown")")
           completion(true, nil)
         } else {
-          NSLog("🔵 SWIFT DEBUG: Google Sign-In cancelled by user")
           completion(false, "User cancelled")
         }
       }
       
     } catch {
-      NSLog("🔴 SWIFT ERROR: Exception in safeGoogleSignIn: \(error)")
-      NSLog("🔴 SWIFT ERROR: Exception type: \(type(of: error))")
-      NSLog("🔴 SWIFT ERROR: Exception description: \(error.localizedDescription)")
       
       // Report the actual exception with full context
       reportError(error, context: "safeGoogleSignIn exception")
@@ -170,46 +149,31 @@ func setupCrashHandlers() {
     
   // Check if Sentry is initialized before trying to capture
   if SentrySDK.isEnabled {
-    NSLog("🔵 SWIFT DEBUG: Sentry is enabled, capturing crash")
-    NSLog("🔵 SWIFT DEBUG: Exception details: \(exception)")
-    NSLog("🔵 SWIFT DEBUG: Exception name: \(exception.name)")
-    NSLog("🔵 SWIFT DEBUG: Exception reason: \(exception.reason ?? "nil")")
     
     let result = SentrySDK.capture(exception: exception)
-    NSLog("🔵 SWIFT DEBUG: SentrySDK.capture result: \(result)")
     
     // Check if Sentry has any pending events (simplified check)
-    NSLog("🔵 SWIFT DEBUG: Sentry capture completed")
   } else {
-    NSLog("🔵 SWIFT DEBUG: Sentry is NOT enabled, crash not sent to Sentry")
   }
   }
 
   // Set up signal handler for SIGABRT and other signals
   signal(SIGABRT) { signal in
-    NSLog("🔴 NATIVE SIGNAL CRASH: SIGABRT")
-    os_log("🔴 NATIVE SIGNAL CRASH: SIGABRT", log: OSLog.default, type: .error)
     
     // Check if Sentry is initialized before trying to capture
     if SentrySDK.isEnabled {
-      NSLog("🔵 SWIFT DEBUG: Sentry is enabled, capturing SIGABRT")
       SentrySDK.capture(message: "Native signal crash: SIGABRT")
     } else {
-      NSLog("🔵 SWIFT DEBUG: Sentry is NOT enabled, SIGABRT not sent to Sentry")
     }
     exit(1)
   }
 
   signal(SIGSEGV) { signal in
-    NSLog("🔴 NATIVE SIGNAL CRASH: SIGSEGV")
-    os_log("🔴 NATIVE SIGNAL CRASH: SIGSEGV", log: OSLog.default, type: .error)
     
     // Check if Sentry is initialized before trying to capture
     if SentrySDK.isEnabled {
-      NSLog("🔵 SWIFT DEBUG: Sentry is enabled, capturing SIGSEGV")
       SentrySDK.capture(message: "Native signal crash: SIGSEGV")
     } else {
-      NSLog("🔵 SWIFT DEBUG: Sentry is NOT enabled, SIGSEGV not sent to Sentry")
     }
     exit(1)
   }
@@ -226,23 +190,15 @@ func setupCrashHandlers() {
   ) -> Bool {
     
     // Don't initialize Sentry in Swift - let Flutter handle it
-    // Swift will queue errors until Flutter initializes Sentry
-    NSLog("🔵 SWIFT DEBUG: Skipping Sentry initialization in Swift - will queue errors until Flutter is ready")
-    
+    // Swift will queue errors until Flutter initializes Sentry    
     // Set up crash handlers IMMEDIATELY for better observability
     setupCrashHandlers()
     
-    NSLog("🔵 SWIFT DEBUG: AppDelegate starting - Thread: \(Thread.current)")
-    os_log("🔵 SWIFT DEBUG: AppDelegate starting - Thread: %@", log: OSLog.default, type: .debug, "\(Thread.current)")
     
     // Test Sentry immediately to verify it's working
-    NSLog("🔵 SWIFT DEBUG: Testing Sentry - isEnabled: \(SentrySDK.isEnabled)")
     if SentrySDK.isEnabled {
-      NSLog("🔵 SWIFT DEBUG: Sending test message to Sentry...")
       SentrySDK.capture(message: "Test message from AppDelegate startup")
-      NSLog("🔵 SWIFT DEBUG: Test message sent to Sentry")
     } else {
-      NSLog("🔵 SWIFT DEBUG: Sentry is NOT enabled at startup")
     }
     
     // Set up method channels for safe Google Sign-In and error queue flushing
@@ -256,7 +212,6 @@ func setupCrashHandlers() {
       safeGoogleSignInChannel.setMethodCallHandler { [weak self] (call, result) in
         switch call.method {
         case "signIn":
-          NSLog("🔵 SWIFT DEBUG: Received signIn call from Flutter")
           self?.safeGoogleSignIn { success, errorMessage in
             DispatchQueue.main.async {
               if success {
@@ -274,11 +229,9 @@ func setupCrashHandlers() {
             errorQueueChannel.setMethodCallHandler { [weak self] (call, result) in
                 switch call.method {
                 case "flushQueue":
-                    NSLog("🔵 SWIFT DEBUG: Received flushQueue call from Flutter")
                     let flushedCount = self?.flushErrorQueue() ?? 0
                     result(["success": true, "count": flushedCount])
                 case "getQueueStatus":
-                    NSLog("🔵 SWIFT DEBUG: Received getQueueStatus call from Flutter")
                     result(["count": self?.errorQueue.count ?? 0])
                 default:
                     result(FlutterMethodNotImplemented)
@@ -291,28 +244,20 @@ func setupCrashHandlers() {
     // Add crash protection
     do {
       GeneratedPluginRegistrant.register(with: self)
-      NSLog("🔵 SWIFT DEBUG: GeneratedPluginRegistrant.register completed successfully - Thread: \(Thread.current)")
     } catch {
       reportError(error, context: "GeneratedPluginRegistrant.register")
     }
     
-      // Add crash protection around Google Sign-In
-      NSLog("🔵 SWIFT DEBUG: Starting Google Sign-In configuration with crash protection...")
-      
       do {
         // Check if GoogleService-Info 2.plist exists
         if let path = Bundle.main.path(forResource: "GoogleService-Info 2", ofType: "plist") {
-          NSLog("🔵 SWIFT DEBUG: GoogleService-Info.plist found at: \(path)")
           
           if let plist = NSDictionary(contentsOfFile: path) {
-            NSLog("🔵 SWIFT DEBUG: Successfully loaded plist")
             
             if let clientId = plist["CLIENT_ID"] as? String, !clientId.isEmpty {
-              NSLog("🔵 SWIFT DEBUG: CLIENT_ID found: \(String(clientId.prefix(10)))...")
               
               // Configure Google Sign-In with crash protection
               GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
-              NSLog("🔵 SWIFT DEBUG: GoogleSignIn configured successfully!")
             } else {
               let error = NSError(domain: "ConfigurationError", code: -1002, userInfo: [
                 NSLocalizedDescriptionKey: "CLIENT_ID not found or empty"
@@ -333,7 +278,6 @@ func setupCrashHandlers() {
           // Notify Flutter about the error
           notifyFlutterOfError("Google Sign-In is not configured. Please contact support.")
           // Don't configure Google Sign-In if plist is missing - this prevents the hang
-          NSLog("🔵 SWIFT DEBUG: Skipping Google Sign-In configuration due to missing plist")
           return super.application(application, didFinishLaunchingWithOptions: launchOptions)
         }
       } catch {
@@ -349,7 +293,6 @@ func setupCrashHandlers() {
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
-    NSLog("🔵 SWIFT DEBUG: Handling URL: \(url.absoluteString)")
     
     // Add timeout to URL handling to prevent hangs
     let urlTimeout = DispatchTime.now() + .seconds(3)
@@ -371,7 +314,6 @@ func setupCrashHandlers() {
       return false
     }
     
-    NSLog("🔵 SWIFT DEBUG: URL handling result: \(urlResult ? "success" : "failed")")
     return urlResult
   }
 }
