@@ -16,9 +16,9 @@ import '../widgets/task_list_widgets.dart';
 import '../widgets/task_empty_state_widgets.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
-  final VoidCallback? onNavigateToSettings;
   
   const TasksScreen({super.key, this.onNavigateToSettings});
+  final VoidCallback? onNavigateToSettings;
 
   @override
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
@@ -91,14 +91,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
     }
 
     // Wait for the tasks service to be available
-    await Future.delayed(Duration(milliseconds: DesignTokens.delayShort));
+    await Future.delayed(const Duration(milliseconds: DesignTokens.delayShort));
     
     final defaultTaskList = await ref.read(defaultTaskListProvider.future);
     if (defaultTaskList != null && mounted) {
       setState(() {
         _selectedTaskListId = defaultTaskList.id;
       });
-      ref.read(tasksProvider.notifier).setTaskList(defaultTaskList.id!);
+      ref.read(tasksProvider.notifier).setTaskList(defaultTaskList.id);
     }
   }
 
@@ -122,27 +122,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
     setState(() {}); // Trigger UI update
   }
 
-  Future<void> _completeTask(String taskId) async {
-    await TaskInteractionService.completeTask(
-      taskId,
-      ref,
-      context,
-      _animationService,
-      _showCompleted,
-    );
-    setState(() {}); // Trigger UI update
-  }
-
-  Future<void> _uncompleteTask(String taskId) async {
-    await TaskInteractionService.uncompleteTask(
-      taskId,
-      ref,
-      context,
-      _animationService,
-      _showCompleted,
-    );
-    setState(() {}); // Trigger UI update
-  }
 
   Future<void> _deleteTask(String taskId) async {
     await TaskInteractionService.deleteTask(taskId, ref, context);

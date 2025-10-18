@@ -5,17 +5,8 @@ import '../design_system/tokens.dart';
 import '../models/queued_command.dart';
 import '../core/audio/audio_playback_service.dart';
 import '../core/commands/command_action_service.dart';
-import '../generated/app_localizations.dart';
 
 class CommandActionButtons extends ConsumerWidget {
-  final QueuedCommandRealm command;
-  final String commandStatus;
-  final String commandText;
-  final String? transcription;
-  final String? audioPath;
-  final Set<String> retryingCommands;
-  final VoidCallback onRetry;
-  final VoidCallback onEdit;
 
   const CommandActionButtons({
     super.key,
@@ -28,6 +19,14 @@ class CommandActionButtons extends ConsumerWidget {
     required this.onRetry,
     required this.onEdit,
   });
+  final QueuedCommandRealm command;
+  final String commandStatus;
+  final String commandText;
+  final String? transcription;
+  final String? audioPath;
+  final Set<String> retryingCommands;
+  final VoidCallback onRetry;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,12 +42,12 @@ class CommandActionButtons extends ConsumerWidget {
               }
             },
             child: Container(
-              padding: EdgeInsets.all(DesignTokens.spacing1),
+              padding: const EdgeInsets.all(DesignTokens.spacing1),
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.play_arrow,
                 size: DesignTokens.iconSm,
                 color: AppColors.primary,
@@ -67,7 +66,7 @@ commandStatus == 'processing' ||
                 ? null 
                 : onRetry,
             child: Container(
-              padding: EdgeInsets.all(DesignTokens.spacing1),
+              padding: const EdgeInsets.all(DesignTokens.spacing1),
               decoration: BoxDecoration(
                 color: retryingCommands.contains(command.id)
                     ? AppColors.primary.withOpacity(0.1)
@@ -75,7 +74,7 @@ commandStatus == 'processing' ||
                 borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
               ),
               child: retryingCommands.contains(command.id)
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: DesignTokens.iconSm,
                       height: DesignTokens.iconSm,
                       child: CircularProgressIndicator(
@@ -83,7 +82,7 @@ commandStatus == 'processing' ||
                         valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                       ),
                     )
-                  : Icon(
+                  : const Icon(
                       Icons.refresh_outlined,
                       size: DesignTokens.iconSm,
                       color: AppColors.success,
@@ -99,12 +98,12 @@ commandStatus == 'processing' ||
           GestureDetector(
             onTap: () => CommandActionService.approveManualReview(command.id, ref, context),
             child: Container(
-              padding: EdgeInsets.all(DesignTokens.spacing1),
+              padding: const EdgeInsets.all(DesignTokens.spacing1),
               decoration: BoxDecoration(
                 color: AppColors.success.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.check,
                 size: DesignTokens.iconSm,
                 color: AppColors.success,
@@ -119,12 +118,12 @@ commandStatus == 'processing' ||
           GestureDetector(
             onTap: onEdit,
             child: Container(
-              padding: EdgeInsets.all(DesignTokens.spacing1),
+              padding: const EdgeInsets.all(DesignTokens.spacing1),
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.edit_outlined,
                 size: DesignTokens.iconSm,
                 color: AppColors.primary,

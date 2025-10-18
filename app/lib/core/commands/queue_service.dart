@@ -1,17 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import '../../models/queued_command.dart';
 import '../../infrastructure/storage/realm_service.dart';
 
 /// Queue state notifier for managing commands with Realm persistence
 class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
-  late final RealmService _realmService;
 
   QueueNotifier() : super([]) {
     _realmService = RealmService();
     _loadCommandsFromRealmSync();
   }
+  late final RealmService _realmService;
   
   void _loadCommandsFromRealmSync() {
     try {

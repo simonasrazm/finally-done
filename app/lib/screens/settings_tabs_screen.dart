@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../design_system/tokens.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../generated/app_localizations.dart';
@@ -9,7 +8,7 @@ import 'settings_screen.dart';
 import 'integrations_settings_screen.dart';
 
 class SettingsTabsScreen extends ConsumerStatefulWidget {
-  const SettingsTabsScreen({Key? key}) : super(key: key);
+  const SettingsTabsScreen({super.key});
 
   @override
   ConsumerState<SettingsTabsScreen> createState() => _SettingsTabsScreenState();
@@ -66,11 +65,11 @@ class _SettingsTabsScreenState extends ConsumerState<SettingsTabsScreen>
           unselectedLabelStyle: AppTypography.body,
           tabs: [
             Tab(
-              icon: Icon(Icons.person_outline),
+              icon: const Icon(Icons.person_outline),
               text: AppLocalizations.of(context)!.profile,
             ),
             Tab(
-              icon: Icon(Icons.integration_instructions),
+              icon: const Icon(Icons.integration_instructions),
               text: AppLocalizations.of(context)!.integrations,
             ),
           ],
@@ -78,11 +77,11 @@ class _SettingsTabsScreenState extends ConsumerState<SettingsTabsScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
+        children: const [
           // Profile & Preferences Tab
-          const SettingsScreen(),
+          SettingsScreen(),
           // Integrations Tab
-          const IntegrationsSettingsScreen(),
+          IntegrationsSettingsScreen(),
         ],
       ),
     );

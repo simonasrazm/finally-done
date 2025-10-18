@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'ios_speech_service.dart';
 import '../../infrastructure/external_apis/gemini_api_service.dart';
 import 'audio_recording_service.dart';
@@ -16,9 +15,9 @@ abstract class SpeechEngineStrategy {
 
 /// iOS Native Speech Recognition Strategy
 class IosSpeechStrategy implements SpeechEngineStrategy {
-  final IosSpeechService _iosService;
   
   IosSpeechStrategy(this._iosService);
+  final IosSpeechService _iosService;
   
   @override
   String get engineName => 'iOS Native';
@@ -28,7 +27,7 @@ class IosSpeechStrategy implements SpeechEngineStrategy {
     String? language,
     Duration? timeout,
   }) async {
-    return await _iosService.recognizeSpeech(
+    return _iosService.recognizeSpeech(
       language: language,
       timeout: timeout,
     );
@@ -36,16 +35,16 @@ class IosSpeechStrategy implements SpeechEngineStrategy {
   
   @override
   Future<bool> isAvailable() async {
-    return await _iosService.isAvailable();
+    return _iosService.isAvailable();
   }
 }
 
 /// Gemini API Speech Recognition Strategy
 class GeminiSpeechStrategy implements SpeechEngineStrategy {
-  final GeminiApiService _geminiService;
-  final AudioRecordingService _audioService;
   
   GeminiSpeechStrategy(this._geminiService, this._audioService);
+  final GeminiApiService _geminiService;
+  final AudioRecordingService _audioService;
   
   @override
   String get engineName => 'Gemini API';
@@ -57,13 +56,13 @@ class GeminiSpeechStrategy implements SpeechEngineStrategy {
   }) async {
     try {
       // Start recording
-      String? audioPath = await _audioService.startRecording();
+      final String? audioPath = await _audioService.startRecording();
       
       if (audioPath != null) {
         // Return a special message indicating recording is in progress
         return 'RECORDING_IN_PROGRESS';
       } else {
-        throw SpeechEngineException('Failed to start recording. Please try again.');
+        throw const SpeechEngineException('Failed to start recording. Please try again.');
       }
       
     } catch (e) {
@@ -81,13 +80,13 @@ class GeminiSpeechStrategy implements SpeechEngineStrategy {
     try {
       final audioPath = _audioService.currentAudioPath;
       if (audioPath == null || audioPath.isEmpty) {
-        throw SpeechEngineException('No audio path available. Please try again.');
+        throw const SpeechEngineException('No audio path available. Please try again.');
       }
       
       return await _geminiService.processAudioFile(audioPath);
       
     } catch (e) {
-      throw SpeechEngineException('Audio processing failed. Please try again.');
+      throw const SpeechEngineException('Audio processing failed. Please try again.');
     }
   }
   
@@ -97,18 +96,18 @@ class GeminiSpeechStrategy implements SpeechEngineStrategy {
       return await _geminiService.processAudioFile(audioPath);
       
     } catch (e) {
-      throw SpeechEngineException('Audio processing failed. Please try again.');
+      throw const SpeechEngineException('Audio processing failed. Please try again.');
     }
   }
 }
 
 /// Auto-detect Speech Recognition Strategy
 class AutoDetectSpeechStrategy implements SpeechEngineStrategy {
+  
+  AutoDetectSpeechStrategy(this._iosService, this._geminiService, this._audioService);
   final IosSpeechService _iosService;
   final GeminiApiService _geminiService;
   final AudioRecordingService _audioService;
-  
-  AutoDetectSpeechStrategy(this._iosService, this._geminiService, this._audioService);
   
   @override
   String get engineName => 'Auto-detect';
@@ -120,7 +119,7 @@ class AutoDetectSpeechStrategy implements SpeechEngineStrategy {
   }) async {
     try {
       // Try iOS first
-      String result = await _iosService.recognizeSpeech(
+      final String result = await _iosService.recognizeSpeech(
         language: language,
         timeout: timeout,
       );
@@ -135,7 +134,7 @@ class AutoDetectSpeechStrategy implements SpeechEngineStrategy {
       
       return result;
     } catch (e) {
-      return await GeminiSpeechStrategy(_geminiService, _audioService).recognizeSpeech(
+      return GeminiSpeechStrategy(_geminiService, _audioService).recognizeSpeech(
         language: language,
         timeout: timeout,
       );
@@ -152,13 +151,13 @@ class AutoDetectSpeechStrategy implements SpeechEngineStrategy {
     if (text.isEmpty || text == 'No speech detected') return true;
     
     // Simple gibberish detection - check for common patterns
-    String lowerText = text.toLowerCase();
+    final String lowerText = text.toLowerCase();
     
     // Check for very short results (likely incomplete)
     if (text.length < 3) return true;
     
     // Check for common gibberish patterns
-    List<String> gibberishPatterns = [
+    final List<String> gibberishPatterns = [
       'mhm', 'uh', 'um', 'ah', 'eh', 'oh',
       'hmm', 'mmm', 'err', 'umm'
     ];
@@ -168,7 +167,7 @@ class AutoDetectSpeechStrategy implements SpeechEngineStrategy {
     }
     
     // Check for repeated characters (like "aaaa" or "mmmm")
-    RegExp repeatedChars = RegExp(r'(.)\1{3,}');
+    final RegExp repeatedChars = RegExp(r'(.)\1{3,}');
     if (repeatedChars.hasMatch(text)) return true;
     
     return false;
@@ -177,8 +176,8 @@ class AutoDetectSpeechStrategy implements SpeechEngineStrategy {
 
 /// Speech Engine Exception
 class SpeechEngineException implements Exception {
-  final String message;
   const SpeechEngineException(this.message);
+  final String message;
   
   @override
   String toString() => 'SpeechEngineException: $message';

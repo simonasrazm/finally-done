@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -15,12 +14,6 @@ import '../design_system/tokens.dart';
 
 /// State for tasks management
 class TasksState {
-  final List<google_tasks.Task> tasks;
-  final String? selectedTaskListId;
-  final bool isLoading;
-  final String? error;
-  final DateTime lastUpdated;
-  final bool isConnected;
 
   const TasksState({
     this.tasks = const [],
@@ -30,6 +23,12 @@ class TasksState {
     required this.lastUpdated,
     this.isConnected = false,
   });
+  final List<google_tasks.Task> tasks;
+  final String? selectedTaskListId;
+  final bool isLoading;
+  final String? error;
+  final DateTime lastUpdated;
+  final bool isConnected;
 
   TasksState copyWith({
     List<google_tasks.Task>? tasks,
@@ -85,22 +84,20 @@ class TasksState {
 
 /// Notifier for managing tasks state
 class TasksNotifier extends StateNotifier<TasksState> {
-  final Ref _ref;
-  late final TasksConnectionService _connectionService;
-  late final TaskBusinessService _operationsService;
-  late final TaskListService _listService;
-  late final TaskLocalStateService _localStateService;
-  late final TaskPollingService _pollingService;
 
   TasksNotifier(this._ref) : super(TasksState(lastUpdated: DateTime.now())) {
     _initializeServices();
     _waitForIntegrationManager();
   }
+  final Ref _ref;
+  late final TasksConnectionService _connectionService;
+  late final TaskListService _listService;
+  late final TaskLocalStateService _localStateService;
+  late final TaskPollingService _pollingService;
 
   /// Initialize all services
   void _initializeServices() {
     _connectionService = _ref.read(tasksConnectionServiceProvider);
-    _operationsService = _ref.read(taskBusinessServiceProvider);
     _listService = _ref.read(taskListServiceProvider);
     _localStateService = _ref.read(taskLocalStateServiceProvider);
     _pollingService = _ref.read(taskPollingServiceProvider);
@@ -110,7 +107,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
   void _waitForIntegrationManager() async {
     // Wait for integration manager to have providers
     while (_ref.read(integrationManagerProvider).isEmpty) {
-      await Future.delayed(Duration(milliseconds: DesignTokens.delayPolling));
+      await Future.delayed(const Duration(milliseconds: DesignTokens.delayPolling));
     }
     
     // Wait for Google integration to be fully initialized
@@ -125,7 +122,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
           break;
         }
       }
-      await Future.delayed(Duration(milliseconds: DesignTokens.delayPolling));
+      await Future.delayed(const Duration(milliseconds: DesignTokens.delayPolling));
       attempts++;
     }
     

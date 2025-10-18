@@ -82,7 +82,7 @@ MigratedCommand _migrateCommand(OldCommand oldCommand) {
     throw ArgumentError('Command ID cannot be empty');
   }
   
-  if (oldCommand.text.isEmpty && oldCommand.transcription?.isEmpty != false) {
+  if (oldCommand.text.isEmpty && (oldCommand.transcription?.isEmpty ?? true)) {
     throw ArgumentError('Command must have text or transcription content');
   }
   
@@ -112,12 +112,6 @@ bool _isValidStatus(String status) {
 
 // Test data models
 class OldCommand {
-  final String id;
-  final String text;
-  final String status;
-  final DateTime createdAt;
-  final String? audioPath;
-  final String? transcription;
   
   OldCommand({
     required this.id,
@@ -127,17 +121,15 @@ class OldCommand {
     this.audioPath,
     this.transcription,
   });
-}
-
-class MigratedCommand {
   final String id;
   final String text;
   final String status;
   final DateTime createdAt;
   final String? audioPath;
   final String? transcription;
-  final List<String> photoPaths;
-  final String? errorMessage;
+}
+
+class MigratedCommand {
   
   MigratedCommand({
     required this.id,
@@ -149,6 +141,14 @@ class MigratedCommand {
     required this.photoPaths,
     this.errorMessage,
   });
+  final String id;
+  final String text;
+  final String status;
+  final DateTime createdAt;
+  final String? audioPath;
+  final String? transcription;
+  final List<String> photoPaths;
+  final String? errorMessage;
 }
 
 OldCommand _createOldCommand() {

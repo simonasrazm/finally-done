@@ -6,7 +6,7 @@ import '../design_system/tokens.dart';
 import '../generated/app_localizations.dart';
 
 class IntegrationsSettingsScreen extends ConsumerWidget {
-  const IntegrationsSettingsScreen({Key? key}) : super(key: key);
+  const IntegrationsSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -14,7 +14,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     final manager = ref.watch(integrationManagerProvider.notifier);
 
     return ListView(
-        padding: EdgeInsets.all(DesignTokens.layoutPadding),
+        padding: const EdgeInsets.all(DesignTokens.layoutPadding),
         children: [
           // Header
           Text(
@@ -23,14 +23,14 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: DesignTokens.spacing2),
+          const SizedBox(height: DesignTokens.spacing2),
           Text(
             AppLocalizations.of(context)!.integrationsDescription,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: DesignTokens.sectionSpacing),
+          const SizedBox(height: DesignTokens.sectionSpacing),
 
           // Integration Providers (connected first)
           ...() {
@@ -48,7 +48,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
             }).toList();
           }(),
 
-          SizedBox(height: DesignTokens.sectionSpacing),
+          const SizedBox(height: DesignTokens.sectionSpacing),
         ],
     );
   }
@@ -60,7 +60,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     print('🔵 INTEGRATIONS UI: Provider ${provider.id} - isAuthenticated: $isAuthenticated, state: $state');
 
     return Card(
-      margin: EdgeInsets.only(bottom: DesignTokens.componentPadding),
+      margin: const EdgeInsets.only(bottom: DesignTokens.componentPadding),
       child: InkWell(
         onTap: (isConnecting || isSyncing) ? null : () {
           if (isAuthenticated) {
@@ -71,7 +71,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
         },
         borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         child: Padding(
-          padding: EdgeInsets.all(DesignTokens.componentPadding),
+          padding: const EdgeInsets.all(DesignTokens.componentPadding),
           child: Row(
             children: [
               // Provider Icon
@@ -88,7 +88,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                   size: DesignTokens.iconMd,
                 ),
               ),
-              SizedBox(width: DesignTokens.iconSpacing),
+              const SizedBox(width: DesignTokens.iconSpacing),
               
               // Provider Name
               Text(
@@ -98,7 +98,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                 ),
               ),
               
-              SizedBox(width: DesignTokens.spacing2),
+              const SizedBox(width: DesignTokens.spacing2),
               
               // Service Icons (always show, but with different states)
               Expanded(
@@ -109,15 +109,15 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
               if (isAuthenticated) ...[
                 IconButton(
                   onPressed: (isConnecting || isSyncing) ? null : () => _showServiceManagementDialog(context, ref, provider),
-                  icon: Icon(Icons.settings, size: DesignTokens.iconSm),
+                  icon: const Icon(Icons.settings, size: DesignTokens.iconSm),
                   tooltip: AppLocalizations.of(context)!.manageServices,
                   padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(
+                  constraints: const BoxConstraints(
                     minWidth: 24,
                     minHeight: 24,
                   ),
                 ),
-                SizedBox(width: DesignTokens.spacing1),
+                const SizedBox(width: DesignTokens.spacing1),
               ],
 
               // Status Indicator
@@ -125,7 +125,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                 Container(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(
+                  child: const CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                   ),
@@ -134,7 +134,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                 Container(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(
+                  child: const CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
                   ),
@@ -143,7 +143,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                 Container(
                   width: 20,
                   height: 20,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.green,
                     shape: BoxShape.circle,
                   ),
@@ -169,7 +169,10 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
   void _showServiceManagementDialog(BuildContext context, WidgetRef ref, IntegrationProvider provider) {
     showDialog(
       context: context,
-      builder: (context) => _ServiceManagementDialog(provider: provider),
+      builder: (context) => _ServiceManagementDialog(
+        provider: provider,
+        onSignOut: () => _signOutProvider(context, ref, provider),
+      ),
     );
   }
 
@@ -199,6 +202,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     await manager.signOutProvider(provider.id);
     
     if (context.mounted) {
+      Navigator.of(context).pop(); // Close the dialog
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.signedOut(provider.displayName)),
@@ -251,25 +255,6 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     }
   }
 
-  String _formatLastSync(String lastSyncTime) {
-    try {
-      final syncTime = DateTime.parse(lastSyncTime);
-      final now = DateTime.now();
-      final difference = now.difference(syncTime);
-      
-      if (difference.inMinutes < 1) {
-        return 'Just now';
-      } else if (difference.inMinutes < 60) {
-        return '${difference.inMinutes}m ago';
-      } else if (difference.inHours < 24) {
-        return '${difference.inHours}h ago';
-      } else {
-        return '${difference.inDays}d ago';
-      }
-    } catch (e) {
-      return 'Unknown';
-    }
-  }
 
   Widget _buildInlineServiceIcons(BuildContext context, IntegrationProvider provider, IntegrationProviderState? state) {
     final isAuthenticated = state?.isAuthenticated ?? false;
@@ -301,7 +286,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
         }
         
         return Container(
-          margin: EdgeInsets.only(right: DesignTokens.spacing1),
+          margin: const EdgeInsets.only(right: DesignTokens.spacing1),
           width: 24,
           height: 24,
           decoration: BoxDecoration(
@@ -324,9 +309,13 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
 }
 
 class _ServiceManagementDialog extends ConsumerWidget {
-  final IntegrationProvider provider;
 
-  const _ServiceManagementDialog({required this.provider});
+  const _ServiceManagementDialog({
+    required this.provider,
+    required this.onSignOut,
+  });
+  final IntegrationProvider provider;
+  final VoidCallback onSignOut;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -356,6 +345,13 @@ class _ServiceManagementDialog extends ConsumerWidget {
         ),
       ),
       actions: [
+        TextButton(
+          onPressed: onSignOut,
+          child: Text(
+            AppLocalizations.of(context)!.signOut,
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(AppLocalizations.of(context)!.done),

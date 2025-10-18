@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../design_system/tokens.dart';
 import '../../providers/tasks_provider.dart';
@@ -49,7 +48,7 @@ class TaskInteractionService {
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Failed to complete task'),
             backgroundColor: Colors.red,
           ),
@@ -151,7 +150,7 @@ class TaskInteractionService {
     await Future.delayed(const Duration(milliseconds: 50));
     
     // Monitor task completion performance
-    final transaction = Sentry.startTransaction(
+    Sentry.startTransaction(
       'task.toggle',
       'ui.interaction',
       bindToScope: true,
@@ -240,7 +239,7 @@ class TaskInteractionService {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed ?? false) {
       await ref.read(tasksProvider.notifier).deleteTask(taskId);
       
       ScaffoldMessenger.of(context).showSnackBar(

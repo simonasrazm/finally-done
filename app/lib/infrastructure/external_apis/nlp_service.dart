@@ -5,12 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// NLP Service for AI Command Processing
 /// Handles command interpretation using Gemini Pro
 class NLPService {
-  final Dio _dio;
-  final String? _geminiApiKey;
   
   NLPService({Dio? dio, String? geminiApiKey}) 
       : _dio = dio ?? Dio(),
         _geminiApiKey = geminiApiKey;
+  final Dio _dio;
+  final String? _geminiApiKey;
   
   /// Parse command using Gemini Pro
   Future<ParsedCommand> parseCommand(String transcription) async {
@@ -60,52 +60,6 @@ class NLPService {
   }
   
   
-  /// Simple rule-based parser (fallback)
-  ParsedCommand _parseWithRules(String transcription) {
-    final entities = <ParsedEntity>[];
-    final text = transcription.toLowerCase();
-    
-    // Simple keyword detection
-    if (text.contains('nupirk') || text.contains('pirkti') || text.contains('buy')) {
-      entities.add(ParsedEntity(
-        type: 'task',
-        content: transcription,
-        target: 'google_tasks',
-        confidence: 0.7,
-        reasoning: 'Detected shopping/buying keyword',
-      ));
-    } else if (text.contains('susitikimas') || text.contains('meeting') || text.contains('appointment')) {
-      entities.add(ParsedEntity(
-        type: 'event',
-        content: transcription,
-        target: 'google_calendar',
-        confidence: 0.7,
-        reasoning: 'Detected meeting/appointment keyword',
-      ));
-    } else if (text.contains('pastaba') || text.contains('note') || text.contains('remember')) {
-      entities.add(ParsedEntity(
-        type: 'note',
-        content: transcription,
-        target: 'evernote',
-        confidence: 0.7,
-        reasoning: 'Detected note/remember keyword',
-      ));
-    } else {
-      // Default to task
-      entities.add(ParsedEntity(
-        type: 'task',
-        content: transcription,
-        target: 'google_tasks',
-        confidence: 0.5,
-        reasoning: 'Default classification as task',
-      ));
-    }
-    
-    return ParsedCommand(
-      entities: entities,
-      lowConfidence: entities.any((e) => e.confidence < 0.7),
-    );
-  }
   
   /// Build prompt for LLM
   String _buildPrompt(String transcription) {
@@ -182,15 +136,15 @@ Examples:
 
 /// Parsed Command Result
 class ParsedCommand {
-  final List<ParsedEntity> entities;
-  final bool lowConfidence;
-  final String? error;
   
   const ParsedCommand({
     required this.entities,
     required this.lowConfidence,
     this.error,
   });
+  final List<ParsedEntity> entities;
+  final bool lowConfidence;
+  final String? error;
   
   bool get hasError => error != null;
   bool get isEmpty => entities.isEmpty;
@@ -198,12 +152,6 @@ class ParsedCommand {
 
 /// Parsed Entity
 class ParsedEntity {
-  final String type;
-  final String content;
-  final String target;
-  final DateTime? datetime;
-  final double confidence;
-  final String reasoning;
   
   const ParsedEntity({
     required this.type,
@@ -226,6 +174,12 @@ class ParsedEntity {
       reasoning: json['reasoning'] as String,
     );
   }
+  final String type;
+  final String content;
+  final String target;
+  final DateTime? datetime;
+  final double confidence;
+  final String reasoning;
   
   Map<String, dynamic> toJson() {
     return {

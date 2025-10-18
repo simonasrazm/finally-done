@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../design_system/colors.dart';
-import '../../design_system/typography.dart';
 import '../../design_system/tokens.dart';
 import '../commands/queue_service.dart';
 import '../../models/queued_command.dart';
@@ -34,10 +32,6 @@ class TranscriptionDialogService {
 }
 
 class _TranscriptionEditDialog extends StatefulWidget {
-  final String id;
-  final String currentTranscription;
-  final bool isReviewTab;
-  final WidgetRef ref;
 
   const _TranscriptionEditDialog({
     required this.id,
@@ -45,6 +39,10 @@ class _TranscriptionEditDialog extends StatefulWidget {
     required this.isReviewTab,
     required this.ref,
   });
+  final String id;
+  final String currentTranscription;
+  final bool isReviewTab;
+  final WidgetRef ref;
 
   @override
   State<_TranscriptionEditDialog> createState() => _TranscriptionEditDialogState();
@@ -82,9 +80,9 @@ class _TranscriptionEditDialogState extends State<_TranscriptionEditDialog> {
     return TextField(
       controller: _controller,
       maxLines: DesignTokens.textFieldMaxLines,
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         hintText: 'Enter transcription text...',
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(),
       ),
     );
   }
@@ -150,7 +148,7 @@ class _TranscriptionEditDialogState extends State<_TranscriptionEditDialog> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        duration: Duration(milliseconds: DesignTokens.delaySnackbar),
+        duration: const Duration(milliseconds: DesignTokens.delaySnackbar),
       ),
     );
   }

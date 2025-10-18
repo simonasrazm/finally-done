@@ -18,12 +18,7 @@ linter:
     prefer_final_locals: true
     
     # Design system enforcement
-    avoid_hardcoded_values: true  # Custom rule for design tokens
-    prefer_design_tokens: true    # Custom rule for design tokens
-    avoid_magic_numbers: true     # Custom rule for magic numbers
-    
-    # String localization
-    prefer_localized_strings: true  # Custom rule for localization
+    # Note: Custom rules for design tokens and localization would need to be implemented
     
     # Flutter specific
     avoid_unnecessary_containers: true
@@ -64,4 +59,4 @@ linter:
     use_super_parameters: true
     use_test_throws_matchers: true
     use_to_and_as_if_applicable: true
-    use_void_checks: true
+    # use_void_checks: true  # This rule doesn't exist in current Dart linter

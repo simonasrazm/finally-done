@@ -87,13 +87,6 @@ void main() {
     });
 
     test('Retry button should show for manual_review commands', () {
-      final command = QueuedCommandRealm(
-        '1',
-        'Manual review command',
-        CommandStatus.manual_review.name,
-        DateTime.now(),
-        audioPath: '/path/to/audio.mp3',
-      );
 
       expect(shouldShowRetryButton(CommandStatus.manual_review.name, false), isTrue);
     });

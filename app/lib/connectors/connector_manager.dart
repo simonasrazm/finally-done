@@ -2,12 +2,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'base_connector.dart';
 import 'google_tasks_connector.dart';
-import '../infrastructure/network/network_service.dart';
 
 /// Manages all API connectors
 /// Provides centralized access to connectors with proper lifecycle management
 class ConnectorManager extends StateNotifier<Map<String, BaseConnector>> {
-  final NetworkService _networkService = NetworkService();
 
   ConnectorManager() : super({}) {
     _initializeConnectors();

@@ -9,7 +9,6 @@ import 'package:finally_done/utils/retry_mechanism.dart';
 import 'package:newrelic_mobile/newrelic_mobile.dart';
 import 'package:newrelic_mobile/newrelic_navigation_observer.dart';
 import 'package:newrelic_mobile/config.dart';
-import 'dart:io';
 
 import 'design_system/colors.dart';
 import 'design_system/typography.dart';
@@ -26,13 +25,13 @@ import 'utils/sentry_performance.dart';
 void main() async {
         // Load environment variables
         try {
-          await dotenv.load(fileName: ".env");
+          await dotenv.load(fileName: '.env');
         } catch (e) {
           // Continue with defaults
         }
 
         // Initialize New Relic (official setup)
-        var appToken = "";
+        var appToken = '';
         final newRelicToken = dotenv.env['NEW_RELIC_TOKEN'];
         
         if (newRelicToken != null && newRelicToken.isNotEmpty) {
@@ -41,7 +40,7 @@ void main() async {
           return; // Exit early if no token
         }
 
-        Config config = Config(
+        final Config config = Config(
           accessToken: appToken,
           analyticsEventEnabled: true,
           networkErrorRequestEnabled: true,
@@ -82,7 +81,7 @@ void main() async {
       appRunner: () async {
 
         // Start Sentry transaction for app startup performance (now that Sentry is ready)
-        final appStartTransaction = sentryPerformance.startTransaction(
+        sentryPerformance.startTransaction(
           'app.startup',
           'app.lifecycle',
         );
@@ -138,7 +137,7 @@ void main() async {
               }
             },
           );
-      } catch (e, stackTrace) {
+      } catch (e) {
         // Continue without Sentry
         WidgetsFlutterBinding.ensureInitialized();
 
@@ -334,11 +333,6 @@ class _MainScreenState extends State<MainScreen> {
   ];
   }
   
-  int _getPendingCount() {
-    // Get actual count of failed commands from Mission Control data
-    // This will be updated when the provider changes
-    return 0; // Will be updated by Consumer widget
-  }
 
   Widget _buildNotificationIcon(IconData icon, int count) {
     return Stack(
@@ -404,8 +398,8 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home),
             label: AppLocalizations.of(context)!.home,
           ),
           BottomNavigationBarItem(
@@ -424,13 +418,13 @@ class _MainScreenState extends State<MainScreen> {
             label: AppLocalizations.of(context)!.missionControl,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.task_alt_outlined),
-            activeIcon: Icon(Icons.task_alt),
+            icon: const Icon(Icons.task_alt_outlined),
+            activeIcon: const Icon(Icons.task_alt),
             label: AppLocalizations.of(context)!.tasks,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings_outlined),
+            activeIcon: const Icon(Icons.settings),
             label: AppLocalizations.of(context)!.settings,
           ),
         ],

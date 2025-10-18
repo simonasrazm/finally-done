@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
-import '../generated/app_localizations.dart';
 
 /// Common UI components used across the app
 class CommonUIComponents {
@@ -18,7 +17,7 @@ class CommonUIComponents {
     Color? iconColor,
   }) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       decoration: BoxDecoration(
         color: AppColors.getSecondaryBackgroundColor(context),
         borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
@@ -88,7 +87,7 @@ class CommonUIComponents {
     IconData? icon,
   }) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       decoration: BoxDecoration(
         color: AppColors.getSecondaryBackgroundColor(context),
         borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
@@ -132,7 +131,7 @@ class CommonUIComponents {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),

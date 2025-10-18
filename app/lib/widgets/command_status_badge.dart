@@ -4,17 +4,16 @@ import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
 import '../models/queued_command.dart';
 import '../utils/status_helper.dart';
-import '../generated/app_localizations.dart';
 
 class CommandStatusBadge extends StatelessWidget {
-  final QueuedCommandRealm command;
-  final String commandStatus;
 
   const CommandStatusBadge({
     super.key,
     required this.command,
     required this.commandStatus,
   });
+  final QueuedCommandRealm command;
+  final String commandStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +22,7 @@ class CommandStatusBadge extends StatelessWidget {
       children: [
         // Status badge
         Container(
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: DesignTokens.spacing2,
             vertical: DesignTokens.spacing1,
           ),
@@ -44,7 +43,7 @@ class CommandStatusBadge extends StatelessWidget {
         if (command.failed) ...[
           const SizedBox(width: DesignTokens.spacing1),
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spacing1,
               vertical: DesignTokens.spacing0,
             ),
@@ -67,7 +66,7 @@ class CommandStatusBadge extends StatelessWidget {
         if (command.actionNeeded) ...[
           const SizedBox(width: DesignTokens.spacing1),
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spacing1,
               vertical: DesignTokens.spacing0,
             ),

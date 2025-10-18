@@ -1,20 +1,15 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'tasks_connection_service.dart';
-import 'task_operations_service.dart';
-import 'task_list_service.dart';
-import '../../infrastructure/storage/task_local_state_service.dart';
-import '../../utils/sentry_performance.dart';
-import '../../design_system/tokens.dart';
 
 /// Service responsible for managing background polling of tasks
 class TaskPollingService {
+
+  TaskPollingService(this._ref);
   final Ref _ref;
   Timer? _pollingTimer;
   static const Duration _pollingInterval = Duration(minutes: 2);
-  bool _isFetching = false;
-
-  TaskPollingService(this._ref);
+  final bool _isFetching = false;
 
   /// Start polling for tasks updates
   void startPolling() {

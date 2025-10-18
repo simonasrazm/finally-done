@@ -6,11 +6,9 @@ import '../../lib/providers/tasks_provider.dart';
 void main() {
   group('TasksProvider State Management Tests', () {
     late ProviderContainer container;
-    late TasksNotifier notifier;
 
     setUp(() {
       container = ProviderContainer();
-      notifier = container.read(tasksProvider.notifier);
     });
 
     tearDown(() {

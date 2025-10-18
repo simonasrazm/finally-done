@@ -1,24 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
 import '../core/commands/queue_service.dart';
-import '../core/audio/speech_service.dart';
-import '../core/commands/command_retry_service.dart';
-import '../core/audio/audio_playback_service.dart';
-import '../utils/photo_service.dart';
 import '../core/commands/command_action_service.dart';
 import '../core/commands/command_ui_service.dart';
 import '../core/audio/transcription_dialog_service.dart';
 import '../models/queued_command.dart';
 import '../utils/sentry_performance.dart';
 import '../utils/status_helper.dart';
-import '../widgets/photo_gallery_dialog.dart';
 import '../widgets/command_status_badge.dart';
 import '../widgets/command_action_buttons.dart';
 import '../widgets/photo_attachments.dart';
@@ -118,7 +110,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.settings_outlined, size: DesignTokens.iconSm),
+          const Icon(Icons.settings_outlined, size: DesignTokens.iconSm),
           Text(AppLocalizations.of(context)!.processing, style: AppTypography.caption2),
         ],
       ),
@@ -130,7 +122,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.check_circle_outline, size: DesignTokens.iconSm),
+          const Icon(Icons.check_circle_outline, size: DesignTokens.iconSm),
           Text(AppLocalizations.of(context)!.completed, style: AppTypography.caption2),
         ],
       ),
@@ -157,7 +149,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.rate_review_outlined, size: DesignTokens.iconSm),
+        const Icon(Icons.rate_review_outlined, size: DesignTokens.iconSm),
         Text(AppLocalizations.of(context)!.review, style: AppTypography.caption2),
       ],
     );
@@ -168,7 +160,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       top: 0,
       right: 0,
       child: Container(
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: DesignTokens.spacing1,
           vertical: DesignTokens.spacing0,
         ),
@@ -202,10 +194,10 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     final processingCommands = ref.watch(processingCommandsProvider);
     
     return ListView(
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       children: [
         _buildProcessingHeader(processingCommands.length),
-        SizedBox(height: DesignTokens.sectionSpacing),
+        const SizedBox(height: DesignTokens.sectionSpacing),
         _buildProcessingContent(processingCommands),
       ],
     );
@@ -245,7 +237,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     
     return Container(
       margin: const EdgeInsets.only(bottom: DesignTokens.spacing3),
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       decoration: _buildCommandCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +254,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   Widget _buildInvalidCommandCard() {
     return Container(
       margin: const EdgeInsets.only(bottom: DesignTokens.spacing3),
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       decoration: BoxDecoration(
         color: AppColors.getSecondaryBackgroundColor(context),
         borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
@@ -301,7 +293,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         const SizedBox(width: DesignTokens.spacing2),
         Expanded(
           child: Text(
-            props.transcription?.isNotEmpty == true ? props.transcription! : props.text,
+            props.transcription?.isNotEmpty ?? false ? props.transcription! : props.text,
             style: AppTypography.body.copyWith(
               color: AppColors.getTextPrimaryColor(context),
             ),
@@ -321,7 +313,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         children: [
           const SizedBox(height: DesignTokens.spacing2),
           ExpandableErrorMessage(
-            errorMessage: command.errorMessage?.isNotEmpty == true 
+            errorMessage: command.errorMessage?.isNotEmpty ?? false 
                 ? command.errorMessage! 
                 : AppLocalizations.of(context)!.transcriptionRetryFailed,
             expandedErrorMessages: _expandedErrorMessages,
@@ -375,12 +367,12 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     return GestureDetector(
       onTap: () => CommandActionService.deleteCommand(command.id, ref, context),
       child: Container(
-        padding: EdgeInsets.all(DesignTokens.spacing1),
+        padding: const EdgeInsets.all(DesignTokens.spacing1),
         decoration: BoxDecoration(
           color: AppColors.error.withOpacity(DesignTokens.opacity10),
           borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         ),
-        child: Icon(
+        child: const Icon(
           Icons.delete_outline,
           size: DesignTokens.iconSm,
           color: AppColors.error,
@@ -397,24 +389,11 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   }
   
 
-  void _showPhotoPreview(String photoPath, List<String> allPhotoPaths) {
-    final initialIndex = allPhotoPaths.indexOf(photoPath);
-    
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return PhotoGalleryDialog(
-          allPhotoPaths: allPhotoPaths,
-          initialIndex: initialIndex,
-        );
-      },
-    );
-  }
 
 
 
   void _editTranscription(String id, String currentTranscription) {
-    final currentTabIndex = _tabController?.index ?? _processingTabIndex;
+    final currentTabIndex = _tabController.index;
     final isReviewTab = currentTabIndex == _reviewTabIndex;
     
     TranscriptionDialogService.showEditDialog(
@@ -463,7 +442,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     final completedCommands = ref.watch(completedCommandsProvider);
     
     return ListView(
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       children: [
         CommonUIComponents.buildCommandList(
           commands: completedCommands,
@@ -487,7 +466,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     final reviewCommands = ref.watch(reviewCommandsProvider);
     
     return ListView(
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       children: [
         _buildAutoPassToggle(),
         const SizedBox(height: DesignTokens.componentPadding),

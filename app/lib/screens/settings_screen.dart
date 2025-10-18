@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +6,6 @@ import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
 import '../core/audio/speech_service.dart';
-import '../infrastructure/external_apis/integration_service.dart';
 import '../providers/language_provider.dart';
 import '../providers/theme_provider.dart';
 import '../generated/app_localizations.dart';
@@ -124,7 +122,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 modeData['icon'] as IconData,
                                 size: DesignTokens.iconSm,
                               ),
-                              SizedBox(width: DesignTokens.spacing2),
+                              const SizedBox(width: DesignTokens.spacing2),
                               Text(modeData['name'] as String),
                             ],
                           ),
@@ -220,7 +218,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
           DesignTokens.layoutPadding,
           DesignTokens.sectionSpacing,
           DesignTokens.layoutPadding,
@@ -254,7 +252,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           : null,
       trailing: trailing,
       onTap: onTap,
-      contentPadding: EdgeInsets.symmetric(
+      contentPadding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.componentPadding,
         vertical: DesignTokens.spacing1,
       ),
@@ -276,111 +274,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           : null,
       value: value,
       onChanged: onChanged,
-      contentPadding: EdgeInsets.symmetric(
+      contentPadding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.componentPadding,
         vertical: DesignTokens.spacing1,
       ),
     );
   }
   
-  /*
-  Widget _buildGoogleIntegrationTile({
-    required bool isAuthenticated,
-    String? userEmail,
-    required Set<String> connectedServices,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(
-        Icons.account_circle,
-        color: isAuthenticated ? AppColors.primary : AppColors.getTextSecondaryColor(context),
-        size: 28,
-      ),
-          title: Text(
-            AppLocalizations.of(context)!.googleAccount,
-            style: AppTypography.body.copyWith(
-              color: AppColors.getTextPrimaryColor(context),
-              fontWeight: isAuthenticated ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
-          subtitle: Text(
-            isAuthenticated 
-                ? _buildConnectedServicesText(userEmail, connectedServices)
-                : AppLocalizations.of(context)!.connectToGoogle,
-        style: AppTypography.footnote.copyWith(
-          color: AppColors.getTextSecondaryColor(context),
-        ),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isAuthenticated ? Icons.check_circle : Icons.circle_outlined,
-            color: isAuthenticated ? AppColors.success : AppColors.textTertiary,
-            size: 20,
-          ),
-          const SizedBox(width: DesignTokens.iconSpacing),
-          const Icon(Icons.chevron_right, size: 20),
-        ],
-      ),
-          onTap: () {
-            // Use microtask to let ripple animation complete before heavy work
-            Future.microtask(() => onTap());
-          },
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: DesignTokens.componentPadding,
-        vertical: DesignTokens.spacing2,
-      ),
-    );
-  }
   
-  
-  String _buildConnectedServicesText(String? userEmail, Set<String> connectedServices) {
-    final List<String> serviceNames = [];
-    
-    if (connectedServices.contains('tasks')) serviceNames.add('Tasks');
-    if (connectedServices.contains('calendar')) serviceNames.add('Calendar');
-    if (connectedServices.contains('gmail')) serviceNames.add('Gmail');
-    
-    final servicesText = serviceNames.isEmpty 
-        ? 'No services connected'
-        : serviceNames.join(' • ');
-    
-    return 'Connected as: $userEmail\n$servicesText';
-  }
-  
-  */
-
-  Widget _buildServiceTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool isConnected,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title, style: AppTypography.body),
-      subtitle: Text(subtitle, style: AppTypography.footnote),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isConnected ? Icons.check_circle : Icons.circle_outlined,
-            color: isConnected ? AppColors.success : AppColors.textTertiary,
-            size: 20,
-          ),
-          const SizedBox(width: DesignTokens.iconSpacing),
-          const Icon(Icons.chevron_right, size: 20),
-        ],
-      ),
-      onTap: onTap,
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: DesignTokens.componentPadding,
-        vertical: DesignTokens.spacing1,
-      ),
-    );
-  }
   
   
   

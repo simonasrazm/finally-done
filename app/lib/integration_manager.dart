@@ -1,16 +1,12 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:newrelic_mobile/newrelic_mobile.dart';
 import 'integration_provider.dart';
 import 'google_integration_provider.dart';
 import 'apple_notes_integration_provider.dart';
 import 'evernote_integration_provider.dart';
-import 'utils/sentry_performance.dart';
 
 /// Manages all integration providers and their services
 class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderState>> {
-  final Map<String, IntegrationProvider> _providers = {};
 
   IntegrationManager() : super({}) {
     // Initialize providers immediately with "not connected" state
@@ -21,6 +17,7 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
       _initializeProviders();
     });
   }
+  final Map<String, IntegrationProvider> _providers = {};
   
   void _initializeProvidersImmediately() {
     // Create providers immediately with "not connected" state so UI can show them

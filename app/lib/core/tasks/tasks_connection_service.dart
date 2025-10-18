@@ -6,18 +6,15 @@ import '../../connectors/connector_manager.dart';
 
 /// Service responsible for managing Google Tasks connection status and service creation
 class TasksConnectionService {
-  final Ref _ref;
 
   TasksConnectionService(this._ref);
+  final Ref _ref;
 
   /// Check if Google Tasks is connected
   bool isConnected() {
     try {
       // Check if integration manager notifier is available
       final manager = _ref.read(integrationManagerProvider.notifier);
-      if (manager == null) {
-        return false;
-      }
       
       final isConnected = manager.isServiceConnected('google', 'tasks');
       
@@ -35,9 +32,6 @@ class TasksConnectionService {
       
       // Final fallback: check if Google integration is authenticated (even if service not marked as connected)
       final integrationState = _ref.read(integrationManagerProvider);
-      if (integrationState == null) {
-        return false;
-      }
       
       final googleState = integrationState['google'];
       if (googleState != null && googleState.isAuthenticated) {

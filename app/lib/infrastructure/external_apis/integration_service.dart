@@ -1,8 +1,5 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:googleapis/tasks/v1.dart' as tasks;
-import 'package:googleapis/calendar/v3.dart' as calendar;
-import 'package:googleapis/gmail/v1.dart' as gmail;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../integration_manager.dart';
 import '../../google_integration_provider.dart';
@@ -13,9 +10,6 @@ import '../../connectors/connector_manager.dart';
 /// Provides a unified interface for the AI agent to execute actions
 /// on USER's Google services (Tasks, Calendar, Gmail)
 class IntegrationService {
-  final IntegrationManager _integrationManager;
-  final ConnectorManager _connectorManager;
-  GoogleTasksService? _tasksService;
 
   IntegrationService(this._integrationManager, this._connectorManager) {
     // Initialize tasks service if Google Tasks is connected
@@ -26,13 +20,13 @@ class IntegrationService {
       }
     }
   }
+  final IntegrationManager _integrationManager;
+  final ConnectorManager _connectorManager;
+  GoogleTasksService? _tasksService;
 
   /// Check if user is authenticated with Google services
   bool get isAuthenticated => _integrationManager.isProviderAuthenticated('google');
 
-  /// Get user information
-  String? get userEmail => _integrationManager.getProvider('google')?.state.userEmail;
-  String? get userName => _integrationManager.getProvider('google')?.state.userName;
   
   /// Check if specific services are connected
   bool get isTasksConnected => _integrationManager.isServiceConnected('google', 'tasks');

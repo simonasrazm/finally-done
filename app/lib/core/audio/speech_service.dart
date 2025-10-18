@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'speech_engine_strategy.dart';
 import 'speech_engine_factory.dart';
 import 'ios_speech_service.dart';
 import '../../infrastructure/external_apis/gemini_api_service.dart';
@@ -8,10 +7,6 @@ import 'audio_recording_service.dart';
 /// Main Speech Recognition Service
 /// Uses strategy pattern to support different speech engines
 class SpeechService {
-  final SpeechEngineFactory _engineFactory;
-  final IosSpeechService _iosService;
-  final GeminiApiService _geminiService;
-  final AudioRecordingService _audioService;
   
   SpeechService(
     this._engineFactory,
@@ -19,6 +14,10 @@ class SpeechService {
     this._geminiService,
     this._audioService,
   );
+  final SpeechEngineFactory _engineFactory;
+  final IosSpeechService _iosService;
+  final GeminiApiService _geminiService;
+  final AudioRecordingService _audioService;
   
   /// Get current audio path from recording service
   String? get currentAudioPath => _audioService.currentAudioPath;
@@ -33,12 +32,12 @@ class SpeechService {
   
   /// Start recording audio
   Future<String?> startRecording() async {
-    return await _audioService.startRecording();
+    return _audioService.startRecording();
   }
   
   /// Stop recording audio
   Future<String?> stopRecording() async {
-    return await _audioService.stopRecording();
+    return _audioService.stopRecording();
   }
   
   /// Main speech recognition method that respects engine preference
@@ -89,7 +88,7 @@ class SpeechService {
   /// Request speech recognition permissions
   Future<SpeechPermissionStatus> requestPermission() async {
     try {
-      bool available = await _iosService.isAvailable();
+      final bool available = await _iosService.isAvailable();
       if (available) {
         return SpeechPermissionStatus.authorized;
       } else {
@@ -111,12 +110,12 @@ class SpeechService {
   
   /// Check if microphone permission is available
   Future<bool> hasMicrophonePermission() async {
-    return await _audioService.hasPermission();
+    return _audioService.hasPermission();
   }
   
   /// Request microphone permission
   Future<bool> requestMicrophonePermission() async {
-    return await _audioService.requestPermission();
+    return _audioService.requestPermission();
   }
   
   /// Get available speech engines
@@ -126,14 +125,14 @@ class SpeechService {
   
   /// Check if a specific engine is available
   Future<bool> isEngineAvailable(String enginePreference) async {
-    return await _engineFactory.isEngineAvailable(enginePreference);
+    return _engineFactory.isEngineAvailable(enginePreference);
   }
 }
 
 /// Speech Service Exception
 class SpeechServiceException implements Exception {
-  final String message;
   const SpeechServiceException(this.message);
+  final String message;
   
   @override
   String toString() => 'SpeechServiceException: $message';

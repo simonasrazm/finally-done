@@ -1,22 +1,24 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:googleapis/tasks/v1.dart' as tasks;
 import 'package:googleapis/calendar/v3.dart' as calendar;
-import 'package:googleapis/gmail/v1.dart' as gmail;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:flutter/services.dart';
 import 'utils/sentry_performance.dart';
 import 'design_system/tokens.dart';
 import 'integration_provider.dart';
 
 /// Google-specific integration provider
 class GoogleIntegrationProvider extends IntegrationProvider {
+
+  GoogleIntegrationProvider() : super(
+    id: 'google',
+    displayName: 'Google',
+    icon: 'google', // Icon identifier
+    description: 'Connect to Google services like Tasks, Calendar, and Gmail',
+  );
   static FlutterSecureStorage? _storage;
   static FlutterSecureStorage get storage => _storage ??= const FlutterSecureStorage();
   static const String _accessTokenKey = 'google_access_token';
@@ -30,13 +32,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   GoogleSignIn? _googleSignIn;
   AuthClient? _authClient;
 
-  GoogleIntegrationProvider() : super(
-    id: 'google',
-    displayName: 'Google',
-    icon: 'google', // Icon identifier
-    description: 'Connect to Google services like Tasks, Calendar, and Gmail',
-  );
-
   @override
   Future<void> initialize() async {
     await _initializeFromStoredTokensAsync();
@@ -44,9 +39,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
   /// Initialize from stored tokens asynchronously
   Future<void> _initializeFromStoredTokensAsync() async {
-    print('🔵 GOOGLE INTEGRATION: _initializeFromStoredTokensAsync called');
     // Add a small delay to spread out initialization work
-    await Future.delayed(Duration(milliseconds: DesignTokens.animationFast));
+    await Future.delayed(const Duration(milliseconds: DesignTokens.animationFast));
     await _initializeFromStoredTokens();
   }
 
@@ -77,7 +71,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
   @override
   Future<bool> authenticate() async {
-    return await SentryPerformance().monitorTransaction(
+    return SentryPerformance().monitorTransaction(
       PerformanceTransactions.authGoogleSignIn,
       PerformanceOps.authSignIn,
       () async {
@@ -101,14 +95,14 @@ class GoogleIntegrationProvider extends IntegrationProvider {
               PerformanceTransactions.authGoogleSignIn,
               'google_signin_silent',
               PerformanceOps.authSignIn,
-              () async => await _googleSignIn!.signInSilently(),
+              () async => _googleSignIn!.signInSilently(),
             );
             if (googleUser != null) {
               await SentryPerformance().monitorOperation(
                 PerformanceTransactions.authGoogleSignIn,
                 'google_setup_session',
                 PerformanceOps.authSignIn,
-                () async => await _setupUserSession(googleUser),
+                () async => _setupUserSession(googleUser),
               );
               return true;
             }
@@ -119,7 +113,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
             PerformanceTransactions.authGoogleSignIn,
             'google_signin_interactive',
             PerformanceOps.authSignIn,
-            () async => await _googleSignIn!.signIn(),
+            () async => _googleSignIn!.signIn(),
           );
           if (googleUser == null) {
             state = state.copyWith(isConnecting: false);
@@ -130,7 +124,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
             PerformanceTransactions.authGoogleSignIn,
             'google_setup_session',
             PerformanceOps.authSignIn,
-            () async => await _setupUserSession(googleUser),
+            () async => _setupUserSession(googleUser),
           );
           return true;
         } catch (e, stackTrace) {
@@ -191,7 +185,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       _authClient = authenticatedClient(
         _createHttpClient(),
         AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(const Duration(hours: 1))),
           null,
           requestedScopes,
         ),
@@ -260,9 +254,9 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   Future<bool> toggleService(String serviceId) async {
     final isConnected = state.isServiceConnected(serviceId);
     if (isConnected) {
-      return await disconnectServices([serviceId]);
+      return disconnectServices([serviceId]);
     } else {
-      return await connectServices([serviceId]);
+      return connectServices([serviceId]);
     }
   }
 
@@ -351,7 +345,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
   /// Initialize from stored tokens
   Future<void> _initializeFromStoredTokens() async {
-    print('🔵 GOOGLE INTEGRATION: _initializeFromStoredTokens called');
     try {
       final accessToken = await storage.read(key: _accessTokenKey);
       final userEmail = await storage.read(key: _userEmailKey);
@@ -399,7 +392,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         _authClient = authenticatedClient(
           http.Client(),
           AccessCredentials(
-            AccessToken('Bearer', freshAccessToken, DateTime.now().toUtc().add(Duration(hours: 1))),
+            AccessToken('Bearer', freshAccessToken, DateTime.now().toUtc().add(const Duration(hours: 1))),
             null,
             _getCurrentScopes(),
           ),
@@ -415,12 +408,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         );
         
         
-        print('🔵 GOOGLE INTEGRATION: Successfully initialized from stored tokens');
-        print('🔵 GOOGLE INTEGRATION: Final state - isAuthenticated: ${state.isAuthenticated}, userEmail: ${state.userEmail}');
-        print('🔵 GOOGLE INTEGRATION: Connected services: $connectedServices');
-        print('🔵 GOOGLE INTEGRATION: Updated services: ${updatedServices.keys}');
-      } else {
-        print('🔵 GOOGLE INTEGRATION: No valid stored tokens found - accessToken: ${accessToken != null}, userEmail: ${userEmail != null}');
       }
     } catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
@@ -439,7 +426,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     _authClient = authenticatedClient(
       http.Client(),
       AccessCredentials(
-        AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
+        AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(const Duration(hours: 1))),
         null,
         ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'],
       ),
@@ -479,7 +466,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   /// Store authentication tokens
   Future<void> _storeTokens(String accessToken, List<String> scopes) async {
     await storage.write(key: _accessTokenKey, value: accessToken);
-    await storage.write(key: _tokenExpiryKey, value: DateTime.now().toUtc().add(Duration(hours: 1)).toIso8601String());
+    await storage.write(key: _tokenExpiryKey, value: DateTime.now().toUtc().add(const Duration(hours: 1)).toIso8601String());
   }
 
   /// Store user information
@@ -520,7 +507,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       _authClient = authenticatedClient(
         _createHttpClient(),
         AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(Duration(hours: 1))),
+          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(const Duration(hours: 1))),
           null,
           _getCurrentScopes(),
         ),

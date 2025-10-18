@@ -11,38 +11,38 @@ import '../../connectors/google_tasks_connector.dart';
 /// Google Tasks Service
 /// Handles task management through Google Tasks API using the new connector architecture
 class GoogleTasksService {
+
+  GoogleTasksService(this._integrationManager, this._connectorManager, this._authClient) {
+    _tasksApi = tasks.TasksApi(_authClient);
+  }
   final IntegrationManager _integrationManager;
   final ConnectorManager _connectorManager;
   AuthClient _authClient;
   late tasks.TasksApi _tasksApi;
 
-  GoogleTasksService(this._integrationManager, this._connectorManager, this._authClient) {
-    _tasksApi = tasks.TasksApi(_authClient);
-  }
-
   /// Get all task lists using the new connector architecture
   Future<List<tasks.TaskList>> getTaskLists() async {
-    return await sentryPerformance.monitorTransaction(
+    return sentryPerformance.monitorTransaction(
       PerformanceTransactions.apiTaskListsFetch,
       PerformanceOps.apiCall,
       () async {
         // Try to use the new connector architecture first
         final connector = _connectorManager.getConnector<GoogleTasksConnector>('google_tasks');
         if (connector != null && connector.isInitialized) {
-          return await sentryPerformance.monitorOperation(
+          return sentryPerformance.monitorOperation(
             PerformanceTransactions.apiTaskListsFetch,
             'connector_get_task_lists',
             PerformanceOps.apiCall,
-            () async => await connector.getTaskLists(),
+            () async => connector.getTaskLists(),
           );
         }
 
         // Fallback to legacy implementation
-        return await sentryPerformance.monitorOperation(
+        return sentryPerformance.monitorOperation(
           PerformanceTransactions.apiTaskListsFetch,
           'legacy_get_task_lists',
           PerformanceOps.apiCall,
-          () async => await _getTaskListsLegacy(),
+          () async => _getTaskListsLegacy(),
         );
       },
       data: {
@@ -54,7 +54,7 @@ class GoogleTasksService {
 
   /// Legacy implementation for getting task lists
   Future<List<tasks.TaskList>> _getTaskListsLegacy() async {
-    return await _retryOperation(() async {
+    return _retryOperation(() async {
       
       // Ensure valid authentication before making API call
       final googleProvider = _integrationManager.getProvider('google') as GoogleIntegrationProvider?;
@@ -77,11 +77,11 @@ class GoogleTasksService {
 
   /// Get tasks from a specific list
   Future<List<tasks.Task>> getTasks(String taskListId) async {
-    return await sentryPerformance.monitorTransaction(
+    return sentryPerformance.monitorTransaction(
       PerformanceTransactions.apiTasksFetch,
       PerformanceOps.apiCall,
       () async {
-        return await _retryOperation(() async {
+        return _retryOperation(() async {
           
           // Ensure valid authentication before making API call
           final googleProvider = _integrationManager.getProvider('google') as GoogleIntegrationProvider?;
@@ -90,7 +90,7 @@ class GoogleTasksService {
               PerformanceTransactions.apiTasksFetch,
               'auth_check',
               PerformanceOps.authCheck,
-              () async => await googleProvider.ensureValidAuthentication(),
+              () async => googleProvider.ensureValidAuthentication(),
             );
             if (!isValid) {
               throw Exception('Authentication expired and could not be refreshed');
@@ -104,7 +104,7 @@ class GoogleTasksService {
             PerformanceTransactions.apiTasksFetch,
             'api_call_list_tasks',
             PerformanceOps.apiCall,
-            () async => await _tasksApi.tasks.list(taskListId),
+            () async => _tasksApi.tasks.list(taskListId),
           );
           final taskList = response.items ?? [];
           
@@ -121,7 +121,7 @@ class GoogleTasksService {
 
   /// Create a new task
   Future<tasks.Task> createTask(String taskListId, String title, {String? notes, DateTime? due}) async {
-    return await sentryPerformance.monitorTransaction(
+    return sentryPerformance.monitorTransaction(
       PerformanceTransactions.apiTasksCreate,
       PerformanceOps.apiCall,
       () async {
@@ -136,7 +136,7 @@ class GoogleTasksService {
             PerformanceTransactions.apiTasksCreate,
             'api_call_insert_task',
             PerformanceOps.apiCall,
-            () async => await _tasksApi.tasks.insert(task, taskListId),
+            () async => _tasksApi.tasks.insert(task, taskListId),
           );
           
           return createdTask;
@@ -283,7 +283,7 @@ class GoogleTasksService {
 
   /// Retry operation with exponential backoff for network errors
   Future<T> _retryOperation<T>(Future<T> Function() operation, String operationName) async {
-    int maxRetries = 3;
+    final int maxRetries = 3;
     int retryCount = 0;
     
     while (retryCount < maxRetries) {
@@ -330,8 +330,11 @@ final googleTasksServiceProvider = Provider<GoogleTasksService?>((ref) {
   final googleProvider = manager.getProvider('google') as GoogleIntegrationProvider?;
   
   // Only create service if we have both authentication and auth client
-  if (googleState?.isAuthenticated == true && googleProvider?.authClient != null) {
-    return GoogleTasksService(manager, connectorManager, googleProvider!.authClient!);
+  if (googleState?.isAuthenticated ?? false) {
+    final authClient = googleProvider?.authClient;
+    if (authClient != null) {
+      return GoogleTasksService(manager, connectorManager, authClient);
+    }
   }
   return null;
 });
@@ -350,7 +353,7 @@ final robustGoogleTasksServiceProvider = Provider<GoogleTasksService?>((ref) {
   final integrationState = ref.watch(integrationManagerProvider);
   final googleState = integrationState['google'];
   
-  if (googleState?.isAuthenticated == true) {
+  if (googleState?.isAuthenticated ?? false) {
     // We're authenticated but service is null - this is likely a transitional state
     // Return the last known good service if available, or null
     return null;
@@ -365,7 +368,7 @@ final googleTaskListsProvider = FutureProvider<List<tasks.TaskList>>((ref) async
   if (tasksService == null) {
     throw Exception('Google Tasks not authenticated');
   }
-  return await tasksService.getTaskLists();
+  return tasksService.getTaskLists();
 });
 
 /// Provider for default task list
@@ -374,5 +377,5 @@ final googleDefaultTaskListProvider = FutureProvider<tasks.TaskList?>((ref) asyn
   if (tasksService == null) {
     return null;
   }
-  return await tasksService.getDefaultTaskList();
+  return tasksService.getDefaultTaskList();
 });
