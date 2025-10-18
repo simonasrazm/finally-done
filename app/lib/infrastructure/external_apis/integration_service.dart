@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as tasks;
 import 'package:googleapis/calendar/v3.dart' as calendar;
 import 'package:googleapis/gmail/v1.dart' as gmail;
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../integration_manager.dart';
 import '../../google_integration_provider.dart';
 import 'google_tasks_service.dart';
@@ -60,6 +61,7 @@ class IntegrationService {
       
       return success;
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -77,6 +79,7 @@ class IntegrationService {
       }
       return success;
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -87,6 +90,7 @@ class IntegrationService {
       await _integrationManager.signOutProvider('google');
       _tasksService = null;
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
     }
   }
 
@@ -130,6 +134,7 @@ class IntegrationService {
         'message': 'Task created successfully',
       };
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       return {
         'success': false,
         'error': e.toString(),
@@ -169,6 +174,7 @@ class IntegrationService {
         'message': 'Task completed successfully',
       };
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       return {
         'success': false,
         'error': e.toString(),
@@ -216,6 +222,7 @@ class IntegrationService {
         'message': 'Tasks retrieved successfully',
       };
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       return {
         'success': false,
         'error': e.toString(),
@@ -264,6 +271,7 @@ class IntegrationService {
         'message': 'Search completed successfully',
       };
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       return {
         'success': false,
         'error': e.toString(),

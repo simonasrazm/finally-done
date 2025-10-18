@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:finally_done/models/queued_command.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'queue_service.dart';
 import '../audio/speech_service.dart';
 import 'command_retry_service.dart';
@@ -44,8 +45,9 @@ class CommandActionService {
         await _retryTranscription(commandId, command, ref, context);
       }
       
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Store technical error for backend analysis, but show user-friendly message in UI
+      Sentry.captureException(e, stackTrace: stackTrace);
       ref.read(queueProvider.notifier).updateCommandErrorMessage(commandId, e.toString());
       ref.read(queueProvider.notifier).updateCommandFailed(commandId, true);
       
@@ -102,8 +104,8 @@ class CommandActionService {
       ref.read(queueProvider.notifier).updateCommandStatus(commandId, CommandStatus.transcribing);
       
       _showSnackBar(context, 'Audio approved for transcription!', isSuccess: true);
-    } catch (e) {
-      
+    } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       _showSnackBar(context, 'Error approving audio: $e', isError: true);
     }
   }
@@ -142,7 +144,7 @@ class CommandActionService {
       _showSnackBar(context, 'Command deleted successfully', isSuccess: true);
       
     } catch (e, stackTrace) {
-      
+      Sentry.captureException(e, stackTrace: stackTrace);
       _showSnackBar(context, 'Error deleting command: $e', isError: true);
     }
   }

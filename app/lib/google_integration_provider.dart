@@ -134,6 +134,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
           );
           return true;
         } catch (e, stackTrace) {
+          Sentry.captureException(e, stackTrace: stackTrace);
           state = state.copyWith(isConnecting: false);
           return false;
         }
@@ -217,6 +218,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
       return true;
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(isSyncing: false);
       return false;
     }
@@ -248,6 +250,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
       return true;
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(isSyncing: false);
       return false;
     }
@@ -294,6 +297,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       );
       
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
     }
   }
 
@@ -418,7 +422,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       } else {
         print('🔵 GOOGLE INTEGRATION: No valid stored tokens found - accessToken: ${accessToken != null}, userEmail: ${userEmail != null}');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
     }
   }
 
@@ -526,6 +531,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       
       return true;
     } catch (e, stackTrace) {
+      Sentry.captureException(e, stackTrace: stackTrace);
       return false;
     }
   }
