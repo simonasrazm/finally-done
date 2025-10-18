@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:googleapis/tasks/v1.dart' as tasks;
-import 'package:googleapis_auth/auth_io.dart';
 import 'base_connector.dart';
 import '../network/network_service.dart';
-import '../../utils/logger.dart';
 
 /// Google Tasks API connector
 /// Handles all Google Tasks operations with automatic retry and error handling
@@ -39,12 +37,10 @@ class GoogleTasksConnector extends BaseConnector {
   Future<List<tasks.TaskList>> getTaskLists() async {
     return await executeWithAuthRefresh(
       () async {
-        Logger.info('Fetching Google task lists', tag: 'GOOGLE_TASKS');
         
         final response = await _tasksApi.tasklists.list();
         final taskLists = response.items ?? [];
         
-        Logger.info('Retrieved ${taskLists.length} task lists', tag: 'GOOGLE_TASKS');
         return taskLists;
       },
       operationName: 'fetch task lists',
@@ -55,12 +51,10 @@ class GoogleTasksConnector extends BaseConnector {
   Future<List<tasks.Task>> getTasks(String taskListId) async {
     return await executeWithAuthRefresh(
       () async {
-        Logger.info('Fetching tasks from list: $taskListId', tag: 'GOOGLE_TASKS');
         
         final response = await _tasksApi.tasks.list(taskListId);
         final taskList = response.items ?? [];
         
-        Logger.info('Retrieved ${taskList.length} tasks', tag: 'GOOGLE_TASKS');
         return taskList;
       },
       operationName: 'fetch tasks from list: $taskListId',
@@ -76,7 +70,6 @@ class GoogleTasksConnector extends BaseConnector {
   }) async {
     return await executeWithAuthRefresh(
       () async {
-        Logger.info('Creating task: $title in list: $taskListId', tag: 'GOOGLE_TASKS');
         
         final task = tasks.Task()
           ..title = title
@@ -85,7 +78,6 @@ class GoogleTasksConnector extends BaseConnector {
 
         final createdTask = await _tasksApi.tasks.insert(task, taskListId);
         
-        Logger.info('Successfully created task: ${createdTask.id}', tag: 'GOOGLE_TASKS');
         return createdTask;
       },
       operationName: 'create task: $title',
@@ -100,11 +92,9 @@ class GoogleTasksConnector extends BaseConnector {
   ) async {
     return await executeWithAuthRefresh(
       () async {
-        Logger.info('Updating task: $taskId in list: $taskListId', tag: 'GOOGLE_TASKS');
         
         final updatedTask = await _tasksApi.tasks.update(task, taskListId, taskId);
         
-        Logger.info('Successfully updated task: $taskId', tag: 'GOOGLE_TASKS');
         return updatedTask;
       },
       operationName: 'update task: $taskId',
@@ -115,12 +105,10 @@ class GoogleTasksConnector extends BaseConnector {
   Future<void> completeTask(String taskListId, String taskId) async {
     await executeWithAuthRefresh(
       () async {
-        Logger.info('Completing task: $taskId in list: $taskListId', tag: 'GOOGLE_TASKS');
         
         final task = tasks.Task()..status = 'completed';
         await _tasksApi.tasks.update(task, taskListId, taskId);
         
-        Logger.info('Successfully completed task: $taskId', tag: 'GOOGLE_TASKS');
       },
       operationName: 'complete task: $taskId',
     );
@@ -130,11 +118,9 @@ class GoogleTasksConnector extends BaseConnector {
   Future<void> deleteTask(String taskListId, String taskId) async {
     await executeWithAuthRefresh(
       () async {
-        Logger.info('Deleting task: $taskId from list: $taskListId', tag: 'GOOGLE_TASKS');
         
         await _tasksApi.tasks.delete(taskListId, taskId);
         
-        Logger.info('Successfully deleted task: $taskId', tag: 'GOOGLE_TASKS');
       },
       operationName: 'delete task: $taskId',
     );
@@ -144,15 +130,12 @@ class GoogleTasksConnector extends BaseConnector {
   Future<tasks.TaskList?> getDefaultTaskList() async {
     return await executeWithAuthRefresh(
       () async {
-        Logger.info('Fetching default task list', tag: 'GOOGLE_TASKS');
         
         final taskLists = await getTaskLists();
         final defaultList = taskLists.isNotEmpty ? taskLists.first : null;
         
         if (defaultList != null) {
-          Logger.info('Found default task list: ${defaultList.id}', tag: 'GOOGLE_TASKS');
         } else {
-          Logger.warning('No default task list found', tag: 'GOOGLE_TASKS');
         }
         
         return defaultList;
@@ -165,7 +148,6 @@ class GoogleTasksConnector extends BaseConnector {
   Future<List<tasks.Task>> searchTasks(String query) async {
     return await executeWithAuthRefresh(
       () async {
-        Logger.info('Searching tasks with query: $query', tag: 'GOOGLE_TASKS');
         
         final taskLists = await getTaskLists();
         final allTasks = <tasks.Task>[];
@@ -184,7 +166,6 @@ class GoogleTasksConnector extends BaseConnector {
           return title.contains(searchQuery) || notes.contains(searchQuery);
         }).toList();
         
-        Logger.info('Found ${filteredTasks.length} tasks matching query: $query', tag: 'GOOGLE_TASKS');
         return filteredTasks;
       },
       operationName: 'search tasks with query: $query',
@@ -194,6 +175,5 @@ class GoogleTasksConnector extends BaseConnector {
   @override
   void dispose() {
     super.dispose();
-    Logger.info('Disposed Google Tasks connector', tag: 'GOOGLE_TASKS');
   }
 }

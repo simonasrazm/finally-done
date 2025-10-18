@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as tasks;
 import 'package:googleapis/calendar/v3.dart' as calendar;
 import 'package:googleapis/gmail/v1.dart' as gmail;
-import '../utils/logger.dart';
 import 'integrations/integration_manager.dart';
 import 'integrations/google_integration_provider.dart';
 import 'google_tasks_service.dart';
@@ -61,11 +60,6 @@ class IntegrationService {
       
       return success;
     } catch (e, stackTrace) {
-      Logger.error('Failed to connect to service $service', 
-        tag: 'INTEGRATION', 
-        error: e, 
-        stackTrace: stackTrace
-      );
       return false;
     }
   }
@@ -73,7 +67,6 @@ class IntegrationService {
   /// Authenticate user with Google
   Future<bool> authenticate() async {
     try {
-      Logger.info('Starting USER authentication for integrations', tag: 'INTEGRATION');
 
       final success = await _integrationManager.authenticateProvider('google');
       if (success) {
@@ -81,15 +74,9 @@ class IntegrationService {
         if (googleProvider?.authClient != null) {
           _tasksService = GoogleTasksService(_integrationManager, _connectorManager, googleProvider!.authClient!);
         }
-        Logger.info('USER authenticated successfully for integrations', tag: 'INTEGRATION');
       }
       return success;
     } catch (e, stackTrace) {
-      Logger.error('USER authentication failed for integrations', 
-        tag: 'INTEGRATION', 
-        error: e, 
-        stackTrace: stackTrace
-      );
       return false;
     }
   }
@@ -97,16 +84,9 @@ class IntegrationService {
   /// Sign out user
   Future<void> signOut() async {
     try {
-      Logger.info('Signing out USER from integrations', tag: 'INTEGRATION');
       await _integrationManager.signOutProvider('google');
       _tasksService = null;
-      Logger.info('USER signed out from integrations', tag: 'INTEGRATION');
     } catch (e, stackTrace) {
-      Logger.error('USER sign out failed for integrations', 
-        tag: 'INTEGRATION', 
-        error: e, 
-        stackTrace: stackTrace
-      );
     }
   }
 
@@ -127,7 +107,6 @@ class IntegrationService {
         }
       }
 
-      Logger.info('Creating task: $title', tag: 'INTEGRATION');
       
       // Get default task list
       final defaultList = await _tasksService!.getDefaultTaskList();
@@ -142,7 +121,6 @@ class IntegrationService {
         due: due,
       );
 
-      Logger.info('Successfully created task: ${task.id}', tag: 'INTEGRATION');
       
       return {
         'success': true,
@@ -152,11 +130,6 @@ class IntegrationService {
         'message': 'Task created successfully',
       };
     } catch (e, stackTrace) {
-      Logger.error('Failed to create task: $title', 
-        tag: 'INTEGRATION', 
-        error: e, 
-        stackTrace: stackTrace
-      );
       return {
         'success': false,
         'error': e.toString(),
@@ -180,7 +153,6 @@ class IntegrationService {
         }
       }
 
-      Logger.info('Completing task: $taskId', tag: 'INTEGRATION');
       
       // Get default task list
       final defaultList = await _tasksService!.getDefaultTaskList();
@@ -190,7 +162,6 @@ class IntegrationService {
 
       await _tasksService!.completeTask(defaultList.id!, taskId);
 
-      Logger.info('Successfully completed task: $taskId', tag: 'INTEGRATION');
       
       return {
         'success': true,
@@ -198,11 +169,6 @@ class IntegrationService {
         'message': 'Task completed successfully',
       };
     } catch (e, stackTrace) {
-      Logger.error('Failed to complete task: $taskId', 
-        tag: 'INTEGRATION', 
-        error: e, 
-        stackTrace: stackTrace
-      );
       return {
         'success': false,
         'error': e.toString(),
@@ -226,7 +192,6 @@ class IntegrationService {
         }
       }
 
-      Logger.info('Listing user tasks', tag: 'INTEGRATION');
       
       // Get default task list
       final defaultList = await _tasksService!.getDefaultTaskList();
@@ -244,7 +209,6 @@ class IntegrationService {
         'completed': task.completed,
       }).toList();
 
-      Logger.info('Retrieved ${tasks.length} tasks', tag: 'INTEGRATION');
       
       return {
         'success': true,
@@ -252,11 +216,6 @@ class IntegrationService {
         'message': 'Tasks retrieved successfully',
       };
     } catch (e, stackTrace) {
-      Logger.error('Failed to list tasks', 
-        tag: 'INTEGRATION', 
-        error: e, 
-        stackTrace: stackTrace
-      );
       return {
         'success': false,
         'error': e.toString(),
@@ -280,7 +239,6 @@ class IntegrationService {
         }
       }
 
-      Logger.info('Searching tasks with query: $query', tag: 'INTEGRATION');
       
       // Get default task list
       final defaultList = await _tasksService!.getDefaultTaskList();
@@ -298,7 +256,6 @@ class IntegrationService {
         'completed': task.completed,
       }).toList();
 
-      Logger.info('Found ${tasks.length} matching tasks', tag: 'INTEGRATION');
       
       return {
         'success': true,
@@ -307,11 +264,6 @@ class IntegrationService {
         'message': 'Search completed successfully',
       };
     } catch (e, stackTrace) {
-      Logger.error('Failed to search tasks with query: $query', 
-        tag: 'INTEGRATION', 
-        error: e, 
-        stackTrace: stackTrace
-      );
       return {
         'success': false,
         'error': e.toString(),

@@ -10,6 +10,12 @@ class AppTypography {
   static const String fontFamily = 'SF Pro Display'; // Will fallback to system font
   static const String fontFamilyText = 'SF Pro Text'; // Will fallback to system font
 
+  // Font Weights - Centralized for consistency
+  static const FontWeight weightNormal = FontWeight.w400;
+  static const FontWeight weightMedium = FontWeight.w500;
+  static const FontWeight weightSemiBold = FontWeight.w600;
+  static const FontWeight weightBold = FontWeight.w700;
+
   // Large Title (34pt, Bold)
   static const TextStyle largeTitle = TextStyle(
     fontFamily: fontFamily,

@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart';
-import '../../utils/logger.dart';
 import '../../design_system/tokens.dart';
 
 /// Centralized network service for handling common connectivity challenges
@@ -32,7 +30,7 @@ class NetworkService {
     while (retryCount < maxRetries) {
       try {
         return await operation();
-      } catch (e, stackTrace) {
+      } catch (e) {
         retryCount++;
         
         // Check if this is a retryable error
@@ -40,21 +38,11 @@ class NetworkService {
         
         if (shouldRetry) {
           final delay = _calculateBackoffDelay(retryCount, baseDelay, maxDelay);
-          Logger.warning(
-            'Retrying $operationLabel (attempt $retryCount/$maxRetries) after ${delay.inMilliseconds}ms',
-            tag: 'NETWORK_SERVICE',
-          );
           await Future.delayed(delay);
           continue;
         }
         
         // Log the final error and rethrow
-        Logger.error(
-          'Failed to $operationLabel after $retryCount attempts',
-          tag: 'NETWORK_SERVICE',
-          error: e,
-          stackTrace: stackTrace,
-        );
         rethrow;
       }
     }
@@ -131,12 +119,10 @@ class NetworkService {
     Future<String?> Function() refreshTokenCallback,
   ) async {
     if (_isAuthenticationError(error)) {
-      Logger.info('Authentication error detected, attempting token refresh', tag: 'NETWORK_SERVICE');
       try {
         final newToken = await refreshTokenCallback();
         return newToken != null;
       } catch (e) {
-        Logger.warning('Token refresh failed: $e', tag: 'NETWORK_SERVICE');
         return false;
       }
     }

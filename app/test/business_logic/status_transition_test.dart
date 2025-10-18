@@ -6,11 +6,12 @@ void main() {
     test('Voice command flow - valid transitions', () {
       // Test valid voice command flow
       final validTransitions = [
-        CommandStatus.recorded,    // 1. Audio recorded
-        CommandStatus.transcribing, // 2. Being transcribed
-        CommandStatus.queued,      // 3. Ready to process
-        CommandStatus.processing,  // 4. Being processed
-        CommandStatus.completed,   // 5. Successfully executed
+        CommandStatus.recorded,      // 1. Audio recorded
+        CommandStatus.manual_review,  // 2. Manual review required
+        CommandStatus.transcribing,   // 3. Being transcribed
+        CommandStatus.queued,        // 4. Ready to process
+        CommandStatus.processing,    // 5. Being processed
+        CommandStatus.completed,     // 6. Successfully executed
       ];
       
       // Verify each transition is valid
@@ -54,18 +55,18 @@ void main() {
     
     test('Invalid transitions - should be rejected', () {
       // Can't go backwards in voice flow
-      expect(_isValidTransition(CommandStatus.transcribing, CommandStatus.recorded), isFalse);
+      expect(_isValidTransition(CommandStatus.manual_review, CommandStatus.recorded), isFalse);
+      expect(_isValidTransition(CommandStatus.transcribing, CommandStatus.manual_review), isFalse);
       expect(_isValidTransition(CommandStatus.queued, CommandStatus.transcribing), isFalse);
       expect(_isValidTransition(CommandStatus.processing, CommandStatus.queued), isFalse);
       
       // Can't go from completed to anything else (terminal state)
       expect(_isValidTransition(CommandStatus.completed, CommandStatus.processing), isFalse);
       expect(_isValidTransition(CommandStatus.completed, CommandStatus.queued), isFalse);
-      // Note: CommandStatus.failed was removed from the enum
-      // Completed commands cannot transition to other states
       
-      // Note: CommandStatus.failed was removed from the enum
-      // All terminal states (completed) cannot transition to other states
+      // Can't skip manual_review for voice commands
+      expect(_isValidTransition(CommandStatus.recorded, CommandStatus.transcribing), isFalse);
+      expect(_isValidTransition(CommandStatus.recorded, CommandStatus.queued), isFalse);
     });
     
     test('Status validation - required fields', () {
@@ -133,7 +134,8 @@ bool _isValidTransition(CommandStatus from, CommandStatus to) {
   
   // Define valid transitions
   final validTransitions = {
-    CommandStatus.recorded: [CommandStatus.transcribing],
+    CommandStatus.recorded: [CommandStatus.manual_review],
+    CommandStatus.manual_review: [CommandStatus.transcribing],
     CommandStatus.transcribing: [CommandStatus.queued],
     CommandStatus.queued: [CommandStatus.processing],
     CommandStatus.processing: [CommandStatus.completed],
@@ -147,6 +149,10 @@ bool _isValidCommand(QueuedCommandRealm command) {
   switch (CommandStatus.values.firstWhere((s) => s.name == command.status)) {
     case CommandStatus.recorded:
       // Voice commands must have audioPath
+      return command.audioPath != null && command.audioPath!.isNotEmpty;
+      
+    case CommandStatus.manual_review:
+      // Manual review commands must have audioPath
       return command.audioPath != null && command.audioPath!.isNotEmpty;
       
     case CommandStatus.transcribing:

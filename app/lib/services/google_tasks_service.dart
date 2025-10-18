@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as tasks;
 import 'package:googleapis_auth/auth_io.dart';
-import '../utils/logger.dart';
 import '../utils/sentry_performance.dart';
 import 'integrations/integration_manager.dart';
 import 'integrations/google_integration_provider.dart';
@@ -56,7 +55,6 @@ class GoogleTasksService {
   /// Legacy implementation for getting task lists
   Future<List<tasks.TaskList>> _getTaskListsLegacy() async {
     return await _retryOperation(() async {
-      Logger.info('Fetching Google task lists (legacy)', tag: 'GOOGLE_TASKS');
       
       // Ensure valid authentication before making API call
       final googleProvider = _integrationManager.getProvider('google') as GoogleIntegrationProvider?;
@@ -73,7 +71,6 @@ class GoogleTasksService {
       final response = await _tasksApi.tasklists.list();
       final taskLists = response.items ?? [];
       
-      Logger.info('Retrieved ${taskLists.length} task lists (legacy)', tag: 'GOOGLE_TASKS');
       return taskLists;
     }, 'fetch task lists');
   }
@@ -85,7 +82,6 @@ class GoogleTasksService {
       PerformanceOps.apiCall,
       () async {
         return await _retryOperation(() async {
-          Logger.info('Fetching tasks from list: $taskListId', tag: 'GOOGLE_TASKS');
           
           // Ensure valid authentication before making API call
           final googleProvider = _integrationManager.getProvider('google') as GoogleIntegrationProvider?;
@@ -112,7 +108,6 @@ class GoogleTasksService {
           );
           final taskList = response.items ?? [];
           
-          Logger.info('Retrieved ${taskList.length} tasks', tag: 'GOOGLE_TASKS');
           return taskList;
         }, 'fetch tasks from list: $taskListId');
       },
@@ -131,7 +126,6 @@ class GoogleTasksService {
       PerformanceOps.apiCall,
       () async {
         try {
-          Logger.info('Creating task: $title in list: $taskListId', tag: 'GOOGLE_TASKS');
           
           final task = tasks.Task()
             ..title = title
@@ -145,14 +139,8 @@ class GoogleTasksService {
             () async => await _tasksApi.tasks.insert(task, taskListId),
           );
           
-          Logger.info('Successfully created task: ${createdTask.id}', tag: 'GOOGLE_TASKS');
           return createdTask;
-        } catch (e, stackTrace) {
-          Logger.error('Failed to create task: $title', 
-            tag: 'GOOGLE_TASKS', 
-            error: e, 
-            stackTrace: stackTrace
-          );
+        } catch (e) {
           rethrow;
         }
       },
@@ -175,7 +163,6 @@ class GoogleTasksService {
     String? status,
   }) async {
     try {
-      Logger.info('Updating task: $taskId in list: $taskListId', tag: 'GOOGLE_TASKS');
       
       // First get the current task
       final currentTask = await _tasksApi.tasks.get(taskListId, taskId);
@@ -188,14 +175,8 @@ class GoogleTasksService {
 
       final updatedTask = await _tasksApi.tasks.update(currentTask, taskListId, taskId);
       
-      Logger.info('Successfully updated task: $taskId', tag: 'GOOGLE_TASKS');
       return updatedTask;
-    } catch (e, stackTrace) {
-      Logger.error('Failed to update task: $taskId', 
-        tag: 'GOOGLE_TASKS', 
-        error: e, 
-        stackTrace: stackTrace
-      );
+    } catch (e) {
       rethrow;
     }
   }
@@ -210,7 +191,6 @@ class GoogleTasksService {
         throw ArgumentError('Task List ID cannot be empty');
       }
       
-      Logger.info('Completing task: $taskId in list: $taskListId', tag: 'GOOGLE_TASKS');
       
       // First, get the existing task to preserve its content
       final existingTask = await _tasksApi.tasks.get(taskListId, taskId);
@@ -222,14 +202,8 @@ class GoogleTasksService {
 
       final completedTask = await _tasksApi.tasks.update(updatedTask, taskListId, taskId);
       
-      Logger.info('Successfully completed task: $taskId', tag: 'GOOGLE_TASKS');
       return completedTask;
-    } catch (e, stackTrace) {
-      Logger.error('Failed to complete task: $taskId', 
-        tag: 'GOOGLE_TASKS', 
-        error: e, 
-        stackTrace: stackTrace
-      );
+    } catch (e) {
       rethrow;
     }
   }
@@ -244,7 +218,6 @@ class GoogleTasksService {
         throw ArgumentError('Task List ID cannot be empty');
       }
       
-      Logger.info('Uncompleting task: $taskId in list: $taskListId', tag: 'GOOGLE_TASKS');
       
       // First, get the existing task to preserve its content
       final existingTask = await _tasksApi.tasks.get(taskListId, taskId);
@@ -256,14 +229,8 @@ class GoogleTasksService {
 
       final uncompletedTask = await _tasksApi.tasks.update(updatedTask, taskListId, taskId);
       
-      Logger.info('Successfully uncompleted task: $taskId', tag: 'GOOGLE_TASKS');
       return uncompletedTask;
-    } catch (e, stackTrace) {
-      Logger.error('Failed to uncomplete task: $taskId', 
-        tag: 'GOOGLE_TASKS', 
-        error: e, 
-        stackTrace: stackTrace
-      );
+    } catch (e) {
       rethrow;
     }
   }
@@ -271,17 +238,10 @@ class GoogleTasksService {
   /// Delete a task
   Future<void> deleteTask(String taskListId, String taskId) async {
     try {
-      Logger.info('Deleting task: $taskId from list: $taskListId', tag: 'GOOGLE_TASKS');
       
       await _tasksApi.tasks.delete(taskListId, taskId);
       
-      Logger.info('Successfully deleted task: $taskId', tag: 'GOOGLE_TASKS');
-    } catch (e, stackTrace) {
-      Logger.error('Failed to delete task: $taskId', 
-        tag: 'GOOGLE_TASKS', 
-        error: e, 
-        stackTrace: stackTrace
-      );
+    } catch (e) {
       rethrow;
     }
   }
@@ -289,11 +249,9 @@ class GoogleTasksService {
   /// Get the default task list (usually "My Tasks")
   Future<tasks.TaskList?> getDefaultTaskList() async {
     try {
-      Logger.info('Getting default task list', tag: 'GOOGLE_TASKS');
       
       final taskLists = await getTaskLists();
       if (taskLists.isEmpty) {
-        Logger.warning('No task lists found', tag: 'GOOGLE_TASKS');
         return null;
       }
       
@@ -302,14 +260,8 @@ class GoogleTasksService {
         orElse: () => taskLists.first,
       );
       
-      Logger.info('Found default task list: ${defaultList.title}', tag: 'GOOGLE_TASKS');
       return defaultList;
-    } catch (e, stackTrace) {
-      Logger.error('Failed to get default task list', 
-        tag: 'GOOGLE_TASKS', 
-        error: e, 
-        stackTrace: stackTrace
-      );
+    } catch (e) {
       return null;
     }
   }
@@ -317,21 +269,14 @@ class GoogleTasksService {
   /// Search tasks by title
   Future<List<tasks.Task>> searchTasks(String taskListId, String query) async {
     try {
-      Logger.info('Searching tasks with query: $query in list: $taskListId', tag: 'GOOGLE_TASKS');
       
       final allTasks = await getTasks(taskListId);
       final matchingTasks = allTasks.where((task) => 
         task.title?.toLowerCase().contains(query.toLowerCase()) ?? false
       ).toList();
       
-      Logger.info('Found ${matchingTasks.length} matching tasks', tag: 'GOOGLE_TASKS');
       return matchingTasks;
-    } catch (e, stackTrace) {
-      Logger.error('Failed to search tasks with query: $query', 
-        tag: 'GOOGLE_TASKS', 
-        error: e, 
-        stackTrace: stackTrace
-      );
+    } catch (e) {
       rethrow;
     }
   }
@@ -344,24 +289,17 @@ class GoogleTasksService {
     while (retryCount < maxRetries) {
       try {
         return await operation();
-      } catch (e, stackTrace) {
+      } catch (e) {
         retryCount++;
         
         // Check if this is a retryable error
         if (_isRetryableError(e) && retryCount < maxRetries) {
           final delay = Duration(milliseconds: 1000 * retryCount); // Exponential backoff
-          Logger.warning('Retrying $operationName (attempt $retryCount/$maxRetries) after ${delay.inMilliseconds}ms', 
-            tag: 'GOOGLE_TASKS');
           await Future.delayed(delay);
           continue;
         }
         
         // Log the final error and rethrow
-        Logger.error('Failed to $operationName after $retryCount attempts', 
-          tag: 'GOOGLE_TASKS', 
-          error: e, 
-          stackTrace: stackTrace
-        );
         rethrow;
       }
     }

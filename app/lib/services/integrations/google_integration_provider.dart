@@ -11,7 +11,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/services.dart';
-import '../../utils/logger.dart';
 import '../../utils/sentry_performance.dart';
 import '../../design_system/tokens.dart';
 import 'integration_provider.dart';
@@ -46,7 +45,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   /// Initialize from stored tokens asynchronously
   Future<void> _initializeFromStoredTokensAsync() async {
     print('🔵 GOOGLE INTEGRATION: _initializeFromStoredTokensAsync called');
-    Logger.info('GoogleIntegrationProvider: _initializeFromStoredTokensAsync called', tag: 'GOOGLE_INTEGRATION');
     // Add a small delay to spread out initialization work
     await Future.delayed(Duration(milliseconds: DesignTokens.animationFast));
     await _initializeFromStoredTokens();
@@ -84,7 +82,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       PerformanceOps.authSignIn,
       () async {
         try {
-          Logger.info('🚀 Starting Google authentication', tag: 'GOOGLE_INTEGRATION');
           
           state = state.copyWith(isConnecting: true);
           
@@ -137,7 +134,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
           );
           return true;
         } catch (e, stackTrace) {
-          Logger.error('Google authentication failed', tag: 'GOOGLE_INTEGRATION', error: e, stackTrace: stackTrace);
           state = state.copyWith(isConnecting: false);
           return false;
         }
@@ -152,7 +148,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   @override
   Future<bool> connectServices(List<String> serviceIds) async {
     if (!state.isAuthenticated) {
-      Logger.warning('Cannot connect services without authentication', tag: 'GOOGLE_INTEGRATION');
       return false;
     }
 
@@ -220,10 +215,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         lastSyncTime: DateTime.now().toIso8601String(),
       );
 
-      Logger.info('Successfully connected services: $serviceIds', tag: 'GOOGLE_INTEGRATION');
       return true;
     } catch (e, stackTrace) {
-      Logger.error('Failed to connect services', tag: 'GOOGLE_INTEGRATION', error: e, stackTrace: stackTrace);
       state = state.copyWith(isSyncing: false);
       return false;
     }
@@ -253,10 +246,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         isLoading: false,
       );
 
-      Logger.info('Successfully disconnected services: $serviceIds', tag: 'GOOGLE_INTEGRATION');
       return true;
     } catch (e, stackTrace) {
-      Logger.error('Failed to disconnect services', tag: 'GOOGLE_INTEGRATION', error: e, stackTrace: stackTrace);
       state = state.copyWith(isSyncing: false);
       return false;
     }
@@ -275,7 +266,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   @override
   Future<void> signOut() async {
     try {
-      Logger.info('Signing out from Google', tag: 'GOOGLE_INTEGRATION');
       
       // Sign out from Google Sign-In
       await _googleSignIn?.signOut();
@@ -303,9 +293,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         services: updatedServices,
       );
       
-      Logger.info('Successfully signed out from Google', tag: 'GOOGLE_INTEGRATION');
     } catch (e, stackTrace) {
-      Logger.error('Google sign out failed', tag: 'GOOGLE_INTEGRATION', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -315,7 +303,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   /// Ensure valid authentication before API calls
   Future<bool> ensureValidAuthentication() async {
     if (!state.isAuthenticated) {
-      Logger.warning('GoogleIntegrationProvider: Not authenticated', tag: 'GOOGLE_INTEGRATION');
       return false;
     }
 
@@ -325,18 +312,14 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       try {
         final tokenExpiry = DateTime.parse(tokenExpiryStr);
         if (tokenExpiry.isBefore(DateTime.now().toUtc())) {
-          Logger.info('GoogleIntegrationProvider: Token expired, refreshing...', tag: 'GOOGLE_INTEGRATION');
           final refreshed = await _refreshTokensSilently();
           if (!refreshed) {
-            Logger.warning('GoogleIntegrationProvider: Failed to refresh expired token', tag: 'GOOGLE_INTEGRATION');
             return false;
           }
         }
       } catch (e) {
-        Logger.warning('GoogleIntegrationProvider: Failed to parse token expiry, attempting refresh', tag: 'GOOGLE_INTEGRATION');
         final refreshed = await _refreshTokensSilently();
         if (!refreshed) {
-          Logger.warning('GoogleIntegrationProvider: Failed to refresh token after parse error', tag: 'GOOGLE_INTEGRATION');
           return false;
         }
       }
@@ -365,7 +348,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   /// Initialize from stored tokens
   Future<void> _initializeFromStoredTokens() async {
     print('🔵 GOOGLE INTEGRATION: _initializeFromStoredTokens called');
-    Logger.info('GoogleIntegrationProvider: _initializeFromStoredTokens called', tag: 'GOOGLE_INTEGRATION');
     try {
       final accessToken = await storage.read(key: _accessTokenKey);
       final userEmail = await storage.read(key: _userEmailKey);
@@ -373,11 +355,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       final userId = await storage.read(key: _userIdKey);
       final connectedServices = await _getStoredConnectedServices();
       
-      Logger.info('GoogleIntegrationProvider: Stored data check - accessToken: ${accessToken != null ? "EXISTS" : "NULL"}, userEmail: ${userEmail ?? "NULL"}', tag: 'GOOGLE_INTEGRATION');
-      Logger.info('GoogleIntegrationProvider: Connected services from storage: $connectedServices', tag: 'GOOGLE_INTEGRATION');
       
       if (accessToken != null && userEmail != null) {
-        Logger.info('GoogleIntegrationProvider: Found valid stored tokens, setting up authentication', tag: 'GOOGLE_INTEGRATION');
         
         // Check if token is expired
         final tokenExpiryStr = await storage.read(key: _tokenExpiryKey);
@@ -386,16 +365,13 @@ class GoogleIntegrationProvider extends IntegrationProvider {
           try {
             tokenExpiry = DateTime.parse(tokenExpiryStr);
           } catch (e) {
-            Logger.warning('Failed to parse token expiry: $e', tag: 'GOOGLE_INTEGRATION');
           }
         }
         
         // If token is expired or no expiry info, try to refresh
         if (tokenExpiry == null || tokenExpiry.isBefore(DateTime.now().toUtc())) {
-          Logger.info('GoogleIntegrationProvider: Token expired, attempting to refresh...', tag: 'GOOGLE_INTEGRATION');
           final refreshed = await _refreshTokensSilently();
           if (!refreshed) {
-            Logger.warning('GoogleIntegrationProvider: Failed to refresh tokens, clearing stored data', tag: 'GOOGLE_INTEGRATION');
             await _clearStoredData();
             return;
           }
@@ -412,7 +388,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         // Get fresh token after potential refresh
         final freshAccessToken = await storage.read(key: _accessTokenKey);
         if (freshAccessToken == null) {
-          Logger.warning('GoogleIntegrationProvider: No access token after refresh', tag: 'GOOGLE_INTEGRATION');
           return;
         }
         
@@ -440,16 +415,10 @@ class GoogleIntegrationProvider extends IntegrationProvider {
         print('🔵 GOOGLE INTEGRATION: Final state - isAuthenticated: ${state.isAuthenticated}, userEmail: ${state.userEmail}');
         print('🔵 GOOGLE INTEGRATION: Connected services: $connectedServices');
         print('🔵 GOOGLE INTEGRATION: Updated services: ${updatedServices.keys}');
-        Logger.info('GoogleIntegrationProvider: Successfully initialized from stored tokens', tag: 'GOOGLE_INTEGRATION');
-        Logger.info('GoogleIntegrationProvider: Final state - isAuthenticated: ${state.isAuthenticated}, userEmail: ${state.userEmail}', tag: 'GOOGLE_INTEGRATION');
-        Logger.info('GoogleIntegrationProvider: Connected services: $connectedServices', tag: 'GOOGLE_INTEGRATION');
-        Logger.info('GoogleIntegrationProvider: Updated services: ${updatedServices.keys}', tag: 'GOOGLE_INTEGRATION');
       } else {
         print('🔵 GOOGLE INTEGRATION: No valid stored tokens found - accessToken: ${accessToken != null}, userEmail: ${userEmail != null}');
-        Logger.info('GoogleIntegrationProvider: No valid stored tokens found - accessToken: ${accessToken != null}, userEmail: ${userEmail != null}', tag: 'GOOGLE_INTEGRATION');
       }
     } catch (e) {
-      Logger.warning('GoogleIntegrationProvider: Failed to initialize from stored tokens: $e', tag: 'GOOGLE_INTEGRATION');
     }
   }
 
@@ -458,7 +427,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
     
     if (googleAuth.accessToken == null) {
-      Logger.error('No access token received from Google', tag: 'GOOGLE_INTEGRATION');
       return;
     }
 
@@ -492,7 +460,6 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       lastSyncTime: DateTime.now().toIso8601String(),
     );
 
-    Logger.info('Successfully set up Google user session', tag: 'GOOGLE_INTEGRATION');
   }
 
   /// Initialize GoogleSignIn
@@ -531,19 +498,16 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   /// Refresh tokens silently using Google Sign-In
   Future<bool> _refreshTokensSilently() async {
     try {
-      Logger.info('GoogleIntegrationProvider: Attempting to refresh tokens silently...', tag: 'GOOGLE_INTEGRATION');
       _ensureGoogleSignInInitialized();
       
       // Try to sign in silently to refresh tokens
       final GoogleSignInAccount? googleUser = await _googleSignIn!.signInSilently();
       if (googleUser == null) {
-        Logger.warning('GoogleIntegrationProvider: Silent sign-in failed - user is null', tag: 'GOOGLE_INTEGRATION');
         return false;
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       if (googleAuth.accessToken == null) {
-        Logger.warning('GoogleIntegrationProvider: No access token from silent sign-in', tag: 'GOOGLE_INTEGRATION');
         return false;
       }
 
@@ -560,10 +524,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       // Store the new tokens
       await _storeTokens(googleAuth.accessToken!, _getCurrentScopes());
       
-      Logger.info('GoogleIntegrationProvider: Successfully refreshed tokens and updated auth client', tag: 'GOOGLE_INTEGRATION');
       return true;
     } catch (e, stackTrace) {
-      Logger.error('GoogleIntegrationProvider: Failed to refresh tokens silently', tag: 'GOOGLE_INTEGRATION', error: e, stackTrace: stackTrace);
       return false;
     }
   }

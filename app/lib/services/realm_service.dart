@@ -1,6 +1,5 @@
 import 'package:realm/realm.dart';
 import '../models/queued_command.dart';
-import '../utils/logger.dart';
 import '../database/migrations/migration_manager.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -191,16 +190,10 @@ class RealmService {
         _realm.write(() {
           _realm.delete(realmCommand);
         });
-        Logger.info('Removed command from Realm: $id', tag: 'REALM');
       } else {
-        Logger.warning('Command not found for removal: $id', tag: 'REALM');
+        // Command not found for removal
       }
     } catch (e, stackTrace) {
-      Logger.error('Failed to remove command from Realm: $id', 
-        tag: 'REALM', 
-        error: e, 
-        stackTrace: stackTrace
-      );
       
       // Send to Sentry for debugging
       Sentry.captureException(e, stackTrace: stackTrace);

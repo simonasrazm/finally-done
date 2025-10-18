@@ -411,14 +411,14 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Consumer(
               builder: (context, ref, child) {
-                final failedCommands = ref.watch(failedCommandsProvider);
-                return _buildNotificationIcon(Icons.control_camera_outlined, failedCommands.length);
+                final reviewCommands = ref.watch(reviewCommandsProvider);
+                return _buildNotificationIcon(Icons.control_camera_outlined, reviewCommands.length);
               },
             ),
             activeIcon: Consumer(
               builder: (context, ref, child) {
-                final failedCommands = ref.watch(failedCommandsProvider);
-                return _buildNotificationIcon(Icons.control_camera, failedCommands.length);
+                final reviewCommands = ref.watch(reviewCommandsProvider);
+                return _buildNotificationIcon(Icons.control_camera, reviewCommands.length);
               },
             ),
             label: AppLocalizations.of(context)!.missionControl,

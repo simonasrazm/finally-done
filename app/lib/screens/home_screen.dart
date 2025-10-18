@@ -12,7 +12,6 @@ import '../services/speech_service.dart';
 import '../services/nlp_service.dart';
 import '../services/queue_service.dart';
 import '../models/queued_command.dart';
-import '../utils/logger.dart';
 import '../utils/sentry_performance.dart';
 import '../generated/app_localizations.dart';
 
@@ -166,7 +165,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       
     } catch (e, stackTrace) {
       // Log and send to Sentry
-      Logger.handleException(e, stackTrace, tag: 'RECORDING', context: 'Voice recording failed');
       
       setState(() {
         _status = 'Error: ${e.toString()}';
@@ -312,12 +310,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         );
         // Store ID before any potential Realm operations
         final commandId = command.id;
+        
+        // Move to transcribing status and mark as failed
+        queueNotifier.updateCommandStatus(commandId, CommandStatus.transcribing);
         queueNotifier.updateCommandErrorMessage(commandId, 'Audio processing failed: ${e.toString()}');
         queueNotifier.updateCommandFailed(commandId, true);
       } catch (updateError) {
         print('🎤 BACKGROUND: Failed to update command status: $updateError');
         // If we can't update the status, at least log the error
-        Logger.handleException(updateError, null, tag: 'AUDIO_PROCESSING', context: 'Failed to update command status after audio processing error');
       }
     }
   }
@@ -521,19 +521,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             future: _getPhotoPath(_selectedPhotos[index]),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
-                                return Image.file(
-                                  File(snapshot.data!),
+                                return Container(
                                   width: DesignTokens.photoPreviewWidth,
                                   height: DesignTokens.photoPreviewHeight,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      width: DesignTokens.spacing24 + DesignTokens.spacing1,
-                                      height: DesignTokens.spacing24 + DesignTokens.spacing1,
-                                      color: Colors.grey[300],
-                                      child: const Icon(Icons.image_not_supported),
-                                    );
-                                  },
+                                  color: Colors.grey[100],
+                                  child: Image.file(
+                                    File(snapshot.data!),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: DesignTokens.photoPreviewWidth,
+                                        height: DesignTokens.photoPreviewHeight,
+                                        color: Colors.grey[300],
+                                        child: const Icon(Icons.image_not_supported),
+                                      );
+                                    },
+                                  ),
                                 );
                               } else {
                                 return Container(

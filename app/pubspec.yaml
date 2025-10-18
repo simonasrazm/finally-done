@@ -73,6 +73,7 @@ flutter:
     - assets/images/
     - assets/sounds/
     - .env
+    - docs/
   
   # Fonts - Using system fonts for now
   # fonts:

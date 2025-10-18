@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:googleapis_auth/auth_io.dart';
 import '../network/network_service.dart';
-import '../../utils/logger.dart';
 
 /// Base class for all API connectors
 /// Provides common functionality for network operations, authentication, and error handling
@@ -35,7 +34,6 @@ abstract class BaseConnector {
     _scopes = scopes;
     
     await _createAuthClient();
-    Logger.info('Initialized $_connectorName connector', tag: _connectorName.toUpperCase());
   }
 
   /// Execute an API operation with automatic retry and error handling
@@ -116,7 +114,6 @@ abstract class BaseConnector {
   Future<String?> _refreshTokenCallback() async {
     // This should be implemented by subclasses to handle token refresh
     // For now, return null to indicate refresh is not supported
-    Logger.warning('Token refresh not implemented for $_connectorName', tag: _connectorName.toUpperCase());
     return null;
   }
 
@@ -151,7 +148,6 @@ abstract class BaseConnector {
     _refreshToken = null;
     _tokenExpiry = null;
     _scopes.clear();
-    Logger.info('Disposed $_connectorName connector', tag: _connectorName.toUpperCase());
   }
 }
 

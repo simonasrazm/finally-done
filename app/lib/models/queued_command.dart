@@ -101,11 +101,12 @@ extension QueuedCommandRealmExtension on QueuedCommandRealm {
 /// Command status enum
 /// 
 /// Logical flow:
-/// Voice: recorded → transcribing → queued → processing → completed
+/// Voice: recorded → manual_review → transcribing → queued → processing → completed
 /// Text:  queued → processing → completed
 /// Note: Failed state is now handled by the 'failed' flag, not status
 enum CommandStatus {
-  recorded,         // Audio recorded, waiting for transcription
+  recorded,         // Audio recorded, waiting for manual review
+  manual_review,    // Audio needs manual review before transcription
   transcribing,     // Audio being transcribed by AI
   queued,           // Ready to process (text input or transcribed audio)
   processing,       // Being processed by agent

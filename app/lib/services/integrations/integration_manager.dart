@@ -13,14 +13,11 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
   final Map<String, IntegrationProvider> _providers = {};
 
   IntegrationManager() : super({}) {
-    print('🔵 INTEGRATION MANAGER: Constructor called');
-    
     // Initialize providers immediately with "not connected" state
     _initializeProvidersImmediately();
     
     // Then initialize them properly in the background (no delay)
     Future.microtask(() {
-      print('🔵 INTEGRATION MANAGER: _initializeProviders called');
       _initializeProviders();
     });
   }
@@ -35,26 +32,19 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
     for (final providerId in _providers.keys) {
       _updateProviderState(providerId);
     }
-    
-    print('🔵 INTEGRATION MANAGER: Providers created immediately for UI display');
   }
 
   void _initializeProviders() async {
-    print('🔵 INTEGRATION MANAGER: _initializeProviders starting - initializing providers');
-    
     // Initialize all providers in parallel (non-blocking)
     final futures = _providers.entries.map((entry) async {
       final providerId = entry.key;
       final provider = entry.value;
       
-      print('🔵 INTEGRATION MANAGER: Initializing provider: $providerId');
-      
       try {
         // Call the provider's initialization method
         await provider.initialize();
-        print('🔵 INTEGRATION MANAGER: Successfully initialized provider: $providerId');
       } catch (e) {
-        print('🔵 INTEGRATION MANAGER: Error initializing provider $providerId: $e');
+        // Error initializing provider - handled silently
       }
       
       // Update the state after initialization
@@ -63,8 +53,6 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
     
     // Wait for all providers to initialize in parallel
     await Future.wait(futures);
-    
-    print('🔵 INTEGRATION MANAGER: _initializeProviders completed');
   }
 
   /// Check if initialization is complete
@@ -161,15 +149,11 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
     if (mounted) {
       final provider = _providers[providerId];
       if (provider != null) {
-        print('🔵 INTEGRATION MANAGER: Updating state for $providerId - isAuthenticated: ${provider.state.isAuthenticated}');
         state = {
           ...state,
           providerId: provider.state,
         };
-        print('🔵 INTEGRATION MANAGER: State updated for $providerId');
       }
-    } else {
-      print('🔵 INTEGRATION MANAGER: Skipping state update - manager is disposed');
     }
   }
 
@@ -185,7 +169,6 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
 
   @override
   void dispose() {
-    print('🔵 INTEGRATION MANAGER: Disposing IntegrationManager');
     // Clean up any resources
     _providers.clear();
     super.dispose();

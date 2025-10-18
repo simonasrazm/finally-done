@@ -176,6 +176,7 @@ List<String> _validateCommand(QueuedCommandRealm command) {
   // Status-specific validation
   switch (CommandStatus.values.firstWhere((s) => s.name == command.status)) {
     case CommandStatus.recorded:
+    case CommandStatus.manual_review:
     case CommandStatus.transcribing:
       // Voice commands must have audioPath
       if (command.audioPath == null || command.audioPath!.isEmpty) {

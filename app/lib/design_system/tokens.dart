@@ -61,6 +61,7 @@ class DesignTokens {
   static const double iconSm = 16.0;    // Small icons
   static const double iconMd = 20.0;    // Medium icons
   static const double iconLg = 24.0;    // Large icons
+  static const double iconXl = 64.0;    // Extra large icons (empty states)
   static const double icon4xl = 80.0;   // 4X large icons (main recording button)
   
   /// Button sizes
@@ -80,6 +81,9 @@ class DesignTokens {
   static const double radiusMd = 8.0;
   static const double radiusLg = 12.0;
   static const double radius2xl = 24.0;
+  
+  /// Text input settings
+  static const int textFieldMaxLines = 3;
 
   // ============================================================================
   // BORDER TOKENS
@@ -127,11 +131,16 @@ class DesignTokens {
   static const int delayMedium = 1000;      // 1s - medium delays
   static const int delayLong = 2000;        // 2s - long delays
   static const int delayPolling = 250;      // 250ms - polling/retry delays
+  static const int delaySnackbar = 2000;    // 2s - snackbar duration
+  static const int delaySnackbarQuick = 1500; // 1.5s - quick snackbar for rapid actions
   
   static const int animationFast = 150;     // 150ms - fast animations
   static const int animationNormal = 300;   // 300ms - normal animations
   static const int animationSlow = 500;     // 500ms - slow animations
-  static const int animationSmooth = 600;   // 600ms - smooth list transitions
+  static const int animationSmooth = 500;   // 500ms - smooth list transitions
+  
+  /// Animation offsets and transforms
+  static const double animationOffsetBuffer = 100.0;  // Buffer to ensure elements go completely off screen
 
 }
 

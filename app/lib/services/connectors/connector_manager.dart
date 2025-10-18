@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'base_connector.dart';
 import 'google_tasks_connector.dart';
 import '../network/network_service.dart';
-import '../../utils/logger.dart';
 
 /// Manages all API connectors
 /// Provides centralized access to connectors with proper lifecycle management
@@ -16,7 +15,6 @@ class ConnectorManager extends StateNotifier<Map<String, BaseConnector>> {
 
   /// Initialize all available connectors
   void _initializeConnectors() {
-    Logger.info('Initializing connector manager', tag: 'CONNECTOR_MANAGER');
     
     // Register available connectors
     state = {
@@ -28,7 +26,6 @@ class ConnectorManager extends StateNotifier<Map<String, BaseConnector>> {
       // 'evernote': EvernoteConnector(),
     };
     
-    Logger.info('Initialized ${state.length} connectors', tag: 'CONNECTOR_MANAGER');
   }
 
   /// Get a specific connector
@@ -60,7 +57,6 @@ class ConnectorManager extends StateNotifier<Map<String, BaseConnector>> {
       tokenExpiry: tokenExpiry,
     );
 
-    Logger.info('Initialized connector: $connectorId', tag: 'CONNECTOR_MANAGER');
   }
 
   /// Update authentication credentials for a connector
@@ -83,7 +79,6 @@ class ConnectorManager extends StateNotifier<Map<String, BaseConnector>> {
       scopes: scopes,
     );
 
-    Logger.info('Updated credentials for connector: $connectorId', tag: 'CONNECTOR_MANAGER');
   }
 
   /// Check if a connector is initialized
@@ -105,7 +100,6 @@ class ConnectorManager extends StateNotifier<Map<String, BaseConnector>> {
     final connector = state[connectorId];
     if (connector != null) {
       connector.dispose();
-      Logger.info('Disposed connector: $connectorId', tag: 'CONNECTOR_MANAGER');
     }
   }
 
@@ -116,7 +110,6 @@ class ConnectorManager extends StateNotifier<Map<String, BaseConnector>> {
       connector.dispose();
     }
     state.clear();
-    Logger.info('Disposed connector manager', tag: 'CONNECTOR_MANAGER');
     super.dispose();
   }
 }
