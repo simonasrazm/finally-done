@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'base_connector.dart';
 import 'google_tasks_connector.dart';
-import '../network/network_service.dart';
+import '../infrastructure/network/network_service.dart';
 
 /// Manages all API connectors
 /// Provides centralized access to connectors with proper lifecycle management

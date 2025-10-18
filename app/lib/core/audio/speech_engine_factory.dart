@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'speech_engine_strategy.dart';
 import 'ios_speech_service.dart';
-import 'gemini_api_service.dart';
+import '../../infrastructure/external_apis/gemini_api_service.dart';
 import 'audio_recording_service.dart';
 
 /// Factory for creating speech engine strategies

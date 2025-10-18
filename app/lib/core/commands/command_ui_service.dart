@@ -1,4 +1,4 @@
-import '../models/queued_command.dart';
+import '../../models/queued_command.dart';
 
 class CommandUIService {
   /// Safely extracts command properties to avoid Realm invalidation errors

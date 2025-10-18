@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:finally_done/services/command_retry_service.dart';
+import 'package:finally_done/core/commands/command_retry_service.dart';
 import 'package:finally_done/models/queued_command.dart';
 
 void main() {

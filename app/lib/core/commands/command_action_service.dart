@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:finally_done/models/queued_command.dart';
-import 'package:finally_done/services/queue_service.dart';
-import 'package:finally_done/services/speech_service.dart';
-import 'package:finally_done/services/command_retry_service.dart';
-import 'package:finally_done/services/photo_service.dart';
+import 'queue_service.dart';
+import '../audio/speech_service.dart';
+import 'command_retry_service.dart';
+import '../../utils/photo_service.dart';
 import 'package:finally_done/design_system/colors.dart';
 
 /// Service for handling command actions (retry, approve, delete)

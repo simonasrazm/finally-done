@@ -1,5 +1,5 @@
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
-import 'google_tasks_service.dart';
+import '../../infrastructure/external_apis/google_tasks_service.dart';
 
 /// Service for handling task business logic operations (API calls, data operations)
 class TaskBusinessService {

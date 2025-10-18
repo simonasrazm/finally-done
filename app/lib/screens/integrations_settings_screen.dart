@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/integrations/integration_manager.dart';
-import '../services/integrations/integration_provider.dart';
+import '../integration_manager.dart';
+import '../integration_provider.dart';
 import '../design_system/tokens.dart';
 import '../generated/app_localizations.dart';
 

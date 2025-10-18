@@ -6,7 +6,7 @@ import 'integration_provider.dart';
 import 'google_integration_provider.dart';
 import 'apple_notes_integration_provider.dart';
 import 'evernote_integration_provider.dart';
-import '../../utils/sentry_performance.dart';
+import 'utils/sentry_performance.dart';
 
 /// Manages all integration providers and their services
 class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderState>> {

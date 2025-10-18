@@ -3,8 +3,8 @@ import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
-import '../services/date_formatter_service.dart';
-import '../services/task_animation_service.dart';
+import '../utils/date_formatter_service.dart';
+import '../core/tasks/task_animation_service.dart';
 import '../generated/app_localizations.dart';
 
 /// Widget for displaying a single task item

@@ -1,6 +1,6 @@
 import 'package:realm/realm.dart';
-import '../models/queued_command.dart';
-import '../database/migrations/migration_manager.dart';
+import '../../models/queued_command.dart';
+import '../../database/migrations/migration_manager.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Realm database service for persistent storage

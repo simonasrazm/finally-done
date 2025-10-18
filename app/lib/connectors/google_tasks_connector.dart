@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:googleapis/tasks/v1.dart' as tasks;
 import 'base_connector.dart';
-import '../network/network_service.dart';
+import '../infrastructure/network/network_service.dart';
 
 /// Google Tasks API connector
 /// Handles all Google Tasks operations with automatic retry and error handling

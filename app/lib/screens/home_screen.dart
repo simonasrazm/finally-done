@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'dart:io';
 
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
-import '../services/speech_service.dart';
-import '../services/nlp_service.dart';
-import '../services/queue_service.dart';
+import '../core/audio/speech_service.dart';
+import '../infrastructure/external_apis/nlp_service.dart';
+import '../core/commands/queue_service.dart';
 import '../models/queued_command.dart';
 import '../utils/sentry_performance.dart';
 import '../generated/app_localizations.dart';
@@ -165,6 +166,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       
     } catch (e, stackTrace) {
       // Log and send to Sentry
+      print('🎤 RECORDING: Error during recording - $e');
+      Sentry.captureException(e, stackTrace: stackTrace);
       
       setState(() {
         _status = 'Error: ${e.toString()}';
@@ -201,6 +204,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       HapticFeedback.heavyImpact();
       
     } catch (e) {
+      print('📝 SCHEDULE: Error scheduling command - $e');
+      Sentry.captureException(e);
+      
       setState(() {
         _status = 'Error: ${e.toString()}';
       });
@@ -210,7 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Future<void> _processCommand(String transcription) async {
     try {
       final nlpService = ref.read(nlpServiceProvider);
-      final parsedCommand = await nlpService.parseCommand(transcription);
+      await nlpService.parseCommand(transcription);
       
       setState(() {
         _status = AppLocalizations.of(context)!.readyToRecord;
@@ -226,6 +232,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // TODO: Execute commands if high confidence
       
     } catch (e) {
+      print('🧠 PROCESS: Error processing command - $e');
+      Sentry.captureException(e);
+      
       setState(() {
         _status = 'Processing failed: ${e.toString()}';
         _isRecording = false;
@@ -268,6 +277,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
       
     } catch (e) {
+      print('🛑 STOP: Error stopping recording - $e');
+      Sentry.captureException(e);
+      
       setState(() {
         _status = 'Error: ${e.toString()}';
       });
@@ -346,6 +358,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       HapticFeedback.heavyImpact();
       
     } catch (e) {
+      print('🎤 VOICE: Error scheduling voice command - $e');
+      Sentry.captureException(e);
+      
       setState(() {
         _status = 'Error: ${e.toString()}';
       });
@@ -382,6 +397,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
     } catch (e) {
       print('📸 PHOTO: Error taking photo: $e');
+      Sentry.captureException(e);
+      
       setState(() {
         _status = 'Error taking photo: ${e.toString()}';
       });
@@ -416,6 +433,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
     } catch (e) {
       print('📸 PHOTO: Error picking photos: $e');
+      Sentry.captureException(e);
+      
       setState(() {
         _status = 'Error picking photos: ${e.toString()}';
       });

@@ -11,8 +11,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/services.dart';
-import '../../utils/sentry_performance.dart';
-import '../../design_system/tokens.dart';
+import 'utils/sentry_performance.dart';
+import 'design_system/tokens.dart';
 import 'integration_provider.dart';
 
 /// Google-specific integration provider
@@ -77,7 +77,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
   @override
   Future<bool> authenticate() async {
-    return await sentryPerformance.monitorTransaction(
+    return await SentryPerformance().monitorTransaction(
       PerformanceTransactions.authGoogleSignIn,
       PerformanceOps.authSignIn,
       () async {
@@ -85,7 +85,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
           
           state = state.copyWith(isConnecting: true);
           
-          await sentryPerformance.monitorOperation(
+          await SentryPerformance().monitorOperation(
             PerformanceTransactions.authGoogleSignIn,
             'google_signin_init',
             PerformanceOps.authCheck,
@@ -97,14 +97,14 @@ class GoogleIntegrationProvider extends IntegrationProvider {
           // Check if already signed in
           final isAlreadySignedIn = await _googleSignIn!.isSignedIn();
           if (isAlreadySignedIn) {
-            final GoogleSignInAccount? googleUser = await sentryPerformance.monitorOperation(
+            final GoogleSignInAccount? googleUser = await SentryPerformance().monitorOperation(
               PerformanceTransactions.authGoogleSignIn,
               'google_signin_silent',
               PerformanceOps.authSignIn,
               () async => await _googleSignIn!.signInSilently(),
             );
             if (googleUser != null) {
-              await sentryPerformance.monitorOperation(
+              await SentryPerformance().monitorOperation(
                 PerformanceTransactions.authGoogleSignIn,
                 'google_setup_session',
                 PerformanceOps.authSignIn,
@@ -115,7 +115,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
           }
 
           // Sign in with Google
-          final GoogleSignInAccount? googleUser = await sentryPerformance.monitorOperation(
+          final GoogleSignInAccount? googleUser = await SentryPerformance().monitorOperation(
             PerformanceTransactions.authGoogleSignIn,
             'google_signin_interactive',
             PerformanceOps.authSignIn,
@@ -126,7 +126,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
             return false;
           }
 
-          await sentryPerformance.monitorOperation(
+          await SentryPerformance().monitorOperation(
             PerformanceTransactions.authGoogleSignIn,
             'google_setup_session',
             PerformanceOps.authSignIn,

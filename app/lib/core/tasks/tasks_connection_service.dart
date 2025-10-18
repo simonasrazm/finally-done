@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/integrations/integration_manager.dart';
-import '../services/integrations/google_integration_provider.dart';
-import '../services/google_tasks_service.dart';
-import '../services/connectors/connector_manager.dart';
+import '../../integration_manager.dart';
+import '../../google_integration_provider.dart';
+import '../../infrastructure/external_apis/google_tasks_service.dart';
+import '../../connectors/connector_manager.dart';
 
 /// Service responsible for managing Google Tasks connection status and service creation
 class TasksConnectionService {

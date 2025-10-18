@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:finally_done/models/queued_command.dart';
-import 'package:finally_done/services/queue_service.dart';
+import 'package:finally_done/core/commands/queue_service.dart';
 
 void main() {
   group('Error Recovery Flow Tests', () {

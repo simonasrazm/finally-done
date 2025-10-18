@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../design_system/colors.dart';
-import '../design_system/typography.dart';
-import '../design_system/tokens.dart';
-import '../services/queue_service.dart';
-import '../models/queued_command.dart';
-import '../generated/app_localizations.dart';
+import '../../design_system/colors.dart';
+import '../../design_system/typography.dart';
+import '../../design_system/tokens.dart';
+import '../commands/queue_service.dart';
+import '../../models/queued_command.dart';
+import '../../generated/app_localizations.dart';
 
 /// Service for handling transcription editing dialogs
 class TranscriptionDialogService {

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/tasks_connection_service.dart';
-import '../services/task_operations_service.dart';
-import '../services/task_list_service.dart';
-import '../services/task_local_state_service.dart';
-import '../utils/sentry_performance.dart';
-import '../design_system/tokens.dart';
+import 'tasks_connection_service.dart';
+import 'task_operations_service.dart';
+import 'task_list_service.dart';
+import '../../infrastructure/storage/task_local_state_service.dart';
+import '../../utils/sentry_performance.dart';
+import '../../design_system/tokens.dart';
 
 /// Service responsible for managing background polling of tasks
 class TaskPollingService {

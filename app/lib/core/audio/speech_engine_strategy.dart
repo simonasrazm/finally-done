@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'ios_speech_service.dart';
-import 'gemini_api_service.dart';
+import '../../infrastructure/external_apis/gemini_api_service.dart';
 import 'audio_recording_service.dart';
 
 /// Abstract strategy for speech recognition engines

@@ -17,7 +17,7 @@ import 'screens/home_screen.dart';
 import 'screens/mission_control_screen.dart';
 import 'screens/settings_tabs_screen.dart';
 import 'screens/tasks_screen.dart';
-import 'services/queue_service.dart';
+import 'core/commands/queue_service.dart';
 import 'providers/language_provider.dart';
 import 'providers/theme_provider.dart';
 import 'utils/sentry_performance.dart';

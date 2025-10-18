@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../design_system/colors.dart';
 import '../design_system/tokens.dart';
 import '../models/queued_command.dart';
-import '../services/audio_playback_service.dart';
-import '../services/command_action_service.dart';
+import '../core/audio/audio_playback_service.dart';
+import '../core/commands/command_action_service.dart';
 import '../generated/app_localizations.dart';
 
 class CommandActionButtons extends ConsumerWidget {

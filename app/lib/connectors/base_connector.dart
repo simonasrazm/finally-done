@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:googleapis_auth/auth_io.dart';
-import '../network/network_service.dart';
+import '../infrastructure/network/network_service.dart';
 
 /// Base class for all API connectors
 /// Provides common functionality for network operations, authentication, and error handling

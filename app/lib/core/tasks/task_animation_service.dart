@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../design_system/tokens.dart';
+import '../../design_system/tokens.dart';
 
 /// Manager for task animation states and transitions
 class TaskAnimationManager extends ChangeNotifier {

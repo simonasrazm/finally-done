@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as tasks;
 import 'package:googleapis/calendar/v3.dart' as calendar;
 import 'package:googleapis/gmail/v1.dart' as gmail;
-import 'integrations/integration_manager.dart';
-import 'integrations/google_integration_provider.dart';
+import '../../integration_manager.dart';
+import '../../google_integration_provider.dart';
 import 'google_tasks_service.dart';
-import 'connectors/connector_manager.dart';
+import '../../connectors/connector_manager.dart';
 
 /// Integration Service
 /// Provides a unified interface for the AI agent to execute actions

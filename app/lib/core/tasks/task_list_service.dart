@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/google_tasks_service.dart';
+import '../../infrastructure/external_apis/google_tasks_service.dart';
 
 /// Service responsible for managing task list operations
 class TaskListService {

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import 'package:sentry_flutter/sentry_flutter.dart';
-import '../design_system/tokens.dart';
-import '../providers/tasks_provider.dart';
-import '../generated/app_localizations.dart';
+import '../../design_system/tokens.dart';
+import '../../providers/tasks_provider.dart';
+import '../../generated/app_localizations.dart';
 import 'task_animation_service.dart';
 
 /// Service for handling task user interactions (animations, feedback, UI state)

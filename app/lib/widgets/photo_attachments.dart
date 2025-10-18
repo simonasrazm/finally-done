@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import '../design_system/tokens.dart';
 import '../design_system/typography.dart';
-import '../services/photo_service.dart';
+import '../utils/photo_service.dart';
 import '../widgets/photo_gallery_dialog.dart';
 import '../generated/app_localizations.dart';
 

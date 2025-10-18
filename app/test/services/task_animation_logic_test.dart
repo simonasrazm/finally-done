@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:finally_done/services/task_animation_service.dart';
+import 'package:finally_done/core/tasks/task_animation_service.dart';
 import 'package:finally_done/design_system/tokens.dart';
 
 void main() {

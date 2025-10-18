@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import '../design_system/colors.dart';
 import '../design_system/tokens.dart';
-import '../services/task_animation_service.dart';
+import '../core/tasks/task_animation_service.dart';
 import 'task_item_widget.dart';
 
 /// Widget for displaying an animated list of tasks

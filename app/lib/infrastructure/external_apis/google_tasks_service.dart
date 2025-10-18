@@ -2,11 +2,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as tasks;
 import 'package:googleapis_auth/auth_io.dart';
-import '../utils/sentry_performance.dart';
-import 'integrations/integration_manager.dart';
-import 'integrations/google_integration_provider.dart';
-import 'connectors/connector_manager.dart';
-import 'connectors/google_tasks_connector.dart';
+import '../../utils/sentry_performance.dart';
+import '../../integration_manager.dart';
+import '../../google_integration_provider.dart';
+import '../../connectors/connector_manager.dart';
+import '../../connectors/google_tasks_connector.dart';
 
 /// Google Tasks Service
 /// Handles task management through Google Tasks API using the new connector architecture
@@ -329,15 +329,10 @@ final googleTasksServiceProvider = Provider<GoogleTasksService?>((ref) {
   final googleState = integrationState['google'];
   final googleProvider = manager.getProvider('google') as GoogleIntegrationProvider?;
   
-  print('🔵 GOOGLE TASKS SERVICE: Provider called - isAuthenticated: ${googleState?.isAuthenticated}, authClient: ${googleProvider?.authClient != null}');
-  
   // Only create service if we have both authentication and auth client
   if (googleState?.isAuthenticated == true && googleProvider?.authClient != null) {
-    print('🔵 GOOGLE TASKS SERVICE: Creating GoogleTasksService');
     return GoogleTasksService(manager, connectorManager, googleProvider!.authClient!);
   }
-  
-  print('🔵 GOOGLE TASKS SERVICE: Returning null - not authenticated or no auth client');
   return null;
 });
 
@@ -358,7 +353,6 @@ final robustGoogleTasksServiceProvider = Provider<GoogleTasksService?>((ref) {
   if (googleState?.isAuthenticated == true) {
     // We're authenticated but service is null - this is likely a transitional state
     // Return the last known good service if available, or null
-    print('🔵 ROBUST GOOGLE TASKS SERVICE: Authenticated but service null - transitional state');
     return null;
   }
   
