@@ -11,6 +11,10 @@ linter:
     avoid_catches_without_on_clauses: true
     avoid_catching_errors: true
     
+    # Prevent mock code in production
+    avoid_web_libraries_in_flutter: true
+    avoid_relative_lib_imports: true
+    
     # Code quality
     prefer_const_constructors: true
     prefer_const_literals_to_create_immutables: true
@@ -22,7 +26,6 @@ linter:
     
     # Flutter specific
     avoid_unnecessary_containers: true
-    avoid_web_libraries_in_flutter: true
     prefer_single_quotes: true
     sort_constructors_first: true
     sort_unnamed_constructors_first: true

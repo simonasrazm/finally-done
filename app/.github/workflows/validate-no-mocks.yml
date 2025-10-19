@@ -1,0 +1,31 @@
+name: Validate No Mock Code in Production
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate-no-mocks:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Dart
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: stable
+    
+    - name: Install dependencies
+      run: dart pub get
+    
+    - name: Validate no mock code in production
+      run: dart run tool/validate_no_mocks.dart
+    
+    - name: Run linter
+      run: dart analyze --fatal-infos
+    
+    - name: Run tests
+      run: dart test
