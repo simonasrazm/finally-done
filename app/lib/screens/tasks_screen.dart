@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
@@ -27,6 +28,8 @@ class TasksScreen extends ConsumerStatefulWidget {
 
 class _TasksScreenState extends ConsumerState<TasksScreen>
     with WidgetsBindingObserver {
+  static const String _showCompletedKey = 'show_completed_tasks';
+
   String? _selectedTaskListId;
   final TextEditingController _newTaskController = TextEditingController();
   bool _showCompleted = false;
@@ -50,6 +53,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Load saved task list mode preference
+    _loadTaskListMode();
 
     // Track screen load performance
     sentryPerformance.monitorTransaction(
@@ -124,7 +130,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         SnackBar(content: Text('Task added')),
       );
     } catch (e, stackTrace) {
-      print('Error adding task: $e');
+      // Error adding task
       Sentry.captureException(e, stackTrace: stackTrace);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -179,7 +185,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           _showTaskError('complete');
         }
       } catch (e, stackTrace) {
-        print('Error completing task: $e');
+        // Error completing task
         Sentry.captureException(e, stackTrace: stackTrace);
 
         // Revert visual state on error
@@ -230,7 +236,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         _showTaskError(isCompleted ? 'uncomplete' : 'complete');
       }
     } catch (e, stackTrace) {
-      print('Error toggling all items task status: $e');
+      // Error toggling all items task status
       Sentry.captureException(e, stackTrace: stackTrace);
 
       // Revert visual state on error
@@ -268,7 +274,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         setState(() {});
       }
     } catch (e, stackTrace) {
-      print('Error deleting task: $e');
+      // Error deleting task
       Sentry.captureException(e, stackTrace: stackTrace);
 
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -315,6 +321,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               setState(() {
                 _showCompleted = !_showCompleted;
               });
+              // Save the new mode preference
+              _saveTaskListMode(_showCompleted);
             },
             tooltip: _showCompleted
                 ? AppLocalizations.of(context)!.hideCompleted
@@ -424,6 +432,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                 isCompleted: false, // Incomplete tasks are never completed
                 showCompleted: false,
                 isLoading: _incompleteTasksUpdating.contains(task.id),
+                enableSquashAnimation:
+                    true, // Enable squash animation for Incomplete tasks too
                 onTap: () => _toggleTaskStatus(task.id!),
                 onCheckboxChanged: () => _toggleTaskStatus(task.id!),
                 onDelete: () => _deleteTask(task.id!),
@@ -472,6 +482,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                 isCompleted: isCompleted,
                 showCompleted: true,
                 isLoading: _allTasksUpdating.contains(task.id),
+                enableSquashAnimation:
+                    true, // Enable squash animation for All Items list
                 onTap: () => _toggleTaskStatus(task.id!),
                 onCheckboxChanged: () => _toggleTaskStatus(task.id!),
                 onDelete: () => _deleteTask(task.id!),
@@ -652,5 +664,31 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Edit task: ${task.title}')),
     );
+  }
+
+  /// Load saved task list mode preference
+  Future<void> _loadTaskListMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedMode = prefs.getBool(_showCompletedKey);
+      if (savedMode != null) {
+        setState(() {
+          _showCompleted = savedMode;
+        });
+      }
+    } catch (e) {
+      // If loading fails, keep default value (false)
+      // Error loading task list mode preference
+    }
+  }
+
+  /// Save task list mode preference
+  Future<void> _saveTaskListMode(bool showCompleted) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_showCompletedKey, showCompleted);
+    } catch (e) {
+      // Error saving task list mode preference
+    }
   }
 }

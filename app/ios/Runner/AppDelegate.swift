@@ -3,6 +3,7 @@ import Flutter
 import GoogleSignIn
 import os.log
 import Sentry
+import AVFoundation
 
 // MARK: - Generic Error Reporting
 // Sentry's native SDK automatically captures ALL exceptions - no method channels needed!
@@ -209,6 +210,7 @@ func setupCrashHandlers() {
       // Set up method channel for error queue flushing
       let errorQueueChannel = FlutterMethodChannel(name: "error_queue", binaryMessenger: controller.binaryMessenger)
       
+      
       safeGoogleSignInChannel.setMethodCallHandler { [weak self] (call, result) in
         switch call.method {
         case "signIn":
@@ -237,6 +239,7 @@ func setupCrashHandlers() {
                     result(FlutterMethodNotImplemented)
                 }
             }
+            
     }
     
     
@@ -246,6 +249,11 @@ func setupCrashHandlers() {
       GeneratedPluginRegistrant.register(with: self)
     } catch {
       reportError(error, context: "GeneratedPluginRegistrant.register")
+    }
+    
+    // Register our custom plugin
+    if let controller = window?.rootViewController as? FlutterViewController {
+      // Custom plugins registered above
     }
     
       do {
@@ -287,6 +295,7 @@ func setupCrashHandlers() {
     
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+  
   
   override func application(
     _ app: UIApplication,

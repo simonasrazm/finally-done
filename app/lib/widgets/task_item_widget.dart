@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
+import '../services/haptic_service.dart';
+import '../services/audio_service.dart';
 // Removed unused imports
 
 /// Widget for displaying a single task item
-class TaskItemWidget extends StatelessWidget {
+class TaskItemWidget extends StatefulWidget {
   final google_tasks.Task task;
   final bool isCompleted;
   final bool showCompleted;
   final bool isLoading;
+  final bool enableSquashAnimation;
   final VoidCallback onTap;
   final VoidCallback onCheckboxChanged;
   final VoidCallback onDelete;
@@ -22,6 +26,7 @@ class TaskItemWidget extends StatelessWidget {
     required this.isCompleted,
     required this.showCompleted,
     this.isLoading = false,
+    this.enableSquashAnimation = false,
     required this.onTap,
     required this.onCheckboxChanged,
     required this.onDelete,
@@ -29,12 +34,76 @@ class TaskItemWidget extends StatelessWidget {
   });
 
   @override
+  State<TaskItemWidget> createState() => _TaskItemWidgetState();
+}
+
+class _TaskItemWidgetState extends State<TaskItemWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _squashController;
+  late Animation<double> _squashAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.enableSquashAnimation) {
+      _squashController = AnimationController(
+        duration: const Duration(milliseconds: 150),
+        vsync: this,
+      );
+      _squashAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+        CurvedAnimation(parent: _squashController, curve: Curves.easeInOut),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.enableSquashAnimation) {
+      _squashController.dispose();
+    }
+    super.dispose();
+  }
+
+  void _handleTaskCompletion() async {
+    // Only play audio when completing a task (not when uncompleting)
+    if (!widget.isCompleted) {
+      // Play haptic feedback
+      HapticService.lightImpact();
+
+      // Play audio feedback using 1s magic astral sweep sound
+      await AudioService.playAudioFile('audio/magic-astral-sweep-1s.aac');
+    } else {
+      // Play haptic feedback for uncompleting (but no audio)
+      HapticService.lightImpact();
+    }
+  }
+
+  void _triggerSquashAnimation() {
+    if (widget.enableSquashAnimation) {
+      // Only handle animation - single responsibility
+      _squashController.forward().then((_) {
+        _squashController.reverse();
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final hasAdditionalContent =
-        task.notes?.isNotEmpty == true || task.due != null;
+        widget.task.notes?.isNotEmpty == true || widget.task.due != null;
 
-    return InkWell(
-      onTap: onTap,
+    Widget content = InkWell(
+      onTap: () {
+        // Handle task completion feedback (audio + haptic)
+        _handleTaskCompletion();
+
+        // Trigger animation
+        _triggerSquashAnimation();
+
+        // Notify parent of state change
+        widget.onTap();
+      },
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: DesignTokens.spacing3,
@@ -45,45 +114,42 @@ class TaskItemWidget extends StatelessWidget {
         child: Row(
           children: [
             // Checkbox
-            GestureDetector(
-              onTap: onCheckboxChanged,
-              child: Container(
-                width: DesignTokens.checkboxSize,
-                height: DesignTokens.checkboxSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.rectangle,
-                  borderRadius:
-                      BorderRadius.circular(DesignTokens.borderRadiusSmall),
-                  border: Border.all(
-                    color: isCompleted
-                        ? AppColors.primary
-                        : AppColors.getTextSecondaryColor(context),
-                    width: DesignTokens.borderWidthMedium,
-                  ),
-                  color: isCompleted
+            Container(
+              width: DesignTokens.checkboxSize,
+              height: DesignTokens.checkboxSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.rectangle,
+                borderRadius:
+                    BorderRadius.circular(DesignTokens.borderRadiusSmall),
+                border: Border.all(
+                  color: widget.isCompleted
                       ? AppColors.primary
-                      : isLoading
-                          ? AppColors.getBackgroundColor(context)
-                          : AppColors.transparent,
+                      : AppColors.getTextSecondaryColor(context),
+                  width: DesignTokens.borderWidthMedium,
                 ),
-                child: isLoading
-                    ? SizedBox(
-                        width: DesignTokens.iconSizeSmall,
-                        height: DesignTokens.iconSizeSmall,
-                        child: CircularProgressIndicator(
-                          strokeWidth: DesignTokens.borderWidthMedium,
-                          color: AppColors.getTextSecondaryColor(
-                              context), // Theme-aware color
-                        ),
-                      )
-                    : isCompleted
-                        ? Icon(
-                            Icons.check,
-                            color: AppColors.getTextPrimaryColor(context),
-                            size: DesignTokens.iconSizeSmall,
-                          )
-                        : null,
+                color: widget.isCompleted
+                    ? AppColors.primary
+                    : widget.isLoading
+                        ? AppColors.getBackgroundColor(context)
+                        : AppColors.transparent,
               ),
+              child: widget.isLoading
+                  ? SizedBox(
+                      width: DesignTokens.iconSizeSmall,
+                      height: DesignTokens.iconSizeSmall,
+                      child: CircularProgressIndicator(
+                        strokeWidth: DesignTokens.borderWidthMedium,
+                        color: AppColors.getTextSecondaryColor(
+                            context), // Theme-aware color
+                      ),
+                    )
+                  : widget.isCompleted
+                      ? Icon(
+                          Icons.check,
+                          color: AppColors.getTextPrimaryColor(context),
+                          size: DesignTokens.iconSizeSmall,
+                        )
+                      : null,
             ),
             SizedBox(width: DesignTokens.spacing3),
 
@@ -94,12 +160,12 @@ class TaskItemWidget extends StatelessWidget {
                 children: [
                   // Task title
                   Text(
-                    task.title ?? '',
+                    widget.task.title ?? '',
                     style: AppTypography.body.copyWith(
-                      color: isCompleted
+                      color: widget.isCompleted
                           ? AppColors.getTextSecondaryColor(context)
                           : AppColors.getTextPrimaryColor(context),
-                      decoration: isCompleted
+                      decoration: widget.isCompleted
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
@@ -108,19 +174,19 @@ class TaskItemWidget extends StatelessWidget {
                   // Additional content (notes, due date)
                   if (hasAdditionalContent) ...[
                     SizedBox(height: DesignTokens.spacing1),
-                    if (task.notes?.isNotEmpty == true)
+                    if (widget.task.notes?.isNotEmpty == true)
                       Text(
-                        task.notes!,
+                        widget.task.notes!,
                         style: AppTypography.subhead.copyWith(
                           color: AppColors.getTextSecondaryColor(context),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    if (task.due != null) ...[
-                      if (task.notes?.isNotEmpty == true)
+                    if (widget.task.due != null) ...[
+                      if (widget.task.notes?.isNotEmpty == true)
                         SizedBox(height: DesignTokens.spacing0),
-                      _buildDueDate(context, task.due!),
+                      _buildDueDate(context, widget.task.due!),
                     ],
                   ],
                 ],
@@ -133,7 +199,7 @@ class TaskItemWidget extends StatelessWidget {
               children: [
                 // Edit button
                 IconButton(
-                  onPressed: onEdit,
+                  onPressed: widget.onEdit,
                   icon: Icon(
                     Icons.edit_outlined,
                     color: AppColors.textSecondary,
@@ -148,7 +214,7 @@ class TaskItemWidget extends StatelessWidget {
 
                 // Delete button
                 IconButton(
-                  onPressed: onDelete,
+                  onPressed: widget.onDelete,
                   icon: Icon(
                     Icons.delete_outline,
                     color: AppColors.textSecondary,
@@ -166,6 +232,21 @@ class TaskItemWidget extends StatelessWidget {
         ),
       ),
     );
+
+    // Wrap with animation if enabled
+    if (widget.enableSquashAnimation) {
+      return AnimatedBuilder(
+        animation: _squashAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _squashAnimation.value,
+            child: content,
+          );
+        },
+      );
+    }
+
+    return content;
   }
 
   Widget _buildDueDate(BuildContext context, String dueDateString) {

@@ -15,7 +15,6 @@ class ThumbnailService {
       // Read the original image
       final originalFile = File(imagePath);
       if (!await originalFile.exists()) {
-        print('🖼️ THUMBNAIL: Original image not found: $imagePath');
         return null;
       }
 
@@ -23,7 +22,6 @@ class ThumbnailService {
       final originalImage = img.decodeImage(originalBytes);
 
       if (originalImage == null) {
-        print('🖼️ THUMBNAIL: Failed to decode image: $imagePath');
         return null;
       }
 
@@ -51,10 +49,8 @@ class ThumbnailService {
       final thumbnailFile = File(thumbnailPath);
       await thumbnailFile.writeAsBytes(thumbnailBytes);
 
-      print('🖼️ THUMBNAIL: Created thumbnail: $thumbnailPath');
       return thumbnailPath;
     } catch (e) {
-      print('🖼️ THUMBNAIL: Error creating thumbnail: $e');
       return null;
     }
   }
@@ -74,7 +70,6 @@ class ThumbnailService {
       // Create thumbnail if it doesn't exist
       return await createThumbnail(imagePath);
     } catch (e) {
-      print('🖼️ THUMBNAIL: Error getting thumbnail path: $e');
       return null;
     }
   }
@@ -89,10 +84,8 @@ class ThumbnailService {
 
       if (await thumbnailFile.exists()) {
         await thumbnailFile.delete();
-        print('🖼️ THUMBNAIL: Deleted thumbnail: $thumbnailPath');
       }
     } catch (e) {
-      print('🖼️ THUMBNAIL: Error deleting thumbnail: $e');
     }
   }
 }

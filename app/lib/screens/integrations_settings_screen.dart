@@ -57,7 +57,6 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     final isAuthenticated = state?.isAuthenticated ?? false;
     final isConnecting = state?.isConnecting ?? false;
     final isSyncing = state?.isSyncing ?? false;
-    print('🔵 INTEGRATIONS UI: Provider ${provider.id} - isAuthenticated: $isAuthenticated, state: $state');
 
     return Card(
       margin: const EdgeInsets.only(bottom: DesignTokens.componentPadding),

@@ -20,6 +20,7 @@ import 'core/commands/queue_service.dart';
 import 'providers/language_provider.dart';
 import 'providers/theme_provider.dart';
 import 'utils/sentry_performance.dart';
+import 'services/haptic_service.dart';
 
 void main() async {
   // Load environment variables
@@ -104,6 +105,9 @@ void main() async {
           DeviceOrientation.portraitUp,
           DeviceOrientation.portraitDown,
         ]);
+
+        // Initialize services
+        await HapticService.initialize();
 
         // App launch
         runApp(

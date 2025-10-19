@@ -72,7 +72,7 @@ flutter:
   # Assets
   assets:
     - assets/images/
-    - assets/sounds/
+    - assets/audio/
     - .env
     - docs/
   

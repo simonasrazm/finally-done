@@ -8,11 +8,9 @@ class MigrationV0ToV2 {
   static const int toVersion = 2;
   
   static void migrate(Migration migration, int oldSchemaVersion) {
-    print('🗄️ MIGRATION: v$oldSchemaVersion → v$toVersion');
     
     if (oldSchemaVersion < toVersion) {
       final oldCommands = migration.oldRealm.all('QueuedCommandRealm');
-      print('🗄️ MIGRATION: Found ${oldCommands.length} commands to migrate');
       
       for (final oldCommand in oldCommands) {
         try {
@@ -36,10 +34,8 @@ class MigrationV0ToV2 {
               // errorMessage is null by default
             }
             
-            print('🗄️ MIGRATION: Migrated command: $id');
           }
         } catch (e) {
-          print('🗄️ MIGRATION: Error migrating command: $e');
         }
       }
     }

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:finally_done/models/queued_command.dart';
+import '../../models/queued_command.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'queue_service.dart';
 import '../audio/speech_service.dart';

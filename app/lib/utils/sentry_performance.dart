@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Comprehensive Sentry Performance monitoring utility
-/// 
+///
 /// This utility provides consistent transaction and span management
 /// for tracking app performance across all critical operations.
 class SentryPerformance {
@@ -18,11 +18,7 @@ class SentryPerformance {
   dynamic startTransaction(String name, String operation) {
     final transaction = Sentry.startTransaction(name, operation);
     _activeTransactions[name] = transaction;
-    
-    if (kDebugMode) {
-      print('🟡 SENTRY: Started transaction $name ($operation)');
-    }
-    
+
     return transaction;
   }
 
@@ -30,19 +26,12 @@ class SentryPerformance {
   dynamic startSpan(String transactionName, String spanName, String operation) {
     final transaction = _activeTransactions[transactionName];
     if (transaction == null) {
-      if (kDebugMode) {
-        print('🔴 SENTRY: No active transaction $transactionName for span $spanName');
-      }
       return null;
     }
 
     final span = transaction.startChild(spanName, description: operation);
     _activeSpans[spanName] = span;
-    
-    if (kDebugMode) {
-      print('🟡 SENTRY: Started span $spanName in transaction $transactionName');
-    }
-    
+
     return span;
   }
 
@@ -54,10 +43,6 @@ class SentryPerformance {
         span.setData('data', data);
       }
       span.finish();
-      
-      if (kDebugMode) {
-        print('🟢 SENTRY: Finished span $spanName');
-      }
     }
   }
 
@@ -69,10 +54,6 @@ class SentryPerformance {
         transaction.setData('data', data);
       }
       transaction.finish();
-      
-      if (kDebugMode) {
-        print('🟢 SENTRY: Finished transaction $transactionName');
-      }
     }
   }
 
@@ -85,7 +66,7 @@ class SentryPerformance {
     Map<String, dynamic>? data,
   }) async {
     final span = startSpan(transactionName, spanName, operation);
-    
+
     try {
       final result = await operationFunc();
       finishSpan(spanName, data: data);
@@ -108,7 +89,7 @@ class SentryPerformance {
     Map<String, dynamic>? data,
   }) {
     final span = startSpan(transactionName, spanName, operation);
-    
+
     try {
       final result = operationFunc();
       finishSpan(spanName, data: data);
@@ -130,7 +111,7 @@ class SentryPerformance {
     Map<String, dynamic>? data,
   }) async {
     final transaction = startTransaction(transactionName, operation);
-    
+
     try {
       final result = await transactionFunc();
       finishTransaction(transactionName, data: data);
@@ -186,25 +167,25 @@ class PerformanceOps {
   // Screen operations
   static const String screenLoad = 'screen.load';
   static const String screenNavigation = 'screen.navigation';
-  
+
   // Authentication operations
   static const String authSignIn = 'auth.signin';
   static const String authTokenRefresh = 'auth.token_refresh';
   static const String authCheck = 'auth.check';
-  
+
   // API operations
   static const String apiCall = 'api.call';
   static const String apiRequest = 'api.request';
   static const String apiResponse = 'api.response';
-  
+
   // Provider operations
   static const String providerInit = 'provider.init';
   static const String providerUpdate = 'provider.update';
-  
+
   // Background operations
   static const String backgroundPoll = 'background.poll';
   static const String backgroundSync = 'background.sync';
-  
+
   // UI operations
   static const String uiRender = 'ui.render';
   static const String uiUpdate = 'ui.update';
@@ -218,23 +199,26 @@ class PerformanceTransactions {
   static const String screenSettings = 'screen.settings';
   static const String screenMissionControl = 'screen.mission_control';
   static const String screenIntegrations = 'screen.integrations';
-  
+
   // Authentication transactions
   static const String authGoogleSignIn = 'auth.google.signin';
   static const String authGoogleTokenRefresh = 'auth.google.token_refresh';
-  
+
   // API transactions
   static const String apiTasksFetch = 'api.tasks.fetch';
   static const String apiTasksCreate = 'api.tasks.create';
   static const String apiTasksComplete = 'api.tasks.complete';
   static const String apiTasksDelete = 'api.tasks.delete';
   static const String apiTaskListsFetch = 'api.task_lists.fetch';
-  
+
   // Provider transactions
-  static const String providerIntegrationManagerInit = 'provider.integration_manager.init';
-  static const String providerTasksProviderInit = 'provider.tasks_provider.init';
-  static const String providerGoogleIntegrationInit = 'provider.google_integration.init';
-  
+  static const String providerIntegrationManagerInit =
+      'provider.integration_manager.init';
+  static const String providerTasksProviderInit =
+      'provider.tasks_provider.init';
+  static const String providerGoogleIntegrationInit =
+      'provider.google_integration.init';
+
   // Background transactions
   static const String backgroundTasksPoll = 'background.tasks.poll';
   static const String backgroundTasksSync = 'background.tasks.sync';
