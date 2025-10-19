@@ -5,6 +5,7 @@ import '../design_system/typography.dart';
 import '../generated/app_localizations.dart';
 import '../utils/sentry_performance.dart';
 import '../widgets/animated_title_widget.dart';
+import '../main.dart';
 import 'settings_screen.dart';
 import 'integrations_settings_screen.dart';
 
@@ -49,6 +50,7 @@ class _SettingsTabsScreenState extends ConsumerState<SettingsTabsScreen>
     return Scaffold(
       appBar: AppBar(
         title: AnimatedTitleWidget(
+          key: const ValueKey('settings_title'),
           text: AppLocalizations.of(context)!.settings,
           style: AppTypography.title1.copyWith(
             color: AppColors.getTextPrimaryColor(context),

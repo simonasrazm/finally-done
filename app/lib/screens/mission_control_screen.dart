@@ -17,6 +17,7 @@ import '../widgets/photo_attachments.dart';
 import '../widgets/expandable_error_message.dart';
 import '../widgets/common_ui_components.dart';
 import '../widgets/animated_title_widget.dart';
+import '../main.dart';
 import '../generated/app_localizations.dart';
 
 class MissionControlScreen extends ConsumerStatefulWidget {
@@ -86,6 +87,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
 
   Widget _buildAppBarTitle(BuildContext context) {
     return AnimatedTitleWidget(
+      key: const ValueKey('mission_control_title'),
       text: AppLocalizations.of(context)!.missionControl,
       style: AppTypography.title1.copyWith(
         color: AppColors.getTextPrimaryColor(context),

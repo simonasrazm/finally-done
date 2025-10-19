@@ -43,7 +43,17 @@ class _AnimatedTitleWidgetState extends State<AnimatedTitleWidget>
       curve: Curves.easeInQuart,
     ));
 
-    _animationController.forward();
+    // Animate on first load
+    _startAnimation();
+  }
+
+  void _startAnimation() {
+    _animationController.reset();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _animationController.forward();
+      }
+    });
   }
 
   @override
@@ -57,21 +67,23 @@ class _AnimatedTitleWidgetState extends State<AnimatedTitleWidget>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, 30 * (1 - _animation.value)),
-          child: Opacity(
-            opacity: _animation.value,
-            child: Text(
-              widget.text,
-              style: widget.style ??
-                  AppTypography.title1.copyWith(
-                    color: AppColors.getTextPrimaryColor(context),
-                    fontWeight: AppTypography.weightSemiBold,
-                  ),
-            ),
+        return Opacity(
+          opacity: _animation.value,
+          child: Text(
+            widget.text,
+            style: widget.style ??
+                AppTypography.title1.copyWith(
+                  color: AppColors.getTextPrimaryColor(context),
+                  fontWeight: AppTypography.weightSemiBold,
+                ),
           ),
         );
       },
     );
+  }
+
+  // Public method to restart animation from outside
+  void restartAnimation() {
+    _startAnimation();
   }
 }

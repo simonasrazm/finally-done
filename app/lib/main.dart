@@ -304,14 +304,17 @@ class FinallyDoneApp extends ConsumerWidget {
   }
 }
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+// Provider for current tab index
+final currentTabIndexProvider = StateProvider<int>((ref) => 0);
+
+class _MainScreenState extends ConsumerState<MainScreen> {
   int _currentIndex = 0;
 
   late final List<Widget> _screens;
@@ -385,6 +388,8 @@ class _MainScreenState extends State<MainScreen> {
               setState(() {
                 _currentIndex = index;
               });
+              // Update the provider to trigger animations
+              ref.read(currentTabIndexProvider.notifier).state = index;
             },
             data: {
               'from_screen': screenNames[_currentIndex],

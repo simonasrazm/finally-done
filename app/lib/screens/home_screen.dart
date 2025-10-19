@@ -9,6 +9,7 @@ import 'dart:io';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
+import '../widgets/animated_title_widget.dart';
 import '../core/audio/speech_service.dart';
 import '../infrastructure/external_apis/nlp_service.dart';
 import '../core/commands/queue_service.dart';
@@ -29,18 +30,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late AnimationController _scaleController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _scaleAnimation;
-  
+
   bool _isRecording = false;
   String _transcription = '';
   String _status = '';
   final TextEditingController _textController = TextEditingController();
   final List<String> _selectedPhotos = [];
   final ImagePicker _imagePicker = ImagePicker();
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // Track screen load performance
     sentryPerformance.monitorTransaction(
       PerformanceTransactions.screenHome,
@@ -54,23 +55,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         _pulseAnimation = Tween<double>(
           begin: 1.0,
           end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-    
-    // Scale animation for button press
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: DesignTokens.animationFast),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.easeInOut,
-    ));
+        ).animate(CurvedAnimation(
+          parent: _pulseController,
+          curve: Curves.easeInOut,
+        ));
+
+        // Scale animation for button press
+        _scaleController = AnimationController(
+          duration: const Duration(milliseconds: DesignTokens.animationFast),
+          vsync: this,
+        );
+        _scaleAnimation = Tween<double>(
+          begin: 1.0,
+          end: 0.95,
+        ).animate(CurvedAnimation(
+          parent: _scaleController,
+          curve: Curves.easeInOut,
+        ));
       },
       data: {
         'screen': 'home',
@@ -78,7 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       },
     );
   }
-  
+
   @override
   void dispose() {
     _pulseController.dispose();
@@ -86,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _textController.dispose();
     super.dispose();
   }
-  
+
   Widget _buildInputButton({
     required IconData icon,
     required VoidCallback onTap,
@@ -119,32 +120,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
     );
   }
-  
+
   Future<void> _startRecording() async {
     if (_isRecording) return;
-    
+
     setState(() {
       _isRecording = true;
       _status = 'Recording...';
       _transcription = '';
     });
-    
+
     // Start pulse animation
     _pulseController.repeat(reverse: true);
-    
+
     // Haptic feedback
     HapticFeedback.mediumImpact();
-    
+
     try {
       final speechService = ref.read(speechServiceProvider);
       final enginePreference = ref.read(speechEngineProvider);
-      
+
       if (enginePreference == 'gemini') {
         // For Gemini, start recording and wait for user to stop
         String result = await speechService.recognizeSpeech(
           enginePreference: enginePreference,
         );
-        
+
         if (result == 'RECORDING_IN_PROGRESS') {
           // Don't change status, keep "Recording..." message
           // Don't process yet, wait for user to tap again
@@ -155,20 +156,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         String result = await speechService.recognizeSpeech(
           enginePreference: enginePreference,
         );
-        
+
         setState(() {
           _transcription = result;
           _status = 'Processing...';
         });
-        
+
         await _processCommand(result);
       }
-      
     } catch (e, stackTrace) {
       // Log and send to Sentry
-      print('🎤 RECORDING: Error during recording - $e');
-      Sentry.captureException(e, stackTrace: stackTrace);
-      
+      Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+        withScope: (scope) {
+          scope.setTag('operation', 'recording');
+          scope.setTag('is_recording', _isRecording.toString());
+          scope.setTag('engine_preference', ref.read(speechEngineProvider));
+        },
+      );
+
       setState(() {
         _status = 'Error: ${e.toString()}';
         _isRecording = false;
@@ -177,10 +184,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _pulseController.reset();
     }
   }
-  
+
   Future<void> _scheduleCommand(String text) async {
     if (text.trim().isEmpty) return;
-    
+
     try {
       // Create command and add to queue
       final queueNotifier = ref.read(queueProvider.notifier);
@@ -191,22 +198,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         DateTime.now(),
         photoPaths: _selectedPhotos,
       );
-      
+
       queueNotifier.addCommand(command);
-      
+
       setState(() {
         _textController.clear();
         _transcription = '';
         _selectedPhotos.clear(); // Clear photos after scheduling
       });
-      
+
       // Success haptic
       HapticFeedback.heavyImpact();
-      
     } catch (e) {
-      print('📝 SCHEDULE: Error scheduling command - $e');
-      Sentry.captureException(e);
-      
+      Sentry.captureException(
+        e,
+        withScope: (scope) {
+          scope.setTag('operation', 'schedule_command');
+          scope.setTag('text_length', text.trim().length.toString());
+          scope.setTag('has_photos', _selectedPhotos.isNotEmpty.toString());
+          scope.setTag('photo_count', _selectedPhotos.length.toString());
+        },
+      );
+
       setState(() {
         _status = 'Error: ${e.toString()}';
       });
@@ -217,24 +230,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     try {
       final nlpService = ref.read(nlpServiceProvider);
       await nlpService.parseCommand(transcription);
-      
+
       setState(() {
         _status = AppLocalizations.of(context)!.readyToRecord;
         _isRecording = false;
       });
-      
+
       _pulseController.stop();
       _pulseController.reset();
-      
+
       // Success haptic
       HapticFeedback.heavyImpact();
-      
+
       // TODO: Execute commands if high confidence
-      
     } catch (e) {
-      print('🧠 PROCESS: Error processing command - $e');
-      Sentry.captureException(e);
-      
+      Sentry.captureException(
+        e,
+        withScope: (scope) {
+          scope.setTag('operation', 'process_command');
+          scope.setTag('transcription_length', transcription.length.toString());
+          scope.setTag('is_recording', _isRecording.toString());
+        },
+      );
+
       setState(() {
         _status = 'Processing failed: ${e.toString()}';
         _isRecording = false;
@@ -243,53 +261,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _pulseController.reset();
     }
   }
-  
+
   Future<void> _stopRecording() async {
     if (!_isRecording) return;
-    
+
     setState(() {
       _isRecording = false;
       _status = AppLocalizations.of(context)!.readyToRecord;
     });
-    
+
     _pulseController.stop();
     _pulseController.reset();
-    
+
     try {
       final speechService = ref.read(speechServiceProvider);
       final enginePreference = ref.read(speechEngineProvider);
-      
+
       if (enginePreference == 'gemini') {
         // Stop recording and get audio path immediately
         String? audioPath = await speechService.stopRecording();
-        
+
         if (audioPath != null && audioPath.isNotEmpty) {
           // Store the audio path in the speech service
           speechService.setCurrentAudioPath(audioPath);
-          
+
           // Extract just the filename for storage
           final fileName = audioPath.split('/').last;
           await _scheduleVoiceCommand('Recording...', fileName);
-          
+
           // Start background processing
           _processAudioInBackground(audioPath);
         }
       }
-      
     } catch (e) {
-      print('🛑 STOP: Error stopping recording - $e');
-      Sentry.captureException(e);
-      
+      Sentry.captureException(
+        e,
+        withScope: (scope) {
+          scope.setTag('operation', 'stop_recording');
+          scope.setTag('is_recording', _isRecording.toString());
+          scope.setTag('engine_preference', ref.read(speechEngineProvider));
+        },
+      );
+
       setState(() {
         _status = 'Error: ${e.toString()}';
       });
     }
   }
-  
+
   Future<void> _processAudioInBackground(String audioPath) async {
     try {
       final speechService = ref.read(speechServiceProvider);
-      
+
       // Find the command by filename
       final queueNotifier = ref.read(queueProvider.notifier);
       final commands = ref.read(queueProvider);
@@ -298,19 +321,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         (cmd) => cmd.audioPath == fileName,
         orElse: () => throw Exception('Command not found'),
       );
-      
+
       // Store command ID before any Realm operations to avoid invalidation
       final commandId = command.id;
-      
+
       // Process audio in background
       String transcription = await speechService.processRecordedAudio();
-      
+
       // Update with transcription and final status using stored ID
       queueNotifier.updateCommandTranscription(commandId, transcription);
       queueNotifier.updateCommandStatus(commandId, CommandStatus.queued);
-      
     } catch (e) {
-      print('🎤 BACKGROUND: Error processing audio - $e');
       // Update status to failed - use stored commandId if available
       try {
         final queueNotifier = ref.read(queueProvider.notifier);
@@ -322,19 +343,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         );
         // Store ID before any potential Realm operations
         final commandId = command.id;
-        
+
         // Move to transcribing status and mark as failed
-        queueNotifier.updateCommandStatus(commandId, CommandStatus.transcribing);
-        queueNotifier.updateCommandErrorMessage(commandId, 'Audio processing failed: ${e.toString()}');
+        queueNotifier.updateCommandStatus(
+            commandId, CommandStatus.transcribing);
+        queueNotifier.updateCommandErrorMessage(
+            commandId, 'Audio processing failed: ${e.toString()}');
         queueNotifier.updateCommandFailed(commandId, true);
       } catch (updateError) {
-        print('🎤 BACKGROUND: Failed to update command status: $updateError');
         // If we can't update the status, at least log the error
+        Sentry.captureException(updateError, stackTrace: StackTrace.current);
       }
     }
   }
-  
-  Future<void> _scheduleVoiceCommand(String transcription, String? audioPath) async {
+
+  Future<void> _scheduleVoiceCommand(
+      String transcription, String? audioPath) async {
     try {
       // Create command and add to queue
       final queueNotifier = ref.read(queueProvider.notifier);
@@ -346,21 +370,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         audioPath: audioPath,
         photoPaths: _selectedPhotos,
       );
-      
+
       queueNotifier.addCommand(command);
-      
+
       setState(() {
         _transcription = '';
         _selectedPhotos.clear(); // Clear photos after scheduling
       });
-      
+
       // Success haptic
       HapticFeedback.heavyImpact();
-      
     } catch (e) {
-      print('🎤 VOICE: Error scheduling voice command - $e');
-      Sentry.captureException(e);
-      
+      Sentry.captureException(
+        e,
+        withScope: (scope) {
+          scope.setTag('operation', 'schedule_voice_command');
+          scope.setTag('transcription_length', transcription.length.toString());
+          scope.setTag('has_audio_path', (audioPath != null).toString());
+          scope.setTag('has_photos', _selectedPhotos.isNotEmpty.toString());
+          scope.setTag('photo_count', _selectedPhotos.length.toString());
+        },
+      );
+
       setState(() {
         _status = 'Error: ${e.toString()}';
       });
@@ -373,32 +404,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         source: ImageSource.camera,
         imageQuality: 80, // Compress to reduce file size
       );
-      
+
       if (photo != null) {
         // Save to Photos app (user's main photo library)
         await photo.saveTo(photo.path); // This saves to Photos
-        
+
         // Also save local copy to app's Documents directory
         final directory = await getApplicationDocumentsDirectory();
         final photosDir = Directory('${directory.path}/photos');
         if (!await photosDir.exists()) {
           await photosDir.create(recursive: true);
         }
-        
+
         final fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final localPath = '${photosDir.path}/$fileName';
         await photo.saveTo(localPath);
-        
+
         setState(() {
-          _selectedPhotos.add(fileName); // Store just filename for local reference
+          _selectedPhotos
+              .add(fileName); // Store just filename for local reference
         });
-        
-        print('📸 PHOTO: Saved to Photos and local copy as $fileName');
       }
     } catch (e) {
-      print('📸 PHOTO: Error taking photo: $e');
-      Sentry.captureException(e);
-      
+      Sentry.captureException(
+        e,
+        withScope: (scope) {
+          scope.setTag('operation', 'take_photo');
+          scope.setTag(
+              'has_existing_photos', _selectedPhotos.isNotEmpty.toString());
+          scope.setTag(
+              'existing_photo_count', _selectedPhotos.length.toString());
+        },
+      );
+
       setState(() {
         _status = 'Error taking photo: ${e.toString()}';
       });
@@ -410,49 +448,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final List<XFile> photos = await _imagePicker.pickMultiImage(
         imageQuality: 80,
       );
-      
+
       if (photos.isNotEmpty) {
         final directory = await getApplicationDocumentsDirectory();
         final photosDir = Directory('${directory.path}/photos');
         if (!await photosDir.exists()) {
           await photosDir.create(recursive: true);
         }
-        
+
         for (final photo in photos) {
           // Photos from gallery are already in Photos app, just create local copies
-          final fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}_${photos.indexOf(photo)}.jpg';
+          final fileName =
+              'photo_${DateTime.now().millisecondsSinceEpoch}_${photos.indexOf(photo)}.jpg';
           final localPath = '${photosDir.path}/$fileName';
           await photo.saveTo(localPath);
-          
+
           setState(() {
             _selectedPhotos.add(fileName);
           });
         }
-        
-        print('📸 PHOTO: Selected ${photos.length} photos from gallery and created local copies');
       }
     } catch (e) {
-      print('📸 PHOTO: Error picking photos: $e');
-      Sentry.captureException(e);
-      
+      Sentry.captureException(
+        e,
+        withScope: (scope) {
+          scope.setTag('operation', 'pick_from_gallery');
+          scope.setTag(
+              'has_existing_photos', _selectedPhotos.isNotEmpty.toString());
+          scope.setTag(
+              'existing_photo_count', _selectedPhotos.length.toString());
+        },
+      );
+
       setState(() {
         _status = 'Error picking photos: ${e.toString()}';
       });
     }
   }
 
-
   Future<String> _getPhotoPath(String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     return '${directory.path}/photos/$fileName';
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Finally Done',
+        title: AnimatedTitleWidget(
+          key: const ValueKey('home_title'),
+          text: AppLocalizations.of(context)!.appTitle,
           style: AppTypography.title1.copyWith(
             color: AppColors.getTextPrimaryColor(context),
             fontWeight: FontWeight.w600,
@@ -463,14 +508,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(DesignTokens.layoutPadding + DesignTokens.spacing1),
+          padding: EdgeInsets.all(
+              DesignTokens.layoutPadding + DesignTokens.spacing1),
           child: Column(
             children: [
               // Status text
               Text(
-                _status.isEmpty ? AppLocalizations.of(context)!.readyToRecord : _status,
+                _status.isEmpty
+                    ? AppLocalizations.of(context)!.readyToRecord
+                    : _status,
                 style: AppTypography.headline.copyWith(
-                  color: _isRecording ? AppColors.error : AppColors.getTextPrimaryColor(context),
+                  color: _isRecording
+                      ? AppColors.error
+                      : AppColors.getTextPrimaryColor(context),
                   fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
@@ -497,11 +547,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: DesignTokens.spacing3,
-                          vertical: DesignTokens.spacing1 + DesignTokens.spacing1,
+                          vertical:
+                              DesignTokens.spacing1 + DesignTokens.spacing1,
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(DesignTokens.radius2xl),
+                          borderRadius:
+                              BorderRadius.circular(DesignTokens.radius2xl),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -533,9 +585,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     itemCount: _selectedPhotos.length,
                     itemBuilder: (context, index) {
                       return Container(
-                        margin: const EdgeInsets.only(right: DesignTokens.spacing2),
+                        margin:
+                            const EdgeInsets.only(right: DesignTokens.spacing2),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(DesignTokens.radiusMd),
                           child: FutureBuilder<String>(
                             future: _getPhotoPath(_selectedPhotos[index]),
                             builder: (context, snapshot) {
@@ -552,7 +606,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         width: DesignTokens.photoPreviewWidth,
                                         height: DesignTokens.photoPreviewHeight,
                                         color: Colors.grey[300],
-                                        child: const Icon(Icons.image_not_supported),
+                                        child: const Icon(
+                                            Icons.image_not_supported),
                                       );
                                     },
                                   ),
@@ -573,9 +628,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 ),
               ],
-              
-              SizedBox(height: DesignTokens.sectionSpacing + DesignTokens.spacing4),
-              
+
+              SizedBox(
+                  height: DesignTokens.sectionSpacing + DesignTokens.spacing4),
+
               // Main recording area with three buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -585,15 +641,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     icon: Icons.camera_alt_outlined,
                     onTap: () => _takePhoto(),
                   ),
-                  
+
                   SizedBox(width: DesignTokens.sectionSpacing),
-                  
+
                   // Main recording button
                   AnimatedBuilder(
-                    animation: Listenable.merge([_pulseAnimation, _scaleAnimation]),
+                    animation:
+                        Listenable.merge([_pulseAnimation, _scaleAnimation]),
                     builder: (context, child) {
                       return Transform.scale(
-                        scale: _isRecording ? _pulseAnimation.value : _scaleAnimation.value,
+                        scale: _isRecording
+                            ? _pulseAnimation.value
+                            : _scaleAnimation.value,
                         child: GestureDetector(
                           onTapDown: (_) => _scaleController.forward(),
                           onTapUp: (_) {
@@ -618,7 +677,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 end: Alignment.bottomRight,
                                 colors: _isRecording
                                     ? [AppColors.error, AppColors.warning]
-                                    : [AppColors.primary, AppColors.primaryDark],
+                                    : [
+                                        AppColors.primary,
+                                        AppColors.primaryDark
+                                      ],
                               ),
                               boxShadow: [
                                 BoxShadow(
@@ -638,9 +700,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       );
                     },
                   ),
-                  
+
                   SizedBox(width: DesignTokens.sectionSpacing),
-                  
+
                   // Photos button on the right
                   _buildInputButton(
                     icon: Icons.photo_library_outlined,
@@ -648,9 +710,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 ],
               ),
-              
-              SizedBox(height: DesignTokens.sectionSpacing + DesignTokens.spacing4),
-              
+
+              SizedBox(
+                  height: DesignTokens.sectionSpacing + DesignTokens.spacing4),
+
               // Text input alternative
               Container(
                 padding: EdgeInsets.symmetric(
@@ -670,7 +733,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: TextField(
                         controller: _textController,
                         decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.orTypeYourCommand,
+                          hintText:
+                              AppLocalizations.of(context)!.orTypeYourCommand,
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -694,9 +758,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ],
                 ),
               ),
-              
+
               SizedBox(height: DesignTokens.sectionSpacing),
-              
+
               // Transcription result
               if (_transcription.isNotEmpty)
                 Container(
@@ -726,7 +790,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ],
                   ),
                 ),
-              
+
               SizedBox(height: DesignTokens.sectionSpacing),
             ],
           ),

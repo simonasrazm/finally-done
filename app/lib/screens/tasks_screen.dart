@@ -14,6 +14,7 @@ import '../widgets/task_input_widget.dart';
 import '../widgets/task_item_widget.dart';
 import '../widgets/task_empty_state_widgets.dart';
 import '../widgets/animated_title_widget.dart';
+import '../main.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
   final VoidCallback? onNavigateToSettings;
@@ -294,6 +295,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         backgroundColor: AppColors.getBackgroundColor(context),
         elevation: DesignTokens.elevation0,
         title: AnimatedTitleWidget(
+          key: const ValueKey('tasks_title'),
           text: AppLocalizations.of(context)!.tasks,
           style: AppTypography.title1.copyWith(
             color: AppColors.getTextPrimaryColor(context),
