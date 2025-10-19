@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Design Tokens - Single source of truth for all design values
-/// 
+///
 /// This system follows modern design token principles:
 /// 1. Semantic naming (what it's for, not what it looks like)
 /// 2. Scale-based values (consistent mathematical relationships)
@@ -14,90 +14,111 @@ class DesignTokens {
   // ============================================================================
   // SPACING TOKENS
   // ============================================================================
-  
+
   /// Base spacing unit (4px) - all spacing is multiples of this
   static const double _baseUnit = 4.0;
-  
+
   /// Spacing scale following 4px grid system
-  static const double spacing0 = 0.0;           // 0px
-  static const double spacing1 = _baseUnit * 1;  // 4px
-  static const double spacing2 = _baseUnit * 2;  // 8px
-  static const double spacing3 = _baseUnit * 3;  // 12px
-  static const double spacing4 = _baseUnit * 4;  // 16px
-  static const double spacing6 = _baseUnit * 6;  // 24px
-  static const double spacing8 = _baseUnit * 8;  // 32px
+  static const double spacing0 = 0.0; // 0px
+  static const double spacing1 = _baseUnit * 1; // 4px
+  static const double spacing2 = _baseUnit * 2; // 8px
+  static const double spacing3 = _baseUnit * 3; // 12px
+  static const double spacing4 = _baseUnit * 4; // 16px
+  static const double spacing6 = _baseUnit * 6; // 24px
+  static const double spacing8 = _baseUnit * 8; // 32px
   static const double spacing12 = _baseUnit * 12; // 48px
   static const double spacing24 = _baseUnit * 24; // 96px
 
   // ============================================================================
   // SEMANTIC SPACING TOKENS
   // ============================================================================
-  
+
   /// Component internal spacing
-  static const double componentPadding = spacing4;      // 16px
-  static const double componentGap = spacing2;          // 8px
-  static const double componentMargin = spacing4;       // 16px
-  
+  static const double componentPadding = spacing4; // 16px
+  static const double componentGap = spacing2; // 8px
+  static const double componentMargin = spacing4; // 16px
+
   /// Layout spacing
-  static const double layoutPadding = spacing4;         // 16px
-  static const double layoutGap = spacing6;             // 24px
-  static const double sectionSpacing = spacing8;        // 32px
-  
+  static const double layoutPadding = spacing4; // 16px
+  static const double layoutGap = spacing6; // 24px
+  static const double sectionSpacing = spacing8; // 32px
+
   /// Content spacing
-  static const double contentPadding = spacing4;        // 16px
-  static const double contentGap = spacing3;            // 12px
-  static const double textSpacing = spacing2;           // 8px
-  
+  static const double contentPadding = spacing4; // 16px
+  static const double contentGap = spacing3; // 12px
+  static const double textSpacing = spacing2; // 8px
+
   /// Interactive element spacing
-  static const double buttonPadding = spacing3;         // 12px
-  static const double inputPadding = spacing3;          // 12px
-  static const double iconSpacing = spacing2;           // 8px
+  static const double buttonPadding = spacing3; // 12px
+  static const double inputPadding = spacing3; // 12px
+  static const double iconSpacing = spacing2; // 8px
 
   // ============================================================================
   // SIZING TOKENS
   // ============================================================================
-  
+
   /// Icon sizes
-  static const double iconSm = 16.0;    // Small icons
-  static const double iconMd = 20.0;    // Medium icons
-  static const double iconLg = 24.0;    // Large icons
-  static const double iconXl = 64.0;    // Extra large icons (empty states)
-  static const double icon4xl = 80.0;   // 4X large icons (main recording button)
+  static const double iconSm = 16.0; // Small icons
+  static const double iconMd = 20.0; // Medium icons
+  static const double iconLg = 24.0; // Large icons
+  static const double iconXl = 64.0; // Extra large icons (empty states)
+  static const double icon4xl = 80.0; // 4X large icons (main recording button)
   
+  /// Alias for consistency
+  static const double iconSizeSmall = iconSm;
+  static const double iconSizeMedium = iconMd;
+  static const double iconSizeLarge = iconLg;
+
   /// Button sizes
-  static const double buttonHeight2xl = 60.0;  // 2X large buttons (input buttons)
-  static const double buttonHeight3xl = 200.0; // 3X large buttons (main recording button)
-  
+  static const double buttonHeight2xl =
+      60.0; // 2X large buttons (input buttons)
+  static const double buttonHeight3xl =
+      200.0; // 3X large buttons (main recording button)
+
   /// Input field widths
-  static const double inputWidthMd = 120.0;    // Medium input widths
-  static const double inputWidthLg = 150.0;    // Large input widths
-  
+  static const double inputWidthMd = 120.0; // Medium input widths
+  static const double inputWidthLg = 150.0; // Large input widths
+
   /// Photo/Media sizes
-  static const double photoPreviewHeight = 100.0;  // Photo preview height
-  static const double photoPreviewWidth = 100.0;   // Photo preview width
+  static const double photoPreviewHeight = 100.0; // Photo preview height
+  static const double photoPreviewWidth = 100.0; // Photo preview width
   
+  /// Component sizes
+  static const double checkboxSize = 24.0; // Checkbox size
+  static const double touchTargetSize = 32.0; // Minimum touch target size
+
   /// Border radius
   static const double radiusSm = 4.0;
   static const double radiusMd = 8.0;
   static const double radiusLg = 12.0;
   static const double radius2xl = 24.0;
   
+  /// Alias for consistency
+  static const double borderRadiusSmall = radiusSm;
+  static const double borderRadiusMedium = radiusMd;
+  static const double borderRadiusLarge = radiusLg;
+
   /// Text input settings
   static const int textFieldMaxLines = 3;
 
   // ============================================================================
   // BORDER TOKENS
   // ============================================================================
-  
+
   /// Border widths
   static const double borderWidth1 = 1.0;
   static const double borderWidth2 = 2.0;
   static const double borderWidth3 = 3.0;
+  
+  /// Alias for consistency
+  static const double borderWidthSmall = borderWidth1;
+  static const double borderWidthMedium = borderWidth2;
+  static const double borderWidthLarge = borderWidth3;
 
   // ============================================================================
   // ELEVATION TOKENS
   // ============================================================================
-  
+
   /// Material elevation levels
   static const double elevation0 = 0.0;
   static const double elevation1 = 1.0;
@@ -109,7 +130,7 @@ class DesignTokens {
   // ============================================================================
   // OPACITY TOKENS
   // ============================================================================
-  
+
   /// Opacity values for overlays and transparency
   static const double opacity10 = 0.1;
   static const double opacity20 = 0.2;
@@ -125,50 +146,54 @@ class DesignTokens {
   // ============================================================================
   // TIMING TOKENS
   // ============================================================================
-  
-  /// Animation and delay durations
-  static const int delayShort = 500;        // 500ms - short delays
-  static const int delayMedium = 1000;      // 1s - medium delays
-  static const int delayLong = 2000;        // 2s - long delays
-  static const int delayPolling = 250;      // 250ms - polling/retry delays
-  static const int delaySnackbar = 2000;    // 2s - snackbar duration
-  static const int delaySnackbarQuick = 1500; // 1.5s - quick snackbar for rapid actions
-  
-  static const int animationFast = 150;     // 150ms - fast animations
-  static const int animationNormal = 300;   // 300ms - normal animations
-  static const int animationSlow = 500;     // 500ms - slow animations
-  static const int animationSmooth = 500;   // 500ms - smooth list transitions
-  
-  /// Animation offsets and transforms
-  static const double animationOffsetBuffer = 100.0;  // Buffer to ensure elements go completely off screen
 
+  /// Animation and delay durations
+  static const int delayShort = 500; // 500ms - short delays
+  static const int delayMedium = 1000; // 1s - medium delays
+  static const int delayLong = 2000; // 2s - long delays
+  static const int delayPolling = 250; // 250ms - polling/retry delays
+  static const int delaySnackbar = 2000; // 2s - snackbar duration
+  static const int delaySnackbarQuick =
+      1500; // 1.5s - quick snackbar for rapid actions
+
+  static const int animationFast = 150; // 150ms - fast animations
+  static const int animationNormal = 300; // 300ms - normal animations
+  static const int animationSlow = 500; // 500ms - slow animations
+  static const int animationSmooth = 500; // 500ms - smooth list transitions
+  static const int animationTaskList =
+      800; // 800ms - task list item animations (remove/add)
+  static const int animationTitle = 800; // 800ms - screen title animations
+
+  /// Animation offsets and transforms
+  static const double animationOffsetBuffer =
+      100.0; // Buffer to ensure elements go completely off screen
 }
 
 /// Convenience class for commonly used spacing values
 class AppSpacing {
   // Private constructor to prevent instantiation
   AppSpacing._();
-  
+
   // Quick access to most common spacing values
-  static const double xs = DesignTokens.spacing1;    // 4px
-  static const double sm = DesignTokens.spacing2;    // 8px
-  static const double md = DesignTokens.spacing4;    // 16px
-  static const double lg = DesignTokens.spacing6;    // 24px
-  static const double xl = DesignTokens.spacing8;    // 32px
-  static const double xxl = DesignTokens.spacing12;  // 48px
-  
+  static const double xs = DesignTokens.spacing1; // 4px
+  static const double sm = DesignTokens.spacing2; // 8px
+  static const double md = DesignTokens.spacing4; // 16px
+  static const double lg = DesignTokens.spacing6; // 24px
+  static const double xl = DesignTokens.spacing8; // 32px
+  static const double xxl = DesignTokens.spacing12; // 48px
+
   // Semantic spacing
   static const double componentPadding = DesignTokens.componentPadding;
   static const double layoutPadding = DesignTokens.layoutPadding;
   static const double sectionSpacing = DesignTokens.sectionSpacing;
-  
+
   // Gap values
   static const double gapXs = DesignTokens.spacing1;
   static const double gapSm = DesignTokens.spacing2;
   static const double gapMd = DesignTokens.spacing3;
   static const double gapLg = DesignTokens.spacing4;
   static const double gapXl = DesignTokens.spacing6;
-  
+
   // Width/Height helpers
   static const double widthXs = DesignTokens.spacing1;
   static const double widthSm = DesignTokens.spacing2;

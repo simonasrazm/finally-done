@@ -10,34 +10,42 @@ class AppColors {
   static const primary = Color(0xFF007AFF); // iOS Blue
   static const primaryDark = Color(0xFF0051D5);
   static const secondary = Color(0xFF5856D6); // iOS Purple
-  
+
   // Status Colors
   static const success = Color(0xFF34C759); // iOS Green
   static const warning = Color(0xFFFF9500); // iOS Orange
   static const error = Color(0xFFFF3B30); // iOS Red
   static const info = Color(0xFF007AFF); // iOS Blue
-  
+
   // Neutral Colors (iOS System Colors)
   static const background = Color(0xFFF2F2F7); // iOS Background
-  static const backgroundSecondary = Color(0xFFFFFFFF); // iOS Secondary Background
-  static const backgroundTertiary = Color(0xFFF2F2F7); // iOS Tertiary Background
-  
+  static const backgroundSecondary =
+      Color(0xFFFFFFFF); // iOS Secondary Background
+  static const backgroundTertiary =
+      Color(0xFFF2F2F7); // iOS Tertiary Background
+
   // Text Colors
   static const textPrimary = Color(0xFF000000); // iOS Label
-  static const textSecondary = Color(0xFF3C3C43); // iOS Secondary Label (99% opacity)
-  static const textTertiary = Color(0xFF3C3C43); // iOS Tertiary Label (60% opacity)
-  static const textQuaternary = Color(0xFF3C3C43); // iOS Quaternary Label (30% opacity)
-  
+  static const textSecondary =
+      Color(0xFF3C3C43); // iOS Secondary Label (99% opacity)
+  static const textTertiary =
+      Color(0xFF3C3C43); // iOS Tertiary Label (60% opacity)
+  static const textQuaternary =
+      Color(0xFF3C3C43); // iOS Quaternary Label (30% opacity)
+
   // Separator Colors
   static const separator = Color(0xFF3C3C43); // iOS Separator (30% opacity)
   static const separatorOpaque = Color(0xFFC6C6C8); // iOS Opaque Separator
-  
+
   // Fill Colors
   static const fillPrimary = Color(0xFF787880); // iOS Fill (20% opacity)
-  static const fillSecondary = Color(0xFF787880); // iOS Secondary Fill (16% opacity)
-  static const fillTertiary = Color(0xFF767680); // iOS Tertiary Fill (12% opacity)
-  static const fillQuaternary = Color(0xFF747480); // iOS Quaternary Fill (8% opacity)
-  
+  static const fillSecondary =
+      Color(0xFF787880); // iOS Secondary Fill (16% opacity)
+  static const fillTertiary =
+      Color(0xFF767680); // iOS Tertiary Fill (12% opacity)
+  static const fillQuaternary =
+      Color(0xFF747480); // iOS Quaternary Fill (8% opacity)
+
   // Dark Mode Colors
   static const darkBackground = Color(0xFF000000);
   static const darkBackgroundSecondary = Color(0xFF1C1C1E);
@@ -91,4 +99,8 @@ class AppColors {
         ? darkTextTertiary
         : textTertiary;
   }
+
+  // Theme-agnostic colors
+  static const white = Color(0xFFFFFFFF);
+  static const transparent = Color(0x00000000);
 }

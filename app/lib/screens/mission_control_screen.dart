@@ -16,40 +16,40 @@ import '../widgets/command_action_buttons.dart';
 import '../widgets/photo_attachments.dart';
 import '../widgets/expandable_error_message.dart';
 import '../widgets/common_ui_components.dart';
+import '../widgets/animated_title_widget.dart';
 import '../generated/app_localizations.dart';
 
 class MissionControlScreen extends ConsumerStatefulWidget {
   const MissionControlScreen({super.key});
 
   @override
-  ConsumerState<MissionControlScreen> createState() => _MissionControlScreenState();
+  ConsumerState<MissionControlScreen> createState() =>
+      _MissionControlScreenState();
 }
 
 class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   // Tab indices for better readability
-  static const int _processingTabIndex = 0;
-  static const int _completedTabIndex = 1;
   static const int _reviewTabIndex = 2;
-  
+
   // Track which commands are currently being retried
   final Set<String> _retryingCommands = <String>{};
-  
+
   // Auto-pass toggle for review tab
   bool _autoPassAudioToQueue = false;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // Track screen load performance
     sentryPerformance.monitorTransaction(
       PerformanceTransactions.screenMissionControl,
       PerformanceOps.screenLoad,
       () async {
-    _tabController = TabController(length: 3, vsync: this);
+        _tabController = TabController(length: 3, vsync: this);
       },
       data: {
         'screen': 'mission_control',
@@ -57,13 +57,13 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       },
     );
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,8 +85,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
   }
 
   Widget _buildAppBarTitle(BuildContext context) {
-    return Text(
-      AppLocalizations.of(context)!.missionControl,
+    return AnimatedTitleWidget(
+      text: AppLocalizations.of(context)!.missionControl,
       style: AppTypography.title1.copyWith(
         color: AppColors.getTextPrimaryColor(context),
         fontWeight: AppTypography.weightSemiBold,
@@ -111,7 +111,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.settings_outlined, size: DesignTokens.iconSm),
-          Text(AppLocalizations.of(context)!.processing, style: AppTypography.caption2),
+          Text(AppLocalizations.of(context)!.processing,
+              style: AppTypography.caption2),
         ],
       ),
     );
@@ -123,7 +124,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.check_circle_outline, size: DesignTokens.iconSm),
-          Text(AppLocalizations.of(context)!.completed, style: AppTypography.caption2),
+          Text(AppLocalizations.of(context)!.completed,
+              style: AppTypography.caption2),
         ],
       ),
     );
@@ -137,7 +139,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
           return Stack(
             children: [
               _buildReviewTabContent(),
-              if (reviewCommands.isNotEmpty) _buildReviewBadge(reviewCommands.length),
+              if (reviewCommands.isNotEmpty)
+                _buildReviewBadge(reviewCommands.length),
             ],
           );
         },
@@ -150,7 +153,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Icon(Icons.rate_review_outlined, size: DesignTokens.iconSm),
-        Text(AppLocalizations.of(context)!.review, style: AppTypography.caption2),
+        Text(AppLocalizations.of(context)!.review,
+            style: AppTypography.caption2),
       ],
     );
   }
@@ -166,7 +170,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         ),
         decoration: const BoxDecoration(
           color: AppColors.warning,
-          borderRadius: BorderRadius.all(Radius.circular(DesignTokens.radiusMd)),
+          borderRadius:
+              BorderRadius.all(Radius.circular(DesignTokens.radiusMd)),
         ),
         child: Text(
           '$count',
@@ -189,10 +194,10 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       ],
     );
   }
-  
+
   Widget _buildProcessingTabContent() {
     final processingCommands = ref.watch(processingCommandsProvider);
-    
+
     return ListView(
       padding: const EdgeInsets.all(DesignTokens.componentPadding),
       children: [
@@ -227,14 +232,14 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       subtitle: AppLocalizations.of(context)!.completedCommandsWillAppearHere,
     );
   }
-  
+
   Widget _buildQueuedCommandCard(QueuedCommandRealm command) {
     final props = CommandUIService.extractCommandProperties(command);
-    
+
     if (!props.isValid) {
       return _buildInvalidCommandCard();
     }
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: DesignTokens.spacing3),
       padding: const EdgeInsets.all(DesignTokens.componentPadding),
@@ -282,7 +287,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     );
   }
 
-  Widget _buildCommandHeader(CommandProperties props, QueuedCommandRealm command) {
+  Widget _buildCommandHeader(
+      CommandProperties props, QueuedCommandRealm command) {
     return Row(
       children: [
         Icon(
@@ -293,7 +299,9 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         const SizedBox(width: DesignTokens.spacing2),
         Expanded(
           child: Text(
-            props.transcription?.isNotEmpty ?? false ? props.transcription! : props.text,
+            props.transcription?.isNotEmpty ?? false
+                ? props.transcription!
+                : props.text,
             style: AppTypography.body.copyWith(
               color: AppColors.getTextPrimaryColor(context),
             ),
@@ -307,14 +315,15 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     );
   }
 
-  Widget _buildErrorMessageIfNeeded(QueuedCommandRealm command, CommandProperties props) {
+  Widget _buildErrorMessageIfNeeded(
+      QueuedCommandRealm command, CommandProperties props) {
     if (command.failed) {
       return Column(
         children: [
           const SizedBox(height: DesignTokens.spacing2),
           ExpandableErrorMessage(
-            errorMessage: command.errorMessage?.isNotEmpty ?? false 
-                ? command.errorMessage! 
+            errorMessage: command.errorMessage?.isNotEmpty ?? false
+                ? command.errorMessage!
                 : AppLocalizations.of(context)!.transcriptionRetryFailed,
             expandedErrorMessages: _expandedErrorMessages,
           ),
@@ -324,7 +333,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     return const SizedBox.shrink();
   }
 
-  Widget _buildCommandFooter(CommandProperties props, QueuedCommandRealm command) {
+  Widget _buildCommandFooter(
+      CommandProperties props, QueuedCommandRealm command) {
     return Column(
       children: [
         const SizedBox(height: DesignTokens.spacing2),
@@ -343,14 +353,16 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
 
   Widget _buildTimestampText(CommandProperties props) {
     return Text(
-      AppLocalizations.of(context)!.scheduledTime(StatusHelper.formatTime(props.createdAt)),
+      AppLocalizations.of(context)!
+          .scheduledTime(StatusHelper.formatTime(props.createdAt)),
       style: AppTypography.footnote.copyWith(
         color: AppColors.getTextTertiaryColor(context),
       ),
     );
   }
 
-  Widget _buildActionButtons(CommandProperties props, QueuedCommandRealm command) {
+  Widget _buildActionButtons(
+      CommandProperties props, QueuedCommandRealm command) {
     return CommandActionButtons(
       command: command,
       commandStatus: props.status,
@@ -359,7 +371,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       audioPath: props.audioPath,
       retryingCommands: _retryingCommands,
       onRetry: () => _retryCommand(command.id, props.status),
-      onEdit: () => _editTranscription(command.id, props.transcription ?? props.text),
+      onEdit: () =>
+          _editTranscription(command.id, props.transcription ?? props.text),
     );
   }
 
@@ -387,15 +400,11 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       onPhotoTap: () {}, // Not used in this context
     );
   }
-  
-
-
-
 
   void _editTranscription(String id, String currentTranscription) {
     final currentTabIndex = _tabController.index;
     final isReviewTab = currentTabIndex == _reviewTabIndex;
-    
+
     TranscriptionDialogService.showEditDialog(
       context: context,
       id: id,
@@ -405,21 +414,20 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     );
   }
 
-
   void _retryCommand(String id, String commandStatus) async {
     // Add to retrying set and update UI
     setState(() {
       _retryingCommands.add(id);
     });
-    
+
     try {
       // Get the command to retry
       final allCommands = ref.read(queueProvider);
       final command = allCommands.firstWhere((cmd) => cmd.id == id);
-      
+
       // Use the command action service
-      await CommandActionService.retryCommand(id, commandStatus, command.failed, ref, context);
-      
+      await CommandActionService.retryCommand(
+          id, commandStatus, command.failed, ref, context);
     } catch (e) {
       // Error handling is done in the service
     } finally {
@@ -430,17 +438,12 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     }
   }
 
-
-
-  
-
   // Track expanded state for each error message
   final Map<String, bool> _expandedErrorMessages = {};
 
-  
   Widget _buildExecutedTab() {
     final completedCommands = ref.watch(completedCommandsProvider);
-    
+
     return ListView(
       padding: const EdgeInsets.all(DesignTokens.componentPadding),
       children: [
@@ -461,10 +464,10 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       subtitle: AppLocalizations.of(context)!.completedCommandsWillAppearHere,
     );
   }
-  
+
   Widget _buildReviewTab() {
     final reviewCommands = ref.watch(reviewCommandsProvider);
-    
+
     return ListView(
       padding: const EdgeInsets.all(DesignTokens.componentPadding),
       children: [
@@ -503,10 +506,8 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       context: context,
       icon: Icons.rate_review_outlined,
       title: 'No commands need review',
-      subtitle: 'Failed commands, manual review items, and items needing action will appear here',
+      subtitle:
+          'Failed commands, manual review items, and items needing action will appear here',
     );
   }
-  
-  
 }
-

@@ -4,6 +4,7 @@ import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../generated/app_localizations.dart';
 import '../utils/sentry_performance.dart';
+import '../widgets/animated_title_widget.dart';
 import 'settings_screen.dart';
 import 'integrations_settings_screen.dart';
 
@@ -21,7 +22,7 @@ class _SettingsTabsScreenState extends ConsumerState<SettingsTabsScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Track screen load performance
     sentryPerformance.monitorTransaction(
       PerformanceTransactions.screenSettings,
@@ -47,8 +48,8 @@ class _SettingsTabsScreenState extends ConsumerState<SettingsTabsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.settings,
+        title: AnimatedTitleWidget(
+          text: AppLocalizations.of(context)!.settings,
           style: AppTypography.title1.copyWith(
             color: AppColors.getTextPrimaryColor(context),
             fontWeight: FontWeight.w600,

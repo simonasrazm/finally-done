@@ -21,43 +21,42 @@ import 'providers/language_provider.dart';
 import 'providers/theme_provider.dart';
 import 'utils/sentry_performance.dart';
 
-
 void main() async {
-        // Load environment variables
-        try {
-          await dotenv.load(fileName: '.env');
-        } catch (e) {
-          // Continue with defaults
-        }
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    // Continue with defaults
+  }
 
-        // Initialize New Relic (official setup)
-        var appToken = '';
-        final newRelicToken = dotenv.env['NEW_RELIC_TOKEN'];
-        
-        if (newRelicToken != null && newRelicToken.isNotEmpty) {
-          appToken = newRelicToken;
-        } else {
-          return; // Exit early if no token
-        }
+  // Initialize New Relic (official setup)
+  var appToken = '';
+  final newRelicToken = dotenv.env['NEW_RELIC_TOKEN'];
 
-        final Config config = Config(
-          accessToken: appToken,
-          analyticsEventEnabled: true,
-          networkErrorRequestEnabled: true,
-          networkRequestEnabled: true,
-          crashReportingEnabled: true,
-          interactionTracingEnabled: true,
-          httpResponseBodyCaptureEnabled: true,
-          loggingEnabled: false, // Disable verbose logging in release mode
-          webViewInstrumentation: true,
-          printStatementAsEventsEnabled: false, // Disable print statements as events
-          httpInstrumentationEnabled: true,
-        );
+  if (newRelicToken != null && newRelicToken.isNotEmpty) {
+    appToken = newRelicToken;
+  } else {
+    return; // Exit early if no token
+  }
 
-        await NewrelicMobile.instance.startAgent(config);
+  final Config config = Config(
+    accessToken: appToken,
+    analyticsEventEnabled: true,
+    networkErrorRequestEnabled: true,
+    networkRequestEnabled: true,
+    crashReportingEnabled: true,
+    interactionTracingEnabled: true,
+    httpResponseBodyCaptureEnabled: true,
+    loggingEnabled: false, // Disable verbose logging in release mode
+    webViewInstrumentation: true,
+    printStatementAsEventsEnabled: false, // Disable print statements as events
+    httpInstrumentationEnabled: true,
+  );
 
-        final sentryDsn = dotenv.env['SENTRY_DSN'];
-  
+  await NewrelicMobile.instance.startAgent(config);
+
+  final sentryDsn = dotenv.env['SENTRY_DSN'];
+
   try {
     // Initialize Sentry
     await SentryFlutter.init(
@@ -69,17 +68,16 @@ void main() async {
         options.enableAutoSessionTracking = true;
         options.attachStacktrace = true;
         options.sendDefaultPii = false;
-        
+
         // Session Replay Configuration
         options.replay.sessionSampleRate = 1.0;
         options.replay.onErrorSampleRate = 1.0;
-        
+
         // Release tracking
         options.release = 'finally-done@1.0.0+1';
         options.dist = '1';
       },
       appRunner: () async {
-
         // Start Sentry transaction for app startup performance (now that Sentry is ready)
         sentryPerformance.startTransaction(
           'app.startup',
@@ -116,42 +114,42 @@ void main() async {
           ),
         );
 
-
         // Finish the main startup transaction
         sentryPerformance.finishTransaction('app.startup');
-        
+
         // New Relic automatically tracks app startup completion
       },
     );
-  
-          // Use retry mechanism to flush queued errors from Swift
-          const errorQueueChannel = MethodChannel('error_queue');
-          
-          await RetryMechanism.execute(
-            () async {
-              final result = await errorQueueChannel.invokeMethod('flushQueue');
-              final flushedCount = result['count'] as int;
-              
-              if (flushedCount == 0) {
-                throw Exception('No errors were flushed - SentrySDK may not be ready');
-              }
-            },
-          );
-      } catch (e) {
-        // Continue without Sentry
-        WidgetsFlutterBinding.ensureInitialized();
 
-        await SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.portraitDown,
-        ]);
+    // Use retry mechanism to flush queued errors from Swift
+    const errorQueueChannel = MethodChannel('error_queue');
 
-  runApp(
-    const ProviderScope(
-      child: FinallyDoneApp(),
-    ),
-  );
-      }
+    await RetryMechanism.execute(
+      () async {
+        final result = await errorQueueChannel.invokeMethod('flushQueue');
+        final flushedCount = result['count'] as int;
+
+        if (flushedCount == 0) {
+          throw Exception(
+              'No errors were flushed - SentrySDK may not be ready');
+        }
+      },
+    );
+  } catch (e) {
+    // Continue without Sentry
+    WidgetsFlutterBinding.ensureInitialized();
+
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
+    runApp(
+      const ProviderScope(
+        child: FinallyDoneApp(),
+      ),
+    );
+  }
 }
 
 class FinallyDoneApp extends ConsumerWidget {
@@ -161,29 +159,29 @@ class FinallyDoneApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentLocale = ref.watch(currentLocaleProvider);
     final currentThemeMode = ref.watch(currentFlutterThemeModeProvider);
-    
+
     return MaterialApp(
       title: 'Finally Done',
       debugShowCheckedModeBanner: false,
-      
+
       // New Relic Navigation Tracking
       navigatorObservers: [NewRelicNavigationObserver()],
-      
+
       // Localization
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: currentLocale,
-      
+
       // Theme
       theme: _buildLightTheme(),
       darkTheme: _buildDarkTheme(),
       themeMode: currentThemeMode,
-      
+
       // Home
       home: const MainScreen(),
     );
   }
-  
+
   ThemeData _buildLightTheme() {
     return ThemeData(
       useMaterial3: true,
@@ -230,7 +228,7 @@ class FinallyDoneApp extends ConsumerWidget {
       ),
     );
   }
-  
+
   ThemeData _buildDarkTheme() {
     return ThemeData(
       useMaterial3: true,
@@ -277,15 +275,15 @@ class FinallyDoneApp extends ConsumerWidget {
       ),
     );
   }
-  
+
   TextTheme _buildTextTheme(Brightness brightness) {
-    final textColor = brightness == Brightness.dark 
-        ? AppColors.darkTextPrimary 
+    final textColor = brightness == Brightness.dark
+        ? AppColors.darkTextPrimary
         : AppColors.textPrimary;
-    final secondaryColor = brightness == Brightness.dark 
-        ? AppColors.darkTextSecondary 
+    final secondaryColor = brightness == Brightness.dark
+        ? AppColors.darkTextSecondary
         : AppColors.textSecondary;
-    
+
     return TextTheme(
       displayLarge: AppTypography.largeTitle.copyWith(color: textColor),
       displayMedium: AppTypography.title1.copyWith(color: textColor),
@@ -315,24 +313,23 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  
+
   late final List<Widget> _screens;
-  
+
   @override
   void initState() {
     super.initState();
     _screens = [
-    const HomeScreen(),
-    const MissionControlScreen(),
+      const HomeScreen(),
+      const MissionControlScreen(),
       TasksScreen(onNavigateToSettings: () {
         setState(() {
           _currentIndex = 3; // Settings tab
         });
       }),
-        const SettingsTabsScreen(),
-  ];
+      const SettingsTabsScreen(),
+    ];
   }
-  
 
   Widget _buildNotificationIcon(IconData icon, int count) {
     return Stack(
@@ -366,7 +363,7 @@ class _MainScreenState extends State<MainScreen> {
       ],
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -380,7 +377,7 @@ class _MainScreenState extends State<MainScreen> {
           // Track screen navigation performance
           final screenNames = ['home', 'mission_control', 'tasks', 'settings'];
           final screenName = screenNames[index];
-          
+
           sentryPerformance.monitorTransaction(
             'screen.navigation',
             PerformanceOps.screenNavigation,
@@ -406,13 +403,15 @@ class _MainScreenState extends State<MainScreen> {
             icon: Consumer(
               builder: (context, ref, child) {
                 final reviewCommands = ref.watch(reviewCommandsProvider);
-                return _buildNotificationIcon(Icons.control_camera_outlined, reviewCommands.length);
+                return _buildNotificationIcon(
+                    Icons.control_camera_outlined, reviewCommands.length);
               },
             ),
             activeIcon: Consumer(
               builder: (context, ref, child) {
                 final reviewCommands = ref.watch(reviewCommandsProvider);
-                return _buildNotificationIcon(Icons.control_camera, reviewCommands.length);
+                return _buildNotificationIcon(
+                    Icons.control_camera, reviewCommands.length);
               },
             ),
             label: AppLocalizations.of(context)!.missionControl,

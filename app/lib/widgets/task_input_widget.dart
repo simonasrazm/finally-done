@@ -24,10 +24,12 @@ class TaskInputWidget extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              style: AppTypography.body.copyWith(color: AppColors.getTextPrimaryColor(context)),
+              style: AppTypography.body
+                  .copyWith(color: AppColors.getTextPrimaryColor(context)),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context)!.addNewTask,
-                hintStyle: AppTypography.body.copyWith(color: AppColors.getTextSecondaryColor(context)),
+                hintStyle: AppTypography.body
+                    .copyWith(color: AppColors.getTextSecondaryColor(context)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
                   borderSide: BorderSide(color: AppColors.separatorOpaque),
@@ -38,7 +40,9 @@ class TaskInputWidget extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-                  borderSide: BorderSide(color: AppColors.primary, width: DesignTokens.borderWidth2),
+                  borderSide: BorderSide(
+                      color: AppColors.primary,
+                      width: DesignTokens.borderWidth2),
                 ),
                 filled: true,
                 fillColor: AppColors.getSecondaryBackgroundColor(context),
