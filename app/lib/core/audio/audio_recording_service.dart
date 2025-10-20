@@ -29,7 +29,7 @@ class AudioRecordingService {
     
     try {
       // Check permissions
-      bool hasPermission = await _audioRecorder.hasPermission();
+      final hasPermission = await _audioRecorder.hasPermission();
       if (!hasPermission) {
         throw AudioRecordingException('Microphone permission required');
       }

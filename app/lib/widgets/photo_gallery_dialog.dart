@@ -113,7 +113,7 @@ class _PhotoGalleryDialogState extends State<PhotoGalleryDialog> {
                         shape: BoxShape.circle,
                         color: index == _currentIndex 
                             ? AppColors.primary 
-                            : AppColors.primary.withOpacity(0.3),
+                            : AppColors.primary.withValues(alpha: 0.3),
                       ),
                     ),
                   ),

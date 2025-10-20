@@ -141,7 +141,7 @@ class AppTypography {
   // Helper method to get text style with opacity
   static TextStyle withOpacity(TextStyle style, double opacity) {
     return style.copyWith(
-      color: style.color?.withOpacity(opacity),
+      color: style.color?.withValues(alpha: opacity),
     );
   }
 }

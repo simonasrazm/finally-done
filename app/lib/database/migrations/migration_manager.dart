@@ -93,12 +93,12 @@ class MigrationManager {
   /// Get all supported migration paths
   static List<MigrationPath> getSupportedPaths() {
     return [
-      MigrationPath(from: 0, to: 2, description: 'Initial to v2 (cumulative)'),
-      MigrationPath(from: 1, to: 2, description: 'PhotoPaths to v2'),
-      MigrationPath(
+      const MigrationPath(from: 0, to: 2, description: 'Initial to v2 (cumulative)'),
+      const MigrationPath(from: 1, to: 2, description: 'PhotoPaths to v2'),
+      const MigrationPath(
           from: 2, to: 4, description: 'v2 to v4 (errorMessage + failed flag)'),
-      MigrationPath(from: 3, to: 4, description: 'v3 to v4 (failed flag)'),
-      MigrationPath(
+      const MigrationPath(from: 3, to: 4, description: 'v3 to v4 (failed flag)'),
+      const MigrationPath(
           from: 4, to: 5, description: 'v4 to v5 (actionNeeded flag)'),
     ];
   }

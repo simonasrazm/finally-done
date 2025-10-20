@@ -92,7 +92,7 @@ class CommonUIComponents {
         color: AppColors.getSecondaryBackgroundColor(context),
         borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
         border: Border.all(
-          color: AppColors.separator.withOpacity(DesignTokens.opacity30),
+          color: AppColors.separator.withValues(alpha: DesignTokens.opacity30),
         ),
       ),
       child: Row(

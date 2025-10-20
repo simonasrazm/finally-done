@@ -16,7 +16,7 @@ class AudioService {
       await _audioPlayer.setAudioContext(AudioContext(
         iOS: AudioContextIOS(
           category: AVAudioSessionCategory.ambient,
-          options: {
+          options: const {
             AVAudioSessionOptions.allowBluetooth,
             AVAudioSessionOptions.allowBluetoothA2DP,
           },

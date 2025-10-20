@@ -44,7 +44,7 @@ abstract class BaseConnector {
   }) async {
     final effectiveConfig = config ?? _networkConfig;
     
-    return await _networkService.executeWithRetry(
+    return _networkService.executeWithRetry(
       operation,
       operationName: operationName ?? '$_connectorName operation',
       maxRetries: effectiveConfig.maxRetries,
@@ -60,7 +60,7 @@ abstract class BaseConnector {
     String? operationName,
     NetworkConfig? config,
   }) async {
-    return await executeOperation(
+    return executeOperation(
       () async {
         try {
           return await operation();
@@ -73,7 +73,7 @@ abstract class BaseConnector {
           
           if (refreshed) {
             // Retry the operation with the new token
-            return await operation();
+            return operation();
           }
           
           // If refresh failed, rethrow the original error

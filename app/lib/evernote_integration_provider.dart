@@ -1,30 +1,30 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'integration_provider.dart';
 
 /// Evernote integration provider (placeholder)
 class EvernoteIntegrationProvider extends IntegrationProvider {
-  EvernoteIntegrationProvider() : super(
-    id: 'evernote',
-    displayName: 'Evernote',
-    icon: 'evernote',
-    description: 'Connect to Evernote for note and document management',
-  );
+  EvernoteIntegrationProvider()
+      : super(
+          id: 'evernote',
+          displayName: 'Evernote',
+          icon: 'evernote',
+          description: 'Connect to Evernote for note and document management',
+        );
 
   @override
   List<IntegrationService> get availableServices => [
-    const IntegrationService(
-      id: 'notes',
-      name: 'Evernote Notes',
-      description: 'Access and manage your Evernote notes',
-      icon: 'notes',
-    ),
-    const IntegrationService(
-      id: 'notebooks',
-      name: 'Evernote Notebooks',
-      description: 'Organize notes into notebooks',
-      icon: 'folder',
-    ),
-  ];
+        const IntegrationService(
+          id: 'notes',
+          name: 'Evernote Notes',
+          description: 'Access and manage your Evernote notes',
+          icon: 'notes',
+        ),
+        const IntegrationService(
+          id: 'notebooks',
+          name: 'Evernote Notebooks',
+          description: 'Organize notes into notebooks',
+          icon: 'folder',
+        ),
+      ];
 
   @override
   Future<bool> authenticate() async {

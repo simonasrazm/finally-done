@@ -15,7 +15,6 @@ import '../widgets/task_input_widget.dart';
 import '../widgets/task_item_widget.dart';
 import '../widgets/task_empty_state_widgets.dart';
 import '../widgets/animated_title_widget.dart';
-import '../main.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
   final VoidCallback? onNavigateToSettings;
@@ -420,7 +419,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
         final task = _incompleteTasks[index];
         final hasAdditionalContent =
-            task.notes?.isNotEmpty == true || task.due != null;
+            (task.notes?.isNotEmpty ?? false) || task.due != null;
 
         return FadeTransition(
           opacity: animation,
@@ -470,7 +469,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         final task = _allTasks[index];
         final isCompleted = task.status == 'completed';
         final hasAdditionalContent =
-            task.notes?.isNotEmpty == true || task.due != null;
+            (task.notes?.isNotEmpty ?? false) || task.due != null;
 
         return FadeTransition(
           opacity: animation,
@@ -553,39 +552,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     }
   }
 
-  void _addTaskToIncompleteList(String taskId) {
-    final tasksState = ref.read(tasksProvider);
-    final task = tasksState.tasks.firstWhere((t) => t.id == taskId);
-
-    _incompleteTasks.add(task);
-
-    // Also update the all tasks list to keep it in sync
-    final allTasksIndex = _allTasks.indexWhere((t) => t.id == taskId);
-    if (allTasksIndex != -1) {
-      final updatedTask = google_tasks.Task(
-        id: _allTasks[allTasksIndex].id,
-        title: _allTasks[allTasksIndex].title,
-        notes: _allTasks[allTasksIndex].notes,
-        status: 'needsAction', // Mark as incomplete
-        due: _allTasks[allTasksIndex].due,
-        completed: _allTasks[allTasksIndex].completed,
-        deleted: _allTasks[allTasksIndex].deleted,
-        hidden: _allTasks[allTasksIndex].hidden,
-        links: _allTasks[allTasksIndex].links,
-        parent: _allTasks[allTasksIndex].parent,
-        position: _allTasks[allTasksIndex].position,
-        selfLink: _allTasks[allTasksIndex].selfLink,
-        updated: _allTasks[allTasksIndex].updated,
-      );
-      _allTasks[allTasksIndex] = updatedTask;
-    }
-
-    _incompleteListKey.currentState?.insertItem(
-      _incompleteTasks.length - 1,
-      duration: Duration(milliseconds: DesignTokens.animationTaskList),
-    );
-  }
-
   void _updateTaskInAllItemsList(String taskId) {
     // For all items mode, find and update the task in the list
     final taskIndex = _allTasks.indexWhere((t) => t.id == taskId);
@@ -631,7 +597,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   Widget _buildTaskItemWidget(google_tasks.Task task) {
     final isCompleted = task.status == 'completed';
     final hasAdditionalContent =
-        task.notes?.isNotEmpty == true || task.due != null;
+        (task.notes?.isNotEmpty ?? false) || task.due != null;
 
     return Column(
       key: ValueKey('task_item_${task.id}'),

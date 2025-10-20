@@ -76,7 +76,7 @@ class _AnimationTestScreenState extends State<AnimationTestScreen>
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Test task item with squash animation
             GestureDetector(
               onTap: _triggerSquash,
@@ -91,9 +91,9 @@ class _AnimationTestScreenState extends State<AnimationTestScreen>
                 child: _buildTaskItem(),
               ),
             ),
-            
+
             const SizedBox(height: 30),
-            
+
             Text(
               'This is the effect that will be used for task completion in the "All Tasks" list.',
               style: AppTypography.body.copyWith(
@@ -146,7 +146,7 @@ class _AnimationTestScreenState extends State<AnimationTestScreen>
       decoration: BoxDecoration(
         color: AppColors.getBackgroundColor(context),
         border: Border.all(
-          color: AppColors.getTextSecondaryColor(context).withOpacity(0.3),
+          color: AppColors.getTextSecondaryColor(context).withValues(alpha: 0.3),
           width: DesignTokens.borderWidthMedium,
         ),
         borderRadius: BorderRadius.circular(DesignTokens.borderRadiusSmall),
@@ -157,12 +157,13 @@ class _AnimationTestScreenState extends State<AnimationTestScreen>
             width: DesignTokens.checkboxSize,
             height: DesignTokens.checkboxSize,
             decoration: BoxDecoration(
-              color: Colors.transparent,
+              color: AppColors.transparent,
               border: Border.all(
                 color: AppColors.getTextSecondaryColor(context),
                 width: DesignTokens.borderWidthMedium,
               ),
-              borderRadius: BorderRadius.circular(DesignTokens.borderRadiusSmall),
+              borderRadius:
+                  BorderRadius.circular(DesignTokens.borderRadiusSmall),
             ),
           ),
           const SizedBox(width: 12),

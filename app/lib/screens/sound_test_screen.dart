@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
 import '../design_system/tokens.dart';
@@ -19,19 +18,19 @@ class _SoundTestScreenState extends State<SoundTestScreen> {
   void _playOriginalMagicSweep() async {
     HapticService.lightImpact();
     await AudioService.playAudioFile('audio/magic-astral-sweep.aac');
-    _showFeedback('ORIGINAL MAGIC SWEEP (4s)', Colors.purple);
+    _showFeedback('ORIGINAL MAGIC SWEEP (4s)', AppColors.primary);
   }
 
   void _play1SecondMagicSweep() async {
     HapticService.lightImpact();
     await AudioService.playAudioFile('audio/magic-astral-sweep-1s.aac');
-    _showFeedback('DEFAULT 1s MAGIC SWEEP', Colors.blue);
+    _showFeedback('DEFAULT 1s MAGIC SWEEP', AppColors.secondary);
   }
 
   void _play1Second150msMagicSweep() async {
     HapticService.lightImpact();
     await AudioService.playAudioFile('audio/magic-astral-sweep-1s-150ms.aac');
-    _showFeedback('1s +150ms MAGIC SWEEP', Colors.cyan);
+    _showFeedback('1s +150ms MAGIC SWEEP', AppColors.secondary);
   }
 
   void _testAudioState() async {
@@ -42,7 +41,7 @@ class _SoundTestScreenState extends State<SoundTestScreen> {
     final bool isHapticEnabled = HapticService.isHapticEnabled;
 
     _showFeedback('Audio State: Sound=$isSoundEnabled, Haptic=$isHapticEnabled',
-        Colors.red);
+        AppColors.error);
   }
 
   void _showFeedback(String name, Color color) {
@@ -96,25 +95,25 @@ class _SoundTestScreenState extends State<SoundTestScreen> {
                   _buildSoundButton(
                     'Original (4s)',
                     'Full magic astral sweep - original length',
-                    Colors.purple,
+                    AppColors.primary,
                     _playOriginalMagicSweep,
                   ),
                   _buildSoundButton(
                     'Default (1s)',
                     '1s magic sweep with fade-in/out - perfect for instant feedback',
-                    Colors.blue,
+                    AppColors.secondary,
                     _play1SecondMagicSweep,
                   ),
                   _buildSoundButton(
                     '1s +150ms',
                     '1s starting at 150ms offset',
-                    Colors.cyan,
+                    AppColors.secondary,
                     _play1Second150msMagicSweep,
                   ),
                   _buildSoundButton(
                     'Test Audio State',
                     'Check current device audio state',
-                    Colors.red,
+                    AppColors.error,
                     _testAudioState,
                   ),
                 ],
@@ -144,8 +143,8 @@ class _SoundTestScreenState extends State<SoundTestScreen> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          border: Border.all(color: color.withOpacity(0.3)),
+          color: color.withValues(alpha: 0.1),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(DesignTokens.borderRadiusSmall),
         ),
         child: Padding(

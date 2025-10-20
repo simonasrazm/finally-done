@@ -5,22 +5,22 @@ class SoundService {
   static bool _isPlaying = false;
 
   /// Play a simple click sound (respects user settings)
-  static void playClick() {
-    if (HapticService.isSoundEnabled) {
+  static Future<void> playClick() async {
+    if (await HapticService.isSoundEnabled) {
       SystemSound.play(SystemSoundType.click);
     }
   }
 
   /// Play a delete/trash sound pattern (shush-like)
-  static void playDeleteSound() {
-    if (!HapticService.isSoundEnabled) return;
+  static Future<void> playDeleteSound() async {
+    if (!(await HapticService.isSoundEnabled)) return;
 
     _playSoundPattern([150, 100, 200]); // Short-short-long pattern
   }
 
   /// Play a completion sound pattern
-  static void playCompletionSound() {
-    if (!HapticService.isSoundEnabled) return;
+  static Future<void> playCompletionSound() async {
+    if (!(await HapticService.isSoundEnabled)) return;
 
     _playSoundPattern([100, 50, 100]); // Quick completion pattern
   }

@@ -27,7 +27,7 @@ class CommandStatusBadge extends StatelessWidget {
             vertical: DesignTokens.spacing1,
           ),
           decoration: BoxDecoration(
-            color: StatusHelper.getStatusColor(commandStatus).withOpacity(0.1),
+            color: StatusHelper.getStatusColor(commandStatus).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
           ),
           child: Text(
@@ -48,7 +48,7 @@ class CommandStatusBadge extends StatelessWidget {
               vertical: DesignTokens.spacing0,
             ),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(0.1),
+              color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
             ),
             child: Text(
@@ -71,7 +71,7 @@ class CommandStatusBadge extends StatelessWidget {
               vertical: DesignTokens.spacing0,
             ),
             decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.1),
+              color: AppColors.warning.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
             ),
             child: Text(

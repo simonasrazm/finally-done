@@ -223,7 +223,7 @@ class FinallyDoneApp extends ConsumerWidget {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.textPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -270,7 +270,7 @@ class FinallyDoneApp extends ConsumerWidget {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.textPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -349,7 +349,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             child: Container(
               padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: AppColors.error,
                 borderRadius: BorderRadius.circular(10),
               ),
               constraints: const BoxConstraints(
@@ -359,7 +359,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               child: Text(
                 count.toString(),
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),

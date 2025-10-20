@@ -28,7 +28,7 @@ class FinallyDoneIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -62,7 +62,7 @@ class FinallyDoneIcon extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -181,7 +181,7 @@ class Concept1Icon extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),
@@ -242,7 +242,7 @@ class Concept2Icon extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.02),
           ),
@@ -378,12 +378,12 @@ class Concept3Icon extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [backgroundColor, backgroundColor.withOpacity(0.8)],
+          colors: [backgroundColor, backgroundColor.withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),
@@ -446,7 +446,7 @@ class Concept4Icon extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),

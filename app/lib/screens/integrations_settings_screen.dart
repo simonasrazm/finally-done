@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../integration_manager.dart';
 import '../integration_provider.dart';
 import '../design_system/tokens.dart';
+import '../design_system/colors.dart';
 import '../generated/app_localizations.dart';
 
 class IntegrationsSettingsScreen extends ConsumerWidget {
@@ -14,46 +15,49 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     final manager = ref.watch(integrationManagerProvider.notifier);
 
     return ListView(
-        padding: const EdgeInsets.all(DesignTokens.layoutPadding),
-        children: [
-          // Header
-          Text(
-            AppLocalizations.of(context)!.connectYourServices,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: DesignTokens.spacing2),
-          Text(
-            AppLocalizations.of(context)!.integrationsDescription,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: DesignTokens.sectionSpacing),
+      padding: const EdgeInsets.all(DesignTokens.layoutPadding),
+      children: [
+        // Header
+        Text(
+          AppLocalizations.of(context)!.connectYourServices,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: DesignTokens.spacing2),
+        Text(
+          AppLocalizations.of(context)!.integrationsDescription,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+        ),
+        const SizedBox(height: DesignTokens.sectionSpacing),
 
-          // Integration Providers (connected first)
-          ...() {
-            final providers = manager.availableProviders.toList();
-            providers.sort((a, b) {
-              final aConnected = integrationStates[a.id]?.isAuthenticated ?? false;
-              final bConnected = integrationStates[b.id]?.isAuthenticated ?? false;
-              if (aConnected && !bConnected) return -1;
-              if (!aConnected && bConnected) return 1;
-              return 0;
-            });
-            return providers.map((provider) {
-        final state = integrationStates[provider.id];
-        return _buildProviderCard(context, ref, provider, state);
-            }).toList();
-          }(),
+        // Integration Providers (connected first)
+        ...() {
+          final providers = manager.availableProviders.toList();
+          providers.sort((a, b) {
+            final aConnected =
+                integrationStates[a.id]?.isAuthenticated ?? false;
+            final bConnected =
+                integrationStates[b.id]?.isAuthenticated ?? false;
+            if (aConnected && !bConnected) return -1;
+            if (!aConnected && bConnected) return 1;
+            return 0;
+          });
+          return providers.map((provider) {
+            final state = integrationStates[provider.id];
+            return _buildProviderCard(context, ref, provider, state);
+          }).toList();
+        }(),
 
-          const SizedBox(height: DesignTokens.sectionSpacing),
-        ],
+        const SizedBox(height: DesignTokens.sectionSpacing),
+      ],
     );
   }
 
-  Widget _buildProviderCard(BuildContext context, WidgetRef ref, IntegrationProvider provider, IntegrationProviderState? state) {
+  Widget _buildProviderCard(BuildContext context, WidgetRef ref,
+      IntegrationProvider provider, IntegrationProviderState? state) {
     final isAuthenticated = state?.isAuthenticated ?? false;
     final isConnecting = state?.isConnecting ?? false;
     final isSyncing = state?.isSyncing ?? false;
@@ -61,13 +65,15 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: DesignTokens.componentPadding),
       child: InkWell(
-        onTap: (isConnecting || isSyncing) ? null : () {
-          if (isAuthenticated) {
-            _showServiceManagementDialog(context, ref, provider);
-          } else {
-            _connectProvider(context, ref, provider);
-          }
-        },
+        onTap: (isConnecting || isSyncing)
+            ? null
+            : () {
+                if (isAuthenticated) {
+                  _showServiceManagementDialog(context, ref, provider);
+                } else {
+                  _connectProvider(context, ref, provider);
+                }
+              },
         borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         child: Padding(
           padding: const EdgeInsets.all(DesignTokens.componentPadding),
@@ -83,22 +89,22 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                 ),
                 child: Icon(
                   _getProviderIcon(provider.id),
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   size: DesignTokens.iconMd,
                 ),
               ),
               const SizedBox(width: DesignTokens.iconSpacing),
-              
+
               // Provider Name
               Text(
                 provider.displayName,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-              
+
               const SizedBox(width: DesignTokens.spacing2),
-              
+
               // Service Icons (always show, but with different states)
               Expanded(
                 child: _buildInlineServiceIcons(context, provider, state),
@@ -107,7 +113,10 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
               // Configure Icon (if authenticated)
               if (isAuthenticated) ...[
                 IconButton(
-                  onPressed: (isConnecting || isSyncing) ? null : () => _showServiceManagementDialog(context, ref, provider),
+                  onPressed: (isConnecting || isSyncing)
+                      ? null
+                      : () =>
+                          _showServiceManagementDialog(context, ref, provider),
                   icon: const Icon(Icons.settings, size: DesignTokens.iconSm),
                   tooltip: AppLocalizations.of(context)!.manageServices,
                   padding: EdgeInsets.zero,
@@ -126,7 +135,8 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                   height: 20,
                   child: const CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 ),
               ] else if (isSyncing) ...[
@@ -135,7 +145,8 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                   height: 20,
                   child: const CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.warning),
                   ),
                 ),
               ] else if (isAuthenticated) ...[
@@ -143,7 +154,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                   width: 20,
                   height: 20,
                   decoration: const BoxDecoration(
-                    color: Colors.green,
+                    color: AppColors.success,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -152,7 +163,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: AppColors.separator,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -164,8 +175,8 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     );
   }
 
-
-  void _showServiceManagementDialog(BuildContext context, WidgetRef ref, IntegrationProvider provider) {
+  void _showServiceManagementDialog(
+      BuildContext context, WidgetRef ref, IntegrationProvider provider) {
     showDialog(
       context: context,
       builder: (context) => _ServiceManagementDialog(
@@ -175,37 +186,42 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _connectProvider(BuildContext context, WidgetRef ref, IntegrationProvider provider) async {
+  Future<void> _connectProvider(
+      BuildContext context, WidgetRef ref, IntegrationProvider provider) async {
     final manager = ref.read(integrationManagerProvider.notifier);
     final success = await manager.authenticateProvider(provider.id);
-    
+
     if (success && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.successfullyConnected(provider.displayName)),
-          backgroundColor: Colors.green,
+          content: Text(AppLocalizations.of(context)!
+              .successfullyConnected(provider.displayName)),
+          backgroundColor: AppColors.success,
         ),
       );
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.failedToConnect(provider.displayName)),
-          backgroundColor: Colors.red,
+          content: Text(AppLocalizations.of(context)!
+              .failedToConnect(provider.displayName)),
+          backgroundColor: AppColors.error,
         ),
       );
     }
   }
 
-  Future<void> _signOutProvider(BuildContext context, WidgetRef ref, IntegrationProvider provider) async {
+  Future<void> _signOutProvider(
+      BuildContext context, WidgetRef ref, IntegrationProvider provider) async {
     final manager = ref.read(integrationManagerProvider.notifier);
     await manager.signOutProvider(provider.id);
-    
+
     if (context.mounted) {
       Navigator.of(context).pop(); // Close the dialog
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.signedOut(provider.displayName)),
-          backgroundColor: Colors.orange,
+          content: Text(
+              AppLocalizations.of(context)!.signedOut(provider.displayName)),
+          backgroundColor: AppColors.warning,
         ),
       );
     }
@@ -214,13 +230,13 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
   Color _getProviderColor(String providerId) {
     switch (providerId) {
       case 'google':
-        return Colors.blue;
+        return AppColors.primary;
       case 'apple_notes':
-        return Colors.black;
+        return AppColors.textPrimary;
       case 'evernote':
-        return Colors.green;
+        return AppColors.success;
       default:
-        return Colors.grey;
+        return AppColors.textSecondary;
     }
   }
 
@@ -254,36 +270,36 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
     }
   }
 
-
-  Widget _buildInlineServiceIcons(BuildContext context, IntegrationProvider provider, IntegrationProviderState? state) {
+  Widget _buildInlineServiceIcons(BuildContext context,
+      IntegrationProvider provider, IntegrationProviderState? state) {
     final isAuthenticated = state?.isAuthenticated ?? false;
-    
+
     return Row(
       children: provider.availableServices.map((service) {
         final isConnected = state?.isServiceConnected(service.id) ?? false;
-        
+
         // Show different visual states based on authentication and connection
         Color backgroundColor;
         Color borderColor;
         Color iconColor;
-        
+
         if (!isAuthenticated) {
           // Not authenticated - show greyed out
-          backgroundColor = Colors.grey[100]!;
-          borderColor = Colors.grey[300]!;
-          iconColor = Colors.grey[400]!;
+          backgroundColor = AppColors.getSecondaryBackgroundColor(context);
+          borderColor = AppColors.separator;
+          iconColor = AppColors.textTertiary;
         } else if (isConnected) {
           // Authenticated and connected - show green
-          backgroundColor = Colors.green[100]!;
-          borderColor = Colors.green[300]!;
-          iconColor = Colors.green[700]!;
+          backgroundColor = AppColors.success.withValues(alpha: 0.1);
+          borderColor = AppColors.success;
+          iconColor = AppColors.success;
         } else {
           // Authenticated but not connected - show grey
-          backgroundColor = Colors.grey[100]!;
-          borderColor = Colors.grey[300]!;
-          iconColor = Colors.grey[400]!;
+          backgroundColor = AppColors.getSecondaryBackgroundColor(context);
+          borderColor = AppColors.separator;
+          iconColor = AppColors.textTertiary;
         }
-        
+
         return Container(
           margin: const EdgeInsets.only(right: DesignTokens.spacing1),
           width: 24,
@@ -308,7 +324,6 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
 }
 
 class _ServiceManagementDialog extends ConsumerWidget {
-
   const _ServiceManagementDialog({
     required this.provider,
     required this.onSignOut,
@@ -335,9 +350,11 @@ class _ServiceManagementDialog extends ConsumerWidget {
               title: Text(service.name),
               subtitle: Text(service.description),
               value: isConnected,
-              onChanged: isSyncing ? null : (value) async {
-                await manager.toggleService(provider.id, service.id);
-              },
+              onChanged: isSyncing
+                  ? null
+                  : (value) async {
+                      await manager.toggleService(provider.id, service.id);
+                    },
               secondary: Icon(_getServiceIcon(service.icon)),
             );
           }).toList(),
@@ -348,7 +365,7 @@ class _ServiceManagementDialog extends ConsumerWidget {
           onPressed: onSignOut,
           child: Text(
             AppLocalizations.of(context)!.signOut,
-            style: TextStyle(color: Colors.red),
+            style: TextStyle(color: AppColors.error),
           ),
         ),
         TextButton(

@@ -28,10 +28,10 @@ class _ExpandableErrorMessageState extends State<ExpandableErrorMessage> {
     return Container(
       padding: EdgeInsets.all(DesignTokens.spacing2),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         border: Border.all(
-          color: AppColors.error.withOpacity(0.3),
+          color: AppColors.error.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -71,13 +71,13 @@ class _ExpandableErrorMessageState extends State<ExpandableErrorMessage> {
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
                     size: DesignTokens.iconSm,
-                    color: AppColors.error.withOpacity(0.7),
+                    color: AppColors.error.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: DesignTokens.spacing1),
                   Text(
                     isExpanded ? AppLocalizations.of(context)!.showLess : AppLocalizations.of(context)!.showMore,
                     style: AppTypography.caption1.copyWith(
-                      color: AppColors.error.withOpacity(0.7),
+                      color: AppColors.error.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w500,
                     ),
                   ),

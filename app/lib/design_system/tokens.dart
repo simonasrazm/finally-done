@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Design Tokens - Single source of truth for all design values
 ///
 /// This system follows modern design token principles:
@@ -63,7 +61,7 @@ class DesignTokens {
   static const double iconLg = 24.0; // Large icons
   static const double iconXl = 64.0; // Extra large icons (empty states)
   static const double icon4xl = 80.0; // 4X large icons (main recording button)
-  
+
   /// Alias for consistency
   static const double iconSizeSmall = iconSm;
   static const double iconSizeMedium = iconMd;
@@ -82,7 +80,7 @@ class DesignTokens {
   /// Photo/Media sizes
   static const double photoPreviewHeight = 100.0; // Photo preview height
   static const double photoPreviewWidth = 100.0; // Photo preview width
-  
+
   /// Component sizes
   static const double checkboxSize = 24.0; // Checkbox size
   static const double touchTargetSize = 32.0; // Minimum touch target size
@@ -92,7 +90,7 @@ class DesignTokens {
   static const double radiusMd = 8.0;
   static const double radiusLg = 12.0;
   static const double radius2xl = 24.0;
-  
+
   /// Alias for consistency
   static const double borderRadiusSmall = radiusSm;
   static const double borderRadiusMedium = radiusMd;
@@ -109,7 +107,7 @@ class DesignTokens {
   static const double borderWidth1 = 1.0;
   static const double borderWidth2 = 2.0;
   static const double borderWidth3 = 3.0;
-  
+
   /// Alias for consistency
   static const double borderWidthSmall = borderWidth1;
   static const double borderWidthMedium = borderWidth2;

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
-import '../../lib/providers/tasks_provider.dart';
+import 'package:finally_done/providers/tasks_provider.dart';
 
 void main() {
   group('TasksProvider State Management Tests', () {

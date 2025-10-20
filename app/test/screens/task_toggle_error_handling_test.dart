@@ -4,7 +4,6 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import '../../lib/providers/tasks_provider.dart';
-import '../../lib/screens/tasks_screen.dart';
 import 'task_toggle_error_handling_test.mocks.dart';
 
 // Generate mocks
@@ -37,7 +36,7 @@ void main() {
           ..title = 'Test Task'
           ..status = 'needsAction';
 
-        final tasksState = TasksState(
+        final _tasksState = TasksState(
           tasks: [task],
           lastUpdated: DateTime.now(),
           isConnected: true,
@@ -66,13 +65,13 @@ void main() {
             // Verify loading state is cleared
             expect(incompleteTasksUpdating.contains('task-1'), isFalse);
             // Task should still be in tasks list
-            expect(tasksState.tasks.any((t) => t.id == 'task-1'), isTrue);
+            expect(_tasksState.tasks.any((t) => t.id == 'task-1'), isTrue);
           }
         } catch (e) {
           // Exception handling
           incompleteTasksUpdating.remove('task-1');
           expect(incompleteTasksUpdating.contains('task-1'), isFalse);
-          expect(tasksState.tasks.any((t) => t.id == 'task-1'), isTrue);
+          expect(_tasksState.tasks.any((t) => t.id == 'task-1'), isTrue);
         }
 
         // Verify API was called
@@ -87,7 +86,7 @@ void main() {
           ..title = 'Test Task'
           ..status = 'needsAction';
 
-        final tasksState = TasksState(
+        final _tasksState = TasksState(
           tasks: [task],
           lastUpdated: DateTime.now(),
           isConnected: true,
@@ -117,7 +116,7 @@ void main() {
           // Verify loading state is cleared
           expect(incompleteTasksUpdating.contains('task-1'), isFalse);
           // Task should still be in incomplete list
-          expect(tasksState.tasks.any((t) => t.id == 'task-1'), isTrue);
+          expect(_tasksState.tasks.any((t) => t.id == 'task-1'), isTrue);
         }
 
         // Verify API was called
@@ -134,7 +133,7 @@ void main() {
           ..title = 'Test Task'
           ..status = 'needsAction';
 
-        final tasksState = TasksState(
+        final _tasksState = TasksState(
           tasks: [task],
           lastUpdated: DateTime.now(),
           isConnected: true,
@@ -180,7 +179,7 @@ void main() {
           ..title = 'Test Task'
           ..status = 'needsAction';
 
-        final tasksState = TasksState(
+        final _tasksState = TasksState(
           tasks: [task],
           lastUpdated: DateTime.now(),
           isConnected: true,
@@ -224,7 +223,7 @@ void main() {
           ..title = 'Test Task'
           ..status = 'completed';
 
-        final tasksState = TasksState(
+        final _tasksState = TasksState(
           tasks: [task],
           lastUpdated: DateTime.now(),
           isConnected: true,

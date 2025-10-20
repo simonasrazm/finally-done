@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Service responsible for iOS native speech recognition
 class IosSpeechService {
   final stt.SpeechToText _speech = stt.SpeechToText();
-  
+
   /// Check if speech recognition is available
   Future<bool> isAvailable() async {
     try {
@@ -14,7 +14,7 @@ class IosSpeechService {
       return false;
     }
   }
-  
+
   /// Check if we have microphone permission
   Future<bool> hasPermission() async {
     try {
@@ -25,20 +25,20 @@ class IosSpeechService {
       return false;
     }
   }
-  
+
   /// Get supported languages
   Future<List<String>> getSupportedLanguages() async {
     try {
       bool available = await _speech.initialize();
       if (!available) return ['en-US'];
-      
+
       List<stt.LocaleName> locales = await _speech.locales();
       return locales.map((locale) => locale.localeId).toList();
     } catch (e) {
       return ['en-US']; // Fallback to English
     }
   }
-  
+
   /// Recognize speech using iOS native
   Future<String> recognizeSpeech({
     String? language,
@@ -69,30 +69,26 @@ class IosSpeechService {
       }
 
       String transcription = '';
-      
+
       // Use auto-detect by not specifying localeId if no language provided
       await _speech.listen(
         onResult: (result) {
           transcription = result.recognizedWords;
         },
         localeId: language,
-        listenFor: timeout ?? const Duration(seconds: 5),
+        listenFor: timeout ?? const Duration(seconds: 30),
         pauseFor: const Duration(seconds: 1),
         partialResults: true,
         cancelOnError: true,
         listenMode: stt.ListenMode.confirmation,
       );
 
-      // Wait for results
-      await Future.delayed(timeout ?? const Duration(seconds: 6));
-      
       // Stop listening
       if (_speech.isListening) {
         await _speech.stop();
       }
-      
+
       return transcription.isNotEmpty ? transcription : 'No speech detected';
-      
     } on PlatformException catch (e) {
       throw SpeechException(
         code: e.code,
@@ -106,7 +102,7 @@ class IosSpeechService {
       );
     }
   }
-  
+
   /// Simple recording method with basic error handling
   Future<String> recordSimple({
     String? language,
@@ -115,14 +111,14 @@ class IosSpeechService {
     try {
       // Initialize speech recognition with permission check
       bool available = await _speech.initialize();
-      
+
       if (!available) {
         return 'Speech recognition not available. Please check permissions.';
       }
 
       // Check if we have permission
       bool hasPermission = await _speech.hasPermission;
-      
+
       if (!hasPermission) {
         return 'Microphone permission required. Please enable in Settings.';
       }
@@ -133,10 +129,10 @@ class IosSpeechService {
       }
 
       String transcription = '';
-      
+
       // Check if language is supported
       List<stt.LocaleName> locales = await _speech.locales();
-      
+
       // Try to find a supported locale
       String? supportedLocale;
       if (language != null && locales.any((l) => l.localeId == language)) {
@@ -146,18 +142,18 @@ class IosSpeechService {
       } else if (locales.isNotEmpty) {
         supportedLocale = locales.first.localeId;
       }
-      
+
       if (supportedLocale == null) {
         return 'No supported languages found';
       }
-      
+
       // Simple listen with minimal configuration
       await _speech.listen(
         onResult: (result) {
           transcription = result.recognizedWords;
         },
         localeId: supportedLocale,
-        listenFor: timeout ?? const Duration(seconds: 5),
+        listenFor: timeout ?? const Duration(seconds: 30),
         pauseFor: const Duration(seconds: 1),
         partialResults: false,
         cancelOnError: true,
@@ -166,12 +162,12 @@ class IosSpeechService {
 
       // Wait briefly for results
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // Stop listening
       if (_speech.isListening) {
         await _speech.stop();
       }
-      
+
       return transcription.isNotEmpty ? transcription : 'No speech detected';
     } catch (e) {
       return 'Error: ${e.toString()}';
@@ -184,13 +180,13 @@ class SpeechException implements Exception {
   final String code;
   final String message;
   final dynamic details;
-  
+
   const SpeechException({
     required this.code,
     required this.message,
     this.details,
   });
-  
+
   @override
   String toString() => 'SpeechException($code): $message';
 }

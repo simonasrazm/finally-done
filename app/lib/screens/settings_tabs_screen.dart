@@ -5,10 +5,8 @@ import '../design_system/typography.dart';
 import '../generated/app_localizations.dart';
 import '../utils/sentry_performance.dart';
 import '../widgets/animated_title_widget.dart';
-import '../main.dart';
 import 'settings_screen.dart';
 import 'integrations_settings_screen.dart';
-import 'animation_test_screen.dart';
 
 class SettingsTabsScreen extends ConsumerStatefulWidget {
   const SettingsTabsScreen({super.key});

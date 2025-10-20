@@ -17,7 +17,6 @@ import '../widgets/photo_attachments.dart';
 import '../widgets/expandable_error_message.dart';
 import '../widgets/common_ui_components.dart';
 import '../widgets/animated_title_widget.dart';
-import '../main.dart';
 import '../generated/app_localizations.dart';
 
 class MissionControlScreen extends ConsumerStatefulWidget {
@@ -266,7 +265,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
         color: AppColors.getSecondaryBackgroundColor(context),
         borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
         border: Border.all(
-          color: AppColors.error.withOpacity(DesignTokens.opacity30),
+          color: AppColors.error.withValues(alpha: DesignTokens.opacity30),
         ),
       ),
       child: Text(
@@ -284,7 +283,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       color: AppColors.getSecondaryBackgroundColor(context),
       borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
       border: Border.all(
-        color: AppColors.separator.withOpacity(DesignTokens.opacity30),
+        color: AppColors.separator.withValues(alpha: DesignTokens.opacity30),
       ),
     );
   }
@@ -384,7 +383,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       child: Container(
         padding: const EdgeInsets.all(DesignTokens.spacing1),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(DesignTokens.opacity10),
+          color: AppColors.error.withValues(alpha: DesignTokens.opacity10),
           borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         ),
         child: const Icon(

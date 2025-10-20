@@ -5,9 +5,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import '../../lib/providers/tasks_provider.dart';
-import '../../lib/screens/tasks_screen.dart';
 import '../../lib/widgets/task_item_widget.dart';
-import '../../lib/design_system/colors.dart';
 import 'task_toggle_integration_test.mocks.dart';
 
 // Generate mocks
@@ -21,7 +19,8 @@ void main() {
       mockTasksNotifier = MockTasksNotifier();
       container = ProviderContainer(
         overrides: [
-          tasksProvider.overrideWith((ref) => mockTasksNotifier as TasksNotifier),
+          tasksProvider
+              .overrideWith((ref) => mockTasksNotifier as TasksNotifier),
         ],
       );
     });
@@ -31,9 +30,10 @@ void main() {
     });
 
     group('TaskItemWidget Loading States', () {
-      testWidgets('should show loading spinner when isLoading is true', (WidgetTester tester) async {
+      testWidgets('should show loading spinner when isLoading is true',
+          (WidgetTester tester) async {
         // Arrange
-        final task = google_tasks.Task()
+        final _task = google_tasks.Task()
           ..id = 'task-1'
           ..title = 'Test Task'
           ..status = 'needsAction';
@@ -43,7 +43,7 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: TaskItemWidget(
-                task: task,
+                task: _task,
                 isCompleted: false,
                 showCompleted: false,
                 isLoading: true, // Show loading state
@@ -61,9 +61,10 @@ void main() {
         expect(find.byIcon(Icons.check), findsNothing);
       });
 
-      testWidgets('should show checkmark when isCompleted is true', (WidgetTester tester) async {
+      testWidgets('should show checkmark when isCompleted is true',
+          (WidgetTester tester) async {
         // Arrange
-        final task = google_tasks.Task()
+        final _task = google_tasks.Task()
           ..id = 'task-1'
           ..title = 'Test Task'
           ..status = 'completed';
@@ -73,7 +74,7 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: TaskItemWidget(
-                task: task,
+                task: _task,
                 isCompleted: true, // Show completed state
                 showCompleted: true,
                 isLoading: false,
@@ -91,9 +92,11 @@ void main() {
         expect(find.byType(CircularProgressIndicator), findsNothing);
       });
 
-      testWidgets('should show empty checkbox when not completed and not loading', (WidgetTester tester) async {
+      testWidgets(
+          'should show empty checkbox when not completed and not loading',
+          (WidgetTester tester) async {
         // Arrange
-        final task = google_tasks.Task()
+        final _task = google_tasks.Task()
           ..id = 'task-1'
           ..title = 'Test Task'
           ..status = 'needsAction';
@@ -103,7 +106,7 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: TaskItemWidget(
-                task: task,
+                task: _task,
                 isCompleted: false, // Not completed
                 showCompleted: false,
                 isLoading: false, // Not loading
@@ -127,7 +130,7 @@ void main() {
     group('Error Handling UI States', () {
       test('should handle API failure without UI state corruption', () async {
         // Arrange
-        final task = google_tasks.Task()
+        final _task = google_tasks.Task()
           ..id = 'task-1'
           ..title = 'Test Task'
           ..status = 'needsAction';
@@ -139,16 +142,16 @@ void main() {
         // Act - Simulate the complete error handling flow
         final incompleteTasksUpdating = <String>{};
         final allTasksUpdating = <String>{};
-        
+
         // Show loading state
         incompleteTasksUpdating.add('task-1');
-        
+
         try {
           final success = await mockTasksNotifier.completeTask('task-1');
-          
+
           // Clear loading state after API call
           incompleteTasksUpdating.remove('task-1');
-          
+
           if (success) {
             fail('API should have failed');
           } else {
@@ -168,7 +171,7 @@ void main() {
 
       test('should handle API exception without UI state corruption', () async {
         // Arrange
-        final task = google_tasks.Task()
+        final _task = google_tasks.Task()
           ..id = 'task-1'
           ..title = 'Test Task'
           ..status = 'needsAction';
@@ -180,21 +183,21 @@ void main() {
         // Act - Simulate the complete error handling flow
         final incompleteTasksUpdating = <String>{};
         final allTasksUpdating = <String>{};
-        
+
         // Show loading state
         incompleteTasksUpdating.add('task-1');
-        
+
         try {
           final success = await mockTasksNotifier.completeTask('task-1');
           incompleteTasksUpdating.remove('task-1');
-          
+
           if (success) {
             fail('API should have thrown exception');
           }
         } catch (e) {
           // Exception handling - clear loading state
           incompleteTasksUpdating.remove('task-1');
-          
+
           // Verify UI state is clean
           expect(incompleteTasksUpdating.contains('task-1'), isFalse);
           expect(allTasksUpdating.contains('task-1'), isFalse);
@@ -206,9 +209,10 @@ void main() {
     });
 
     group('Loading State Transitions', () {
-      test('should transition from loading to completed state correctly', () async {
+      test('should transition from loading to completed state correctly',
+          () async {
         // Arrange
-        final task = google_tasks.Task()
+        final _task = google_tasks.Task()
           ..id = 'task-1'
           ..title = 'Test Task'
           ..status = 'needsAction';
@@ -219,17 +223,17 @@ void main() {
 
         // Act - Simulate the complete success flow
         final incompleteTasksUpdating = <String>{};
-        
+
         // Show loading state
         incompleteTasksUpdating.add('task-1');
         expect(incompleteTasksUpdating.contains('task-1'), isTrue);
-        
+
         try {
           final success = await mockTasksNotifier.completeTask('task-1');
-          
+
           // Clear loading state after API call
           incompleteTasksUpdating.remove('task-1');
-          
+
           if (success) {
             // Verify loading state is cleared
             expect(incompleteTasksUpdating.contains('task-1'), isFalse);
@@ -247,11 +251,11 @@ void main() {
 
       test('should handle rapid successive API calls correctly', () async {
         // Arrange
-        final task1 = google_tasks.Task()
+        final _task1 = google_tasks.Task()
           ..id = 'task-1'
           ..title = 'Test Task 1'
           ..status = 'needsAction';
-        final task2 = google_tasks.Task()
+        final _task2 = google_tasks.Task()
           ..id = 'task-2'
           ..title = 'Test Task 2'
           ..status = 'needsAction';
@@ -264,17 +268,17 @@ void main() {
 
         // Act - Simulate rapid successive calls
         final incompleteTasksUpdating = <String>{};
-        
+
         // First task
         incompleteTasksUpdating.add('task-1');
         final success1 = await mockTasksNotifier.completeTask('task-1');
         incompleteTasksUpdating.remove('task-1');
-        
+
         // Second task (immediately after)
         incompleteTasksUpdating.add('task-2');
         final success2 = await mockTasksNotifier.completeTask('task-2');
         incompleteTasksUpdating.remove('task-2');
-        
+
         // Assert
         expect(success1, isTrue);
         expect(success2, isTrue);
@@ -305,11 +309,11 @@ void main() {
 
       test('should handle mixed success and failure scenarios', () async {
         // Arrange
-        final task1 = google_tasks.Task()
+        final _task1 = google_tasks.Task()
           ..id = 'task-1'
           ..title = 'Test Task 1'
           ..status = 'needsAction';
-        final task2 = google_tasks.Task()
+        final _task2 = google_tasks.Task()
           ..id = 'task-2'
           ..title = 'Test Task 2'
           ..status = 'needsAction';
@@ -322,17 +326,17 @@ void main() {
 
         // Act
         final incompleteTasksUpdating = <String>{};
-        
+
         // First task - success
         incompleteTasksUpdating.add('task-1');
         final success1 = await mockTasksNotifier.completeTask('task-1');
         incompleteTasksUpdating.remove('task-1');
-        
+
         // Second task - failure
         incompleteTasksUpdating.add('task-2');
         final success2 = await mockTasksNotifier.completeTask('task-2');
         incompleteTasksUpdating.remove('task-2');
-        
+
         // Assert
         expect(success1, isTrue);
         expect(success2, isFalse);

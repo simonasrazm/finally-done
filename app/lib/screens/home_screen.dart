@@ -102,11 +102,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+            colors: [
+              AppColors.primary,
+              AppColors.primary.withValues(alpha: 0.8)
+            ],
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
               blurRadius: 10,
               spreadRadius: 2,
             ),
@@ -114,7 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
         child: Icon(
           icon,
-          color: Colors.white,
+          color: AppColors.textPrimary,
           size: DesignTokens.iconLg,
         ),
       ),
@@ -551,7 +554,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               DesignTokens.spacing1 + DesignTokens.spacing1,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
+                          color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius:
                               BorderRadius.circular(DesignTokens.radius2xl),
                         ),
@@ -597,7 +600,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 return Container(
                                   width: DesignTokens.photoPreviewWidth,
                                   height: DesignTokens.photoPreviewHeight,
-                                  color: Colors.grey[100],
+                                  color: AppColors.getSecondaryBackgroundColor(
+                                      context),
                                   child: Image.file(
                                     File(snapshot.data!),
                                     fit: BoxFit.contain,
@@ -605,7 +609,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       return Container(
                                         width: DesignTokens.photoPreviewWidth,
                                         height: DesignTokens.photoPreviewHeight,
-                                        color: Colors.grey[300],
+                                        color: AppColors.separator,
                                         child: const Icon(
                                             Icons.image_not_supported),
                                       );
@@ -616,7 +620,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 return Container(
                                   width: DesignTokens.photoPreviewWidth,
                                   height: DesignTokens.photoPreviewHeight,
-                                  color: Colors.grey[300],
+                                  color: AppColors.separator,
                                   child: const CircularProgressIndicator(),
                                 );
                               }
@@ -684,7 +688,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.3),
                                   blurRadius: 20,
                                   spreadRadius: 5,
                                 ),
@@ -693,7 +698,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             child: Icon(
                               _isRecording ? Icons.stop : Icons.mic,
                               size: DesignTokens.icon4xl,
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
@@ -724,7 +729,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   color: AppColors.getSecondaryBackgroundColor(context),
                   borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
                   border: Border.all(
-                    color: AppColors.separator.withOpacity(0.3),
+                    color: AppColors.separator.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -770,7 +775,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     color: AppColors.getSecondaryBackgroundColor(context),
                     borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
                     border: Border.all(
-                      color: AppColors.separator.withOpacity(0.3),
+                      color: AppColors.separator.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Column(
