@@ -16,7 +16,7 @@ class NLPService {
     try {
       // Use Gemini Pro for command interpretation
       return _parseWithGemini(transcription);
-    } catch (e) {
+    } on Exception catch (e) {
       // Return low confidence result for manual review
       return ParsedCommand(
         entities: [],
@@ -122,7 +122,7 @@ Examples:
         entities: entities,
         lowConfidence: json['low_confidence'] as bool? ?? false,
       );
-    } catch (e) {
+    } on Exception catch (e) {
       return ParsedCommand(
         entities: [],
         lowConfidence: true,

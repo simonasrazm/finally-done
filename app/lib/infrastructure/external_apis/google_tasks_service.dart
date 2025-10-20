@@ -261,7 +261,7 @@ class GoogleTasksService {
       );
       
       return defaultList;
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }

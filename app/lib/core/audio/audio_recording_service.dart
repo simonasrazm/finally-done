@@ -15,8 +15,14 @@ class AudioRecordingService {
   
   /// Get current audio path
   String? get currentAudioPath => _currentAudioPath;
-  
-  /// Set current audio path
+
+  /// Setter for current audio path (preferred over method form)
+  set currentAudioPath(String? audioPath) {
+    _currentAudioPath = audioPath;
+  }
+
+  /// Backward-compatible method name used elsewhere
+  // ignore: use_setters_to_change_properties
   void setCurrentAudioPath(String audioPath) {
     _currentAudioPath = audioPath;
   }
@@ -37,8 +43,8 @@ class AudioRecordingService {
       // Create audio file path in documents directory (permanent)
       final directory = await getApplicationDocumentsDirectory();
       final audioDir = Directory('${directory.path}/audio');
-      if (!await audioDir.exists()) {
-        await audioDir.create(recursive: true);
+      if (!audioDir.existsSync()) {
+        audioDir.createSync(recursive: true);
       }
       final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
       _currentAudioPath = '${audioDir.path}/$fileName';

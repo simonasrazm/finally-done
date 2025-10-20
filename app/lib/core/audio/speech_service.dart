@@ -80,7 +80,7 @@ class SpeechService {
   Future<bool> isAvailable(String language) async {
     try {
     return _iosService.isAvailable();
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
@@ -94,7 +94,7 @@ class SpeechService {
       } else {
         return SpeechPermissionStatus.denied;
       }
-    } catch (e) {
+    } on Exception {
       return SpeechPermissionStatus.denied;
     }
   }
@@ -103,7 +103,7 @@ class SpeechService {
   Future<List<String>> getSupportedLanguages() async {
     try {
     return _iosService.getSupportedLanguages();
-    } catch (e) {
+    } on Exception {
       return ['en-US']; // Fallback to English
     }
   }
@@ -178,7 +178,7 @@ class SpeechEngineNotifier extends StateNotifier<String> {
     state = 'gemini';
   }
 
-  void setEngine(String engine) {
+  set engine(String engine) {
     state = engine;
     // TODO: Save to SharedPreferences
   }

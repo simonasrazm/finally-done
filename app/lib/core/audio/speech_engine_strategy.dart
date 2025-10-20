@@ -65,7 +65,7 @@ class GeminiSpeechStrategy implements SpeechEngineStrategy {
         throw const SpeechEngineException('Failed to start recording. Please try again.');
       }
       
-    } catch (e) {
+    } on Exception catch (e) {
       throw SpeechEngineException('Gemini speech recognition failed: $e');
     }
   }
@@ -85,7 +85,7 @@ class GeminiSpeechStrategy implements SpeechEngineStrategy {
       
       return _geminiService.processAudioFile(audioPath);
       
-    } catch (e) {
+    } on Exception {
       throw const SpeechEngineException('Audio processing failed. Please try again.');
     }
   }
@@ -95,7 +95,7 @@ class GeminiSpeechStrategy implements SpeechEngineStrategy {
     try {
       return _geminiService.processAudioFile(audioPath);
       
-    } catch (e) {
+    } on Exception {
       throw const SpeechEngineException('Audio processing failed. Please try again.');
     }
   }
@@ -133,7 +133,7 @@ class AutoDetectSpeechStrategy implements SpeechEngineStrategy {
       }
       
       return result;
-    } catch (e) {
+    } on Exception {
       return GeminiSpeechStrategy(_geminiService, _audioService).recognizeSpeech(
         language: language,
         timeout: timeout,

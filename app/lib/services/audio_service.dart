@@ -31,7 +31,7 @@ class AudioService {
       ));
 
       _initialized = true;
-    } catch (e) {
+    } on Exception {
       // Silent error handling
     }
   }
@@ -60,7 +60,7 @@ class AudioService {
       _audioPlayer.onPlayerComplete.listen((_) {
         _isPlaying = false;
       });
-    } catch (e) {
+    } on Exception {
       _isPlaying = false;
     }
   }

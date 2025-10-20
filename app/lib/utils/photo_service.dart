@@ -20,11 +20,11 @@ class PhotoService {
   static Future<void> deletePhoto(String fileName) async {
     final fullPhotoPath = await getPhotoPath(fileName);
     final photoFile = File(fullPhotoPath);
-    
-    if (await photoFile.exists()) {
+
+    if (photoFile.existsSync()) {
       await photoFile.delete();
     }
-    
+
     // Also delete thumbnail
     await ThumbnailService.deleteThumbnail(fullPhotoPath);
   }

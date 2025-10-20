@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../design_system/colors.dart';
+import '../design_system/tokens.dart';
 
 class FinallyDoneIcon extends StatelessWidget {
   const FinallyDoneIcon({
     super.key,
-    this.size = 64.0,
+    this.size = DesignTokens.iconXl,
     this.backgroundColor,
     this.iconColor,
   });
@@ -14,6 +15,9 @@ class FinallyDoneIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final Color accentColor = iconColor ?? scheme.secondary;
+    final Color onAccentColor = scheme.onSecondary;
     return Container(
       width: size,
       height: size,
@@ -23,14 +27,18 @@ class FinallyDoneIcon extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: backgroundColor != null
               ? [backgroundColor!, backgroundColor!]
-              : [const Color(0xFF00C851), const Color(0xFF00A86B)],
+              : [
+                  accentColor,
+                  accentColor.withValues(alpha: DesignTokens.opacity80)
+                ],
         ),
         borderRadius: BorderRadius.circular(size * 0.2),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color:
+                AppColors.textPrimary.withValues(alpha: DesignTokens.opacity20),
+            blurRadius: DesignTokens.spacing2,
+            offset: const Offset(0, DesignTokens.spacing1),
           ),
         ],
       ),
@@ -40,14 +48,14 @@ class FinallyDoneIcon extends StatelessWidget {
           Positioned(
             left: size * 0.15,
             top: size * 0.2,
-            child: _buildVoiceWaves(size * 0.3),
+            child: _buildVoiceWaves(size * 0.3, onAccentColor),
           ),
 
           // Task list
           Positioned(
             right: size * 0.15,
             top: size * 0.25,
-            child: _buildTaskList(size * 0.25),
+            child: _buildTaskList(size * 0.25, accentColor, onAccentColor),
           ),
 
           // Checkmark (completion indicator)
@@ -58,19 +66,20 @@ class FinallyDoneIcon extends StatelessWidget {
               width: size * 0.2,
               height: size * 0.2,
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: onAccentColor,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.textPrimary.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    color: AppColors.textPrimary
+                        .withValues(alpha: DesignTokens.opacity10),
+                    blurRadius: DesignTokens.spacing1,
+                    offset: const Offset(0, DesignTokens.spacing2),
                   ),
                 ],
               ),
               child: Icon(
                 Icons.check,
-                color: const Color(0xFF00C851),
+                color: accentColor,
                 size: size * 0.12,
               ),
             ),
@@ -80,43 +89,43 @@ class FinallyDoneIcon extends StatelessWidget {
     );
   }
 
-  Widget _buildVoiceWaves(double waveSize) {
+  Widget _buildVoiceWaves(double waveSize, Color waveColor) {
     return SizedBox(
       width: waveSize,
       height: waveSize,
       child: CustomPaint(
         painter: VoiceWavesPainter(
-          color: iconColor ?? AppColors.white,
+          color: waveColor,
         ),
       ),
     );
   }
 
-  Widget _buildTaskList(double listSize) {
+  Widget _buildTaskList(double listSize, Color lineColor, Color background) {
     return Container(
       width: listSize,
       height: listSize * 1.2,
       decoration: BoxDecoration(
-        color: iconColor ?? AppColors.white,
-        borderRadius: BorderRadius.circular(4),
+        color: background,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Container(
             width: listSize * 0.6,
-            height: 2,
-            color: const Color(0xFF00C851),
+            height: DesignTokens.borderWidth2,
+            color: lineColor,
           ),
           Container(
             width: listSize * 0.8,
-            height: 2,
-            color: const Color(0xFF00C851),
+            height: DesignTokens.borderWidth2,
+            color: lineColor,
           ),
           Container(
             width: listSize * 0.4,
-            height: 2,
-            color: const Color(0xFF00C851),
+            height: DesignTokens.borderWidth2,
+            color: lineColor,
           ),
         ],
       ),
@@ -133,7 +142,7 @@ class VoiceWavesPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = DesignTokens.borderWidth2;
 
     final center = Offset(size.width * 0.5, size.height * 0.5);
 
@@ -161,25 +170,29 @@ class VoiceWavesPainter extends CustomPainter {
 class Concept1Icon extends StatelessWidget {
   const Concept1Icon({
     super.key,
-    this.size = 64.0,
-    this.backgroundColor = const Color(0xFF007AFF),
-    this.iconColor = AppColors.white,
+    this.size = DesignTokens.iconXl,
+    this.backgroundColor,
+    this.iconColor,
   });
   final double size;
-  final Color backgroundColor;
-  final Color iconColor;
+  final Color? backgroundColor;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final bgColor = backgroundColor ?? scheme.primary;
+    final iconColor = this.iconColor ?? scheme.onPrimary;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: bgColor,
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.2),
+            color:
+                AppColors.textPrimary.withValues(alpha: DesignTokens.opacity20),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),
@@ -207,7 +220,7 @@ class Concept1Icon extends StatelessWidget {
               ),
               child: Icon(
                 Icons.check,
-                color: backgroundColor,
+                color: bgColor,
                 size: size * 0.15,
               ),
             ),
@@ -221,25 +234,29 @@ class Concept1Icon extends StatelessWidget {
 class Concept2Icon extends StatelessWidget {
   const Concept2Icon({
     super.key,
-    this.size = 64.0,
-    this.backgroundColor = Colors.white,
-    this.accentColor = const Color(0xFF34C759),
+    this.size = DesignTokens.iconXl,
+    this.backgroundColor,
+    this.accentColor,
   });
   final double size;
-  final Color backgroundColor;
-  final Color accentColor;
+  final Color? backgroundColor;
+  final Color? accentColor;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final bgColor = backgroundColor ?? scheme.surface;
+    final accent = accentColor ?? scheme.secondary;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: bgColor,
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color:
+                AppColors.textPrimary.withValues(alpha: DesignTokens.opacity10),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.02),
           ),
@@ -247,7 +264,8 @@ class Concept2Icon extends StatelessWidget {
       ),
       child: CustomPaint(
         painter: CheckmarkWithWavesPainter(
-          accentColor: accentColor,
+          accentColor: accent,
+          onAccentColor: scheme.onSecondary,
           size: size,
         ),
       ),
@@ -258,9 +276,11 @@ class Concept2Icon extends StatelessWidget {
 class CheckmarkWithWavesPainter extends CustomPainter {
   CheckmarkWithWavesPainter({
     required this.accentColor,
+    required this.onAccentColor,
     required this.size,
   });
   final Color accentColor;
+  final Color onAccentColor;
   final double size;
 
   @override
@@ -277,7 +297,7 @@ class CheckmarkWithWavesPainter extends CustomPainter {
 
     // Draw the heart-like shapes (two overlapping circles)
     final heartPaint = Paint()
-      ..color = Colors.white
+      ..color = onAccentColor
       ..style = PaintingStyle.fill;
 
     final heartSize = size * 0.12;
@@ -312,7 +332,7 @@ class CheckmarkWithWavesPainter extends CustomPainter {
 
     // Draw the signal waves
     final wavePaint = Paint()
-      ..color = Colors.white
+      ..color = onAccentColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = size * 0.025
       ..strokeCap = StrokeCap.round;
@@ -361,16 +381,19 @@ class CheckmarkWithWavesPainter extends CustomPainter {
 class Concept3Icon extends StatelessWidget {
   const Concept3Icon({
     super.key,
-    this.size = 64.0,
-    this.backgroundColor = const Color(0xFF5856D6),
-    this.iconColor = AppColors.white,
+    this.size = DesignTokens.iconXl,
+    this.backgroundColor,
+    this.iconColor,
   });
   final double size;
-  final Color backgroundColor;
-  final Color iconColor;
+  final Color? backgroundColor;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final bgColor = backgroundColor ?? scheme.secondary;
+    final iconColor = this.iconColor ?? scheme.onSecondary;
     return Container(
       width: size,
       height: size,
@@ -378,12 +401,13 @@ class Concept3Icon extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [backgroundColor, backgroundColor.withValues(alpha: 0.8)],
+          colors: [bgColor, bgColor.withValues(alpha: DesignTokens.opacity80)],
         ),
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.2),
+            color:
+                AppColors.textPrimary.withValues(alpha: DesignTokens.opacity20),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),
@@ -427,25 +451,29 @@ class Concept3Icon extends StatelessWidget {
 class Concept4Icon extends StatelessWidget {
   const Concept4Icon({
     super.key,
-    this.size = 64.0,
-    this.backgroundColor = const Color(0xFFFF9500),
-    this.iconColor = AppColors.white,
+    this.size = DesignTokens.iconXl,
+    this.backgroundColor,
+    this.iconColor,
   });
   final double size;
-  final Color backgroundColor;
-  final Color iconColor;
+  final Color? backgroundColor;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final bgColor = backgroundColor ?? AppColors.warning;
+    final iconColor = this.iconColor ?? scheme.onSecondary;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: bgColor,
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.2),
+            color:
+                AppColors.textPrimary.withValues(alpha: DesignTokens.opacity20),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),
@@ -496,24 +524,26 @@ class Concept4Icon extends StatelessWidget {
 
 // App icon variants for different sizes
 class AppIconVariants {
-  static Widget small() => const FinallyDoneIcon(size: 32.0);
-  static Widget medium() => const FinallyDoneIcon(size: 64.0);
-  static Widget large() => const FinallyDoneIcon(size: 128.0);
-  static Widget xlarge() => const FinallyDoneIcon(size: 256.0);
+  static Widget small() =>
+      const FinallyDoneIcon(size: DesignTokens.touchTargetSize);
+  static Widget medium() => const FinallyDoneIcon(size: DesignTokens.iconXl);
+  static Widget large() => const FinallyDoneIcon(size: DesignTokens.iconXl * 2);
+  static Widget xlarge() =>
+      const FinallyDoneIcon(size: DesignTokens.iconXl * 4);
 
   // Alternative color schemes
   static Widget blue() => const FinallyDoneIcon(
-        size: 64.0,
+        size: DesignTokens.iconXl,
         backgroundColor: Color(0xFF4A90E2),
       );
 
   static Widget purple() => const FinallyDoneIcon(
-        size: 64.0,
+        size: DesignTokens.iconXl,
         backgroundColor: Color(0xFF9C27B0),
       );
 
   static Widget orange() => const FinallyDoneIcon(
-        size: 64.0,
+        size: DesignTokens.iconXl,
         backgroundColor: Color(0xFFFF6B35),
       );
 }

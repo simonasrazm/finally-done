@@ -15,7 +15,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
     try {
       final commands = _realmService.getAllCommands();
       state = commands;
-    } catch (e) {
+    } on Exception {
       state = [];
     }
   }
@@ -191,7 +191,7 @@ class QueueNotifier extends StateNotifier<List<QueuedCommandRealm>> {
           if (cmdId != id) {
             commandsToKeep.add(cmd);
           }
-        } catch (e) {
+        } on Exception {
           // Skip invalid commands silently - they're corrupted data
         }
       }

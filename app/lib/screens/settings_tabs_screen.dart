@@ -24,6 +24,7 @@ class _SettingsTabsScreenState extends ConsumerState<SettingsTabsScreen>
     super.initState();
 
     // Track screen load performance
+    // ignore: discarded_futures
     sentryPerformance.monitorTransaction(
       PerformanceTransactions.screenSettings,
       PerformanceOps.screenLoad,

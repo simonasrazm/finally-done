@@ -12,15 +12,17 @@ import 'integration_provider.dart';
 
 /// Google-specific integration provider
 class GoogleIntegrationProvider extends IntegrationProvider {
-
-  GoogleIntegrationProvider() : super(
-    id: 'google',
-    displayName: 'Google',
-    icon: 'google', // Icon identifier
-    description: 'Connect to Google services like Tasks, Calendar, and Gmail',
-  );
+  GoogleIntegrationProvider()
+      : super(
+          id: 'google',
+          displayName: 'Google',
+          icon: 'google', // Icon identifier
+          description:
+              'Connect to Google services like Tasks, Calendar, and Gmail',
+        );
   static FlutterSecureStorage? _storage;
-  static FlutterSecureStorage get storage => _storage ??= const FlutterSecureStorage();
+  static FlutterSecureStorage get storage =>
+      _storage ??= const FlutterSecureStorage();
   static const String _accessTokenKey = 'google_access_token';
   static const String _refreshTokenKey = 'google_refresh_token';
   static const String _tokenExpiryKey = 'google_token_expiry';
@@ -40,34 +42,35 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   /// Initialize from stored tokens asynchronously
   Future<void> _initializeFromStoredTokensAsync() async {
     // Add a small delay to spread out initialization work
-    await Future.delayed(const Duration(milliseconds: DesignTokens.animationFast));
+    await Future.delayed(
+        const Duration(milliseconds: DesignTokens.animationFast));
     await _initializeFromStoredTokens();
   }
 
   @override
   List<IntegrationService> get availableServices => [
-    const IntegrationService(
-      id: 'tasks',
-      name: 'Google Tasks',
-      description: 'Manage your tasks and to-do lists',
-      icon: 'tasks',
-      scope: tasks.TasksApi.tasksScope,
-    ),
-    const IntegrationService(
-      id: 'calendar',
-      name: 'Google Calendar',
-      description: 'Access your calendar events',
-      icon: 'calendar',
-      scope: calendar.CalendarApi.calendarScope,
-    ),
-    const IntegrationService(
-      id: 'gmail',
-      name: 'Gmail',
-      description: 'Read your email messages',
-      icon: 'gmail',
-      scope: 'https://www.googleapis.com/auth/gmail.readonly',
-    ),
-  ];
+        const IntegrationService(
+          id: 'tasks',
+          name: 'Google Tasks',
+          description: 'Manage your tasks and to-do lists',
+          icon: 'tasks',
+          scope: tasks.TasksApi.tasksScope,
+        ),
+        const IntegrationService(
+          id: 'calendar',
+          name: 'Google Calendar',
+          description: 'Access your calendar events',
+          icon: 'calendar',
+          scope: calendar.CalendarApi.calendarScope,
+        ),
+        const IntegrationService(
+          id: 'gmail',
+          name: 'Gmail',
+          description: 'Read your email messages',
+          icon: 'gmail',
+          scope: 'https://www.googleapis.com/auth/gmail.readonly',
+        ),
+      ];
 
   @override
   Future<bool> authenticate() async {
@@ -76,9 +79,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       PerformanceOps.authSignIn,
       () async {
         try {
-          
           state = state.copyWith(isConnecting: true);
-          
+
           await SentryPerformance().monitorOperation(
             PerformanceTransactions.authGoogleSignIn,
             'google_signin_init',
@@ -87,11 +89,12 @@ class GoogleIntegrationProvider extends IntegrationProvider {
               _ensureGoogleSignInInitialized();
             },
           );
-          
+
           // Check if already signed in
           final isAlreadySignedIn = await _googleSignIn!.isSignedIn();
           if (isAlreadySignedIn) {
-            final GoogleSignInAccount? googleUser = await SentryPerformance().monitorOperation(
+            final GoogleSignInAccount? googleUser =
+                await SentryPerformance().monitorOperation(
               PerformanceTransactions.authGoogleSignIn,
               'google_signin_silent',
               PerformanceOps.authSignIn,
@@ -109,7 +112,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
           }
 
           // Sign in with Google
-          final GoogleSignInAccount? googleUser = await SentryPerformance().monitorOperation(
+          final GoogleSignInAccount? googleUser =
+              await SentryPerformance().monitorOperation(
             PerformanceTransactions.authGoogleSignIn,
             'google_signin_interactive',
             PerformanceOps.authSignIn,
@@ -127,7 +131,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
             () async => _setupUserSession(googleUser),
           );
           return true;
-        } catch (e, stackTrace) {
+        } on Exception catch (e, stackTrace) {
           Sentry.captureException(e, stackTrace: stackTrace);
           state = state.copyWith(isConnecting: false);
           return false;
@@ -167,15 +171,17 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
       // Create new GoogleSignIn instance with additional scopes
       final serviceGoogleSignIn = GoogleSignIn(scopes: requestedScopes);
-      final GoogleSignInAccount? googleUser = await serviceGoogleSignIn.signIn();
-      
+      final GoogleSignInAccount? googleUser =
+          await serviceGoogleSignIn.signIn();
+
       if (googleUser == null) {
         state = state.copyWith(isSyncing: false);
         return false;
       }
 
       // Get authentication details
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       if (googleAuth.accessToken == null) {
         state = state.copyWith(isSyncing: false);
         return false;
@@ -185,14 +191,16 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       _authClient = authenticatedClient(
         _createHttpClient(),
         AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(const Duration(hours: 1))),
+          AccessToken('Bearer', googleAuth.accessToken!,
+              DateTime.now().toUtc().add(const Duration(hours: 1))),
           null,
           requestedScopes,
         ),
       );
 
       // Update connected services
-      final updatedServices = Map<String, IntegrationService>.from(state.services);
+      final updatedServices =
+          Map<String, IntegrationService>.from(state.services);
       for (final serviceId in serviceIds) {
         final service = updatedServices[serviceId];
         if (service != null) {
@@ -211,7 +219,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       );
 
       return true;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(isSyncing: false);
       return false;
@@ -224,7 +232,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       state = state.copyWith(isLoading: true);
 
       // Update services to disconnected
-      final updatedServices = Map<String, IntegrationService>.from(state.services);
+      final updatedServices =
+          Map<String, IntegrationService>.from(state.services);
       for (final serviceId in serviceIds) {
         final service = updatedServices[serviceId];
         if (service != null) {
@@ -234,7 +243,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
       // Update stored connected services
       final currentConnected = await _getStoredConnectedServices();
-      final newConnected = currentConnected.where((id) => !serviceIds.contains(id)).toList();
+      final newConnected =
+          currentConnected.where((id) => !serviceIds.contains(id)).toList();
       await _storeConnectedServices(newConnected);
 
       state = state.copyWith(
@@ -243,7 +253,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       );
 
       return true;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(isSyncing: false);
       return false;
@@ -263,10 +273,9 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   @override
   Future<void> signOut() async {
     try {
-      
       // Sign out from Google Sign-In
       await _googleSignIn?.signOut();
-      
+
       // Clear stored data
       await storage.delete(key: _accessTokenKey);
       await storage.delete(key: _refreshTokenKey);
@@ -275,22 +284,21 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       await storage.delete(key: _userEmailKey);
       await storage.delete(key: _userNameKey);
       await storage.delete(key: _connectedServicesKey);
-      
+
       // Clear client and reset state
       _authClient?.close();
       _authClient = null;
-      
+
       // Reset services to disconnected
       final updatedServices = <String, IntegrationService>{};
       for (final service in availableServices) {
         updatedServices[service.id] = service.copyWith(isConnected: false);
       }
-      
+
       state = IntegrationProviderState(
         services: updatedServices,
       );
-      
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
     }
   }
@@ -315,7 +323,7 @@ class GoogleIntegrationProvider extends IntegrationProvider {
             return false;
           }
         }
-      } catch (e) {
+      } on Exception {
         final refreshed = await _refreshTokensSilently();
         if (!refreshed) {
           return false;
@@ -332,13 +340,13 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
     ];
-    
+
     final connectedServices = state.services.values
         .where((service) => service.isConnected)
         .map((service) => service.scope)
         .where((scope) => scope != null)
         .cast<String>();
-    
+
     scopes.addAll(connectedServices);
     return scopes;
   }
@@ -351,29 +359,27 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       final userName = await storage.read(key: _userNameKey);
       final userId = await storage.read(key: _userIdKey);
       final connectedServices = await _getStoredConnectedServices();
-      
-      
+
       if (accessToken != null && userEmail != null) {
-        
         // Check if token is expired
         final tokenExpiryStr = await storage.read(key: _tokenExpiryKey);
         DateTime? tokenExpiry;
         if (tokenExpiryStr != null) {
           try {
             tokenExpiry = DateTime.parse(tokenExpiryStr);
-          } catch (e) {
-          }
+          } on Exception {}
         }
-        
+
         // If token is expired or no expiry info, try to refresh
-        if (tokenExpiry == null || tokenExpiry.isBefore(DateTime.now().toUtc())) {
+        if (tokenExpiry == null ||
+            tokenExpiry.isBefore(DateTime.now().toUtc())) {
           final refreshed = await _refreshTokensSilently();
           if (!refreshed) {
             await _clearStoredData();
             return;
           }
         }
-        
+
         // Set up services based on stored data first
         final updatedServices = <String, IntegrationService>{};
         for (final service in availableServices) {
@@ -381,23 +387,24 @@ class GoogleIntegrationProvider extends IntegrationProvider {
             isConnected: connectedServices.contains(service.id),
           );
         }
-        
+
         // Get fresh token after potential refresh
         final freshAccessToken = await storage.read(key: _accessTokenKey);
         if (freshAccessToken == null) {
           return;
         }
-        
+
         // Set up auth client with correct scopes
         _authClient = authenticatedClient(
           http.Client(),
           AccessCredentials(
-            AccessToken('Bearer', freshAccessToken, DateTime.now().toUtc().add(const Duration(hours: 1))),
+            AccessToken('Bearer', freshAccessToken,
+                DateTime.now().toUtc().add(const Duration(hours: 1))),
             null,
             _getCurrentScopes(),
           ),
         );
-        
+
         state = state.copyWith(
           isAuthenticated: true,
           userEmail: userEmail,
@@ -406,18 +413,17 @@ class GoogleIntegrationProvider extends IntegrationProvider {
           services: updatedServices,
           lastSyncTime: DateTime.now().toIso8601String(),
         );
-        
-        
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
     }
   }
 
   /// Set up user session after successful authentication
   Future<void> _setupUserSession(GoogleSignInAccount googleUser) async {
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-    
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
     if (googleAuth.accessToken == null) {
       return;
     }
@@ -426,9 +432,13 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     _authClient = authenticatedClient(
       http.Client(),
       AccessCredentials(
-        AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(const Duration(hours: 1))),
+        AccessToken('Bearer', googleAuth.accessToken!,
+            DateTime.now().toUtc().add(const Duration(hours: 1))),
         null,
-        ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'],
+        [
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/userinfo.email'
+        ],
       ),
     );
 
@@ -439,8 +449,12 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     }
 
     // Store basic authentication
-    await _storeTokens(googleAuth.accessToken!, ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email']);
-    await _storeUserInfo(googleUser.id, googleUser.email, googleUser.displayName ?? '');
+    await _storeTokens(googleAuth.accessToken!, [
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email'
+    ]);
+    await _storeUserInfo(
+        googleUser.id, googleUser.email, googleUser.displayName ?? '');
 
     state = state.copyWith(
       isAuthenticated: true,
@@ -451,14 +465,16 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       isConnecting: false,
       lastSyncTime: DateTime.now().toIso8601String(),
     );
-
   }
 
   /// Initialize GoogleSignIn
   void _ensureGoogleSignInInitialized() {
     if (_googleSignIn == null) {
       _googleSignIn = GoogleSignIn(
-        scopes: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'],
+        scopes: [
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/userinfo.email'
+        ],
       );
     }
   }
@@ -466,11 +482,17 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   /// Store authentication tokens
   Future<void> _storeTokens(String accessToken, List<String> scopes) async {
     await storage.write(key: _accessTokenKey, value: accessToken);
-    await storage.write(key: _tokenExpiryKey, value: DateTime.now().toUtc().add(const Duration(hours: 1)).toIso8601String());
+    await storage.write(
+        key: _tokenExpiryKey,
+        value: DateTime.now()
+            .toUtc()
+            .add(const Duration(hours: 1))
+            .toIso8601String());
   }
 
   /// Store user information
-  Future<void> _storeUserInfo(String userId, String userEmail, String userName) async {
+  Future<void> _storeUserInfo(
+      String userId, String userEmail, String userName) async {
     await storage.write(key: _userIdKey, value: userId);
     await storage.write(key: _userEmailKey, value: userEmail);
     await storage.write(key: _userNameKey, value: userName);
@@ -478,7 +500,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
   /// Store connected services
   Future<void> _storeConnectedServices(List<String> serviceIds) async {
-    await storage.write(key: _connectedServicesKey, value: serviceIds.join(','));
+    await storage.write(
+        key: _connectedServicesKey, value: serviceIds.join(','));
   }
 
   /// Get stored connected services
@@ -491,14 +514,16 @@ class GoogleIntegrationProvider extends IntegrationProvider {
   Future<bool> _refreshTokensSilently() async {
     try {
       _ensureGoogleSignInInitialized();
-      
+
       // Try to sign in silently to refresh tokens
-      final GoogleSignInAccount? googleUser = await _googleSignIn!.signInSilently();
+      final GoogleSignInAccount? googleUser =
+          await _googleSignIn!.signInSilently();
       if (googleUser == null) {
         return false;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       if (googleAuth.accessToken == null) {
         return false;
       }
@@ -507,7 +532,8 @@ class GoogleIntegrationProvider extends IntegrationProvider {
       _authClient = authenticatedClient(
         _createHttpClient(),
         AccessCredentials(
-          AccessToken('Bearer', googleAuth.accessToken!, DateTime.now().toUtc().add(const Duration(hours: 1))),
+          AccessToken('Bearer', googleAuth.accessToken!,
+              DateTime.now().toUtc().add(const Duration(hours: 1))),
           null,
           _getCurrentScopes(),
         ),
@@ -515,9 +541,9 @@ class GoogleIntegrationProvider extends IntegrationProvider {
 
       // Store the new tokens
       await _storeTokens(googleAuth.accessToken!, _getCurrentScopes());
-      
+
       return true;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       return false;
     }
@@ -532,16 +558,16 @@ class GoogleIntegrationProvider extends IntegrationProvider {
     await storage.delete(key: _userEmailKey);
     await storage.delete(key: _userNameKey);
     await storage.delete(key: _connectedServicesKey);
-    
+
     _authClient?.close();
     _authClient = null;
-    
+
     // Reset state
     final updatedServices = <String, IntegrationService>{};
     for (final service in availableServices) {
       updatedServices[service.id] = service.copyWith(isConnected: false);
     }
-    
+
     state = IntegrationProviderState(
       services: updatedServices,
     );

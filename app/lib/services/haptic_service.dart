@@ -42,24 +42,28 @@ class HapticService {
 
   static void lightImpact() {
     if (_hapticEnabled) {
+      // ignore: discarded_futures
       HapticFeedback.lightImpact();
     }
   }
 
   static void mediumImpact() {
     if (_hapticEnabled) {
+      // ignore: discarded_futures
       HapticFeedback.mediumImpact();
     }
   }
 
   static void heavyImpact() {
     if (_hapticEnabled) {
+      // ignore: discarded_futures
       HapticFeedback.heavyImpact();
     }
   }
 
   static void selectionClick() {
     if (_hapticEnabled) {
+      // ignore: discarded_futures
       HapticFeedback.selectionClick();
     }
   }

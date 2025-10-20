@@ -5,7 +5,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Realm database service for persistent storage
 class RealmService {
-
   RealmService() {
     _initializeRealm();
   }
@@ -13,29 +12,30 @@ class RealmService {
 
   void _initializeRealm() {
     try {
-  // SCHEMA VERSION HISTORY:
-  // v0: Initial schema (id, text, audioPath, status, createdAt, transcription)
-  // v1: Added photoPaths (List<String>)
-  // v2: Added errorMessage (String?) + status renames (audioRecorded→recorded, transcribed→queued)
-  // v3: (intermediate version - not used in production)
-  // v4: Added failed flag (bool) - separate from status
-  // v5: Added actionNeeded flag (bool) - indicates if command needs user attention
+      // SCHEMA VERSION HISTORY:
+      // v0: Initial schema (id, text, audioPath, status, createdAt, transcription)
+      // v1: Added photoPaths (List<String>)
+      // v2: Added errorMessage (String?) + status renames (audioRecorded→recorded, transcribed→queued)
+      // v3: (intermediate version - not used in production)
+      // v4: Added failed flag (bool) - separate from status
+      // v5: Added actionNeeded flag (bool) - indicates if command needs user attention
       final config = Configuration.local([
         QueuedCommandRealm.schema,
-      ], schemaVersion: MigrationManager.currentVersion, migrationCallback: MigrationManager.migrate);
+      ],
+          schemaVersion: MigrationManager.currentVersion,
+          migrationCallback: MigrationManager.migrate);
       _realm = Realm(config);
     } catch (e) {
       rethrow;
     }
   }
 
-
   /// Get all queued commands
   List<QueuedCommandRealm> getAllCommands() {
     try {
       final realmCommands = _realm.all<QueuedCommandRealm>();
       return realmCommands.toList();
-    } catch (e) {
+    } on Exception {
       return [];
     }
   }
@@ -43,9 +43,10 @@ class RealmService {
   /// Get queued commands only
   List<QueuedCommandRealm> getQueuedCommands() {
     try {
-      final realmCommands = _realm.query<QueuedCommandRealm>('status == "queued"');
+      final realmCommands =
+          _realm.query<QueuedCommandRealm>('status == "queued"');
       return realmCommands.toList();
-    } catch (e) {
+    } on Exception {
       return [];
     }
   }
@@ -54,10 +55,9 @@ class RealmService {
   List<QueuedCommandRealm> getProcessingCommands() {
     try {
       final realmCommands = _realm.query<QueuedCommandRealm>(
-        'status == "transcribing" OR status == "transcribed" OR status == "processing"'
-      );
+          'status == "transcribing" OR status == "transcribed" OR status == "processing"');
       return realmCommands.toList();
-    } catch (e) {
+    } on Exception {
       return [];
     }
   }
@@ -65,9 +65,10 @@ class RealmService {
   /// Get completed commands
   List<QueuedCommandRealm> getCompletedCommands() {
     try {
-      final realmCommands = _realm.query<QueuedCommandRealm>('status == "completed"');
+      final realmCommands =
+          _realm.query<QueuedCommandRealm>('status == "completed"');
       return realmCommands.toList();
-    } catch (e) {
+    } on Exception {
       return [];
     }
   }
@@ -77,7 +78,7 @@ class RealmService {
     try {
       final realmCommands = _realm.query<QueuedCommandRealm>('failed == true');
       return realmCommands.toList();
-    } catch (e) {
+    } on Exception {
       return [];
     }
   }
@@ -101,8 +102,7 @@ class RealmService {
         _realm.write(() {
           realmCommand.status = status.name;
         });
-      } else {
-      }
+      } else {}
     } catch (e) {
       rethrow;
     }
@@ -116,8 +116,7 @@ class RealmService {
         _realm.write(() {
           realmCommand.transcription = transcription;
         });
-      } else {
-      }
+      } else {}
     } catch (e) {
       rethrow;
     }
@@ -131,8 +130,7 @@ class RealmService {
         _realm.write(() {
           realmCommand.audioPath = audioPath;
         });
-      } else {
-      }
+      } else {}
     } catch (e) {
       rethrow;
     }
@@ -146,8 +144,7 @@ class RealmService {
         _realm.write(() {
           realmCommand.failed = failed;
         });
-      } else {
-      }
+      } else {}
     } catch (e) {
       rethrow;
     }
@@ -161,8 +158,7 @@ class RealmService {
         _realm.write(() {
           realmCommand.errorMessage = errorMessage;
         });
-      } else {
-      }
+      } else {}
     } catch (e) {
       rethrow;
     }
@@ -175,8 +171,7 @@ class RealmService {
         _realm.write(() {
           realmCommand.actionNeeded = actionNeeded;
         });
-      } else {
-      }
+      } else {}
     } catch (e) {
       rethrow;
     }
@@ -193,11 +188,11 @@ class RealmService {
       } else {
         // Command not found for removal
       }
-    } catch (e, stackTrace) {
-      
+    } on Exception catch (e, stackTrace) {
       // Send to Sentry for debugging
+      // ignore: discarded_futures
       Sentry.captureException(e, stackTrace: stackTrace);
-      
+
       rethrow;
     }
   }

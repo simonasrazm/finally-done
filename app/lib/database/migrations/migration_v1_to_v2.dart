@@ -28,7 +28,7 @@ class MigrationV1ToV2 {
             // errorMessage is null by default (new field)
             
           }
-        } catch (e) {
+        } on Exception {
         }
       }
     }

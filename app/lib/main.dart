@@ -26,7 +26,7 @@ void main() async {
   // Load environment variables
   try {
     await dotenv.load(fileName: '.env');
-  } catch (e) {
+  } on Exception {
     // Continue with defaults
   }
 
@@ -91,11 +91,13 @@ void main() async {
 
         // Set up global error handling
         FlutterError.onError = (FlutterErrorDetails details) {
+          // ignore: discarded_futures
           Sentry.captureException(details.exception, stackTrace: details.stack);
         };
 
         // Set up global zone error handling for async errors
         PlatformDispatcher.instance.onError = (error, stack) {
+          // ignore: discarded_futures
           Sentry.captureException(error, stackTrace: stack);
           return true;
         };
@@ -139,7 +141,7 @@ void main() async {
         }
       },
     );
-  } catch (e) {
+  } on Exception {
     // Continue without Sentry
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -195,7 +197,6 @@ class FinallyDoneApp extends ConsumerWidget {
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.backgroundSecondary,
-        background: AppColors.background,
         error: AppColors.error,
       ),
       textTheme: _buildTextTheme(Brightness.light),
@@ -242,7 +243,6 @@ class FinallyDoneApp extends ConsumerWidget {
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.darkBackgroundSecondary,
-        background: AppColors.darkBackground,
         error: AppColors.error,
       ),
       textTheme: _buildTextTheme(Brightness.dark),
@@ -385,6 +385,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           final screenNames = ['home', 'mission_control', 'tasks', 'settings'];
           final screenName = screenNames[index];
 
+          // ignore: discarded_futures
           sentryPerformance.monitorTransaction(
             'screen.navigation',
             PerformanceOps.screenNavigation,

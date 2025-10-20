@@ -36,6 +36,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
     mode: AppThemeMode.system,
     flutterThemeMode: ThemeMode.system,
   )) {
+    // ignore: discarded_futures
     _loadThemeMode();
   }
 
@@ -65,7 +66,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
       final modeIndex = prefs.getInt('theme_mode') ?? 0;
       final mode = AppThemeMode.values[modeIndex];
       _updateThemeMode(mode);
-    } catch (e) {
+    } on Exception {
       // If loading fails, use system default
       _updateThemeMode(AppThemeMode.system);
     }
@@ -77,7 +78,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('theme_mode', mode.index);
       _updateThemeMode(mode);
-    } catch (e) {
+    } on Exception {
       // If saving fails, still update the state
       _updateThemeMode(mode);
     }

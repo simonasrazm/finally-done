@@ -45,13 +45,15 @@ class CommandActionService {
         await _retryTranscription(commandId, command, ref, context);
       }
       
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       // Store technical error for backend analysis, but show user-friendly message in UI
       Sentry.captureException(e, stackTrace: stackTrace);
       ref.read(queueProvider.notifier).updateCommandErrorMessage(commandId, e.toString());
       ref.read(queueProvider.notifier).updateCommandFailed(commandId, true);
       
-      _showSnackBar(context, 'Retry failed: ${e.toString()}', isError: true);
+      if (context.mounted) {
+        _showSnackBar(context, 'Retry failed: ${e.toString()}', isError: true);
+      }
     }
   }
 
@@ -90,7 +92,9 @@ class CommandActionService {
     final message = command.status == CommandStatus.manual_review.name 
         ? 'Transcription updated! Please review the new result.'
         : 'Transcription retry completed!';
-    _showSnackBar(context, message, isSuccess: true);
+    if (context.mounted) {
+      _showSnackBar(context, message, isSuccess: true);
+    }
   }
 
   /// Approve manual review command
@@ -103,10 +107,14 @@ class CommandActionService {
       // Move from manual_review to transcribing
       ref.read(queueProvider.notifier).updateCommandStatus(commandId, CommandStatus.transcribing);
       
-      _showSnackBar(context, 'Audio approved for transcription!', isSuccess: true);
-    } catch (e, stackTrace) {
+      if (context.mounted) {
+        _showSnackBar(context, 'Audio approved for transcription!', isSuccess: true);
+      }
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
-      _showSnackBar(context, 'Error approving audio: $e', isError: true);
+      if (context.mounted) {
+        _showSnackBar(context, 'Error approving audio: $e', isError: true);
+      }
     }
   }
 
@@ -133,19 +141,23 @@ class CommandActionService {
       if (audioPath != null && audioPath.isNotEmpty) {
         final fullAudioPath = await _getFullAudioPath(audioPath);
         final audioFile = File(fullAudioPath);
-        if (await audioFile.exists()) {
-          await audioFile.delete();
+        if (audioFile.existsSync()) {
+          audioFile.deleteSync();
         }
       }
       
       // Delete associated photo files and thumbnails
       await PhotoService.deletePhotos(photoPaths);
       
-      _showSnackBar(context, 'Command deleted successfully', isSuccess: true);
+      if (context.mounted) {
+        _showSnackBar(context, 'Command deleted successfully', isSuccess: true);
+      }
       
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
-      _showSnackBar(context, 'Error deleting command: $e', isError: true);
+      if (context.mounted) {
+        _showSnackBar(context, 'Error deleting command: $e', isError: true);
+      }
     }
   }
 

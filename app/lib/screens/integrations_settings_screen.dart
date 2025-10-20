@@ -71,6 +71,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                 if (isAuthenticated) {
                   _showServiceManagementDialog(context, ref, provider);
                 } else {
+                  // ignore: discarded_futures
                   _connectProvider(context, ref, provider);
                 }
               },
@@ -177,6 +178,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
 
   void _showServiceManagementDialog(
       BuildContext context, WidgetRef ref, IntegrationProvider provider) {
+    // ignore: discarded_futures
     showDialog(
       context: context,
       builder: (context) => _ServiceManagementDialog(

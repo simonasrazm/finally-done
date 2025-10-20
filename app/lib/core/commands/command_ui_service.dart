@@ -16,7 +16,7 @@ class CommandUIService {
         errorMessage: command.errorMessage,
         isValid: true,
       );
-    } catch (e) {
+    } on Exception {
       return CommandProperties.invalid();
     }
   }

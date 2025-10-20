@@ -6,25 +6,26 @@ import 'apple_notes_integration_provider.dart';
 import 'evernote_integration_provider.dart';
 
 /// Manages all integration providers and their services
-class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderState>> {
-
+class IntegrationManager
+    extends StateNotifier<Map<String, IntegrationProviderState>> {
   IntegrationManager() : super({}) {
     // Initialize providers immediately with "not connected" state
     _initializeProvidersImmediately();
-    
+
     // Then initialize them properly in the background (no delay)
+    // ignore: discarded_futures
     Future.microtask(() {
       _initializeProviders();
     });
   }
   final Map<String, IntegrationProvider> _providers = {};
-  
+
   void _initializeProvidersImmediately() {
     // Create providers immediately with "not connected" state so UI can show them
     _providers['google'] = GoogleIntegrationProvider();
     _providers['apple_notes'] = AppleNotesIntegrationProvider();
     _providers['evernote'] = EvernoteIntegrationProvider();
-    
+
     // Set initial states for all providers
     for (final providerId in _providers.keys) {
       _updateProviderState(providerId);
@@ -36,27 +37,28 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
     final futures = _providers.entries.map((entry) async {
       final providerId = entry.key;
       final provider = entry.value;
-      
+
       try {
         // Call the provider's initialization method
         await provider.initialize();
-      } catch (e) {
+      } on Exception {
         // Error initializing provider - handled silently
       }
-      
+
       // Update the state after initialization
       _updateProviderState(providerId);
     });
-    
+
     // Wait for all providers to initialize in parallel
     await Future.wait(futures);
   }
 
   /// Check if initialization is complete
   bool get isInitialized => _providers.isNotEmpty;
-  
+
   /// Get all available providers
-  List<IntegrationProvider> get availableProviders => _providers.values.toList();
+  List<IntegrationProvider> get availableProviders =>
+      _providers.values.toList();
 
   /// Get a specific provider
   IntegrationProvider? getProvider(String providerId) => _providers[providerId];
@@ -96,7 +98,8 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
   }
 
   /// Connect to specific services within a provider
-  Future<bool> connectServices(String providerId, List<String> serviceIds) async {
+  Future<bool> connectServices(
+      String providerId, List<String> serviceIds) async {
     final provider = _providers[providerId];
     if (provider == null) return false;
 
@@ -120,7 +123,8 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
   }
 
   /// Disconnect from specific services
-  Future<bool> disconnectServices(String providerId, List<String> serviceIds) async {
+  Future<bool> disconnectServices(
+      String providerId, List<String> serviceIds) async {
     final provider = _providers[providerId];
     if (provider == null) return false;
 
@@ -173,7 +177,8 @@ class IntegrationManager extends StateNotifier<Map<String, IntegrationProviderSt
 }
 
 /// Provider for IntegrationManager
-final integrationManagerProvider = StateNotifierProvider<IntegrationManager, Map<String, IntegrationProviderState>>((ref) {
+final integrationManagerProvider = StateNotifierProvider<IntegrationManager,
+    Map<String, IntegrationProviderState>>((ref) {
   return IntegrationManager();
 });
 
@@ -190,13 +195,15 @@ final allConnectedServicesProvider = Provider<List<IntegrationService>>((ref) {
 });
 
 /// Provider for a specific provider's state
-final providerStateProvider = Provider.family<IntegrationProviderState?, String>((ref, providerId) {
+final providerStateProvider =
+    Provider.family<IntegrationProviderState?, String>((ref, providerId) {
   final states = ref.watch(integrationManagerProvider);
   return states[providerId];
 });
 
 /// Provider for a specific provider's connected services
-final providerConnectedServicesProvider = Provider.family<List<IntegrationService>, String>((ref, providerId) {
+final providerConnectedServicesProvider =
+    Provider.family<List<IntegrationService>, String>((ref, providerId) {
   final manager = ref.watch(integrationManagerProvider.notifier);
   return manager.getConnectedServices(providerId);
 });

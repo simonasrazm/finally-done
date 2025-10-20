@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
@@ -17,7 +18,6 @@ import '../widgets/task_empty_state_widgets.dart';
 import '../widgets/animated_title_widget.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
-
   const TasksScreen({super.key, this.onNavigateToSettings});
   final VoidCallback? onNavigateToSettings;
 
@@ -54,10 +54,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     WidgetsBinding.instance.addObserver(this);
 
     // Load saved task list mode preference
-    _loadTaskListMode();
+    unawaited(_loadTaskListMode());
 
     // Track screen load performance
-    sentryPerformance.monitorTransaction(
+    unawaited(sentryPerformance.monitorTransaction(
       PerformanceTransactions.screenTasks,
       PerformanceOps.screenLoad,
       () async {
@@ -67,7 +67,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         'screen': 'tasks',
         'has_task_initialization': true,
       },
-    );
+    ));
   }
 
   @override
@@ -87,7 +87,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       _lastAppResumeCall = now;
 
       // Only call refreshTasks - it handles both task fetching and connectivity
-      ref.read(tasksProvider.notifier).refreshTasks();
+      unawaited(ref.read(tasksProvider.notifier).refreshTasks());
     }
   }
 
@@ -125,19 +125,25 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           );
 
       _newTaskController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Task added')),
-      );
-    } catch (e, stackTrace) {
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Task added')),
+        );
+      }
+    } on Exception catch (e, stackTrace) {
       // Error adding task
       Sentry.captureException(e, stackTrace: stackTrace);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to add task'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to add task'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -170,20 +176,28 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
         if (success) {
           // Show success message
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.taskCompleted),
-              duration: const Duration(milliseconds: DesignTokens.delaySnackbarQuick),
-            ),
-          );
+          if (context.mounted) {
+            // ignore: use_build_context_synchronously
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).clearSnackBars();
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    // ignore: use_build_context_synchronously
+                    AppLocalizations.of(context)!.taskCompleted),
+                duration: const Duration(
+                    milliseconds: DesignTokens.delaySnackbarQuick),
+              ),
+            );
+          }
 
           // Remove task with animation
           _removeTaskFromIncompleteList(taskId);
         } else {
           _showTaskError('complete');
         }
-      } catch (e, stackTrace) {
+      } on Exception catch (e, stackTrace) {
         // Error completing task
         Sentry.captureException(e, stackTrace: stackTrace);
 
@@ -200,6 +214,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final tasksState = ref.read(tasksProvider);
     final task = tasksState.tasks.firstWhere((t) => t.id == taskId);
     final isCompleted = task.status == 'completed';
+
+    // Store localized strings and ScaffoldMessenger before async operation
+    final successMessage = isCompleted
+        ? AppLocalizations.of(context)!.taskUncompleted
+        : AppLocalizations.of(context)!.taskCompleted;
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     // Show loading state immediately
     _allTasksUpdating.add(taskId);
@@ -219,22 +239,23 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
       if (success) {
         // Show success message
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(!isCompleted
-                ? AppLocalizations.of(context)!.taskCompleted
-                : AppLocalizations.of(context)!.taskUncompleted),
-            duration: const Duration(milliseconds: DesignTokens.delaySnackbarQuick),
-          ),
-        );
+        if (context.mounted) {
+          scaffoldMessenger.clearSnackBars();
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: Text(successMessage),
+              duration:
+                  const Duration(milliseconds: DesignTokens.delaySnackbarQuick),
+            ),
+          );
+        }
 
         // Update task in all items list
         _updateTaskInAllItemsList(taskId);
       } else {
         _showTaskError(isCompleted ? 'uncomplete' : 'complete');
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       // Error toggling all items task status
       Sentry.captureException(e, stackTrace: stackTrace);
 
@@ -261,9 +282,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     try {
       await ref.read(tasksProvider.notifier).deleteTask(taskId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.taskDeleted)),
-      );
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(
+              // ignore: use_build_context_synchronously
+              AppLocalizations.of(context)!.taskDeleted)),
+        );
+      }
 
       // Remove from AnimatedList with animation
       if (!_showCompleted) {
@@ -272,18 +298,22 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         // For all items mode, just trigger rebuild
         setState(() {});
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       // Error deleting task
       Sentry.captureException(e, stackTrace: stackTrace);
 
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to delete task'),
-          backgroundColor: AppColors.error,
-          duration: Duration(milliseconds: DesignTokens.delaySnackbarQuick),
-        ),
-      );
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).clearSnackBars();
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete task'),
+            backgroundColor: AppColors.error,
+            duration: Duration(milliseconds: DesignTokens.delaySnackbarQuick),
+          ),
+        );
+      }
     }
   }
 
@@ -321,7 +351,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                 _showCompleted = !_showCompleted;
               });
               // Save the new mode preference
-              _saveTaskListMode(_showCompleted);
+              unawaited(_saveTaskListMode(_showCompleted));
             },
             tooltip: _showCompleted
                 ? AppLocalizations.of(context)!.hideCompleted
@@ -331,7 +361,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
             icon: Icon(Icons.refresh,
                 color: AppColors.getTextPrimaryColor(context)),
             onPressed: () {
-              ref.read(tasksProvider.notifier).refreshTasks();
+              unawaited(ref.read(tasksProvider.notifier).refreshTasks());
             },
             tooltip: AppLocalizations.of(context)!.refresh,
           ),
@@ -642,7 +672,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           _showCompleted = savedMode;
         });
       }
-    } catch (e) {
+    } on Exception {
       // If loading fails, keep default value (false)
       // Error loading task list mode preference
     }
@@ -653,7 +683,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_showCompletedKey, showCompleted);
-    } catch (e) {
+    } on Exception {
       // Error saving task list mode preference
     }
   }

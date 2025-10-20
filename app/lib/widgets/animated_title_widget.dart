@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../design_system/typography.dart';
 import '../design_system/colors.dart';
@@ -5,7 +6,6 @@ import '../design_system/tokens.dart';
 
 /// A reusable animated title widget with easeInQuart curve
 class AnimatedTitleWidget extends StatefulWidget {
-
   const AnimatedTitleWidget({
     super.key,
     required this.text,
@@ -51,7 +51,7 @@ class _AnimatedTitleWidgetState extends State<AnimatedTitleWidget>
     _animationController.reset();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _animationController.forward();
+        unawaited(_animationController.forward());
       }
     });
   }

@@ -78,8 +78,11 @@ class IosSpeechService {
         localeId: language,
         listenFor: timeout ?? const Duration(seconds: 30),
         pauseFor: const Duration(seconds: 1),
+        // ignore: deprecated_member_use
         partialResults: true,
+        // ignore: deprecated_member_use
         cancelOnError: true,
+        // ignore: deprecated_member_use
         listenMode: stt.ListenMode.confirmation,
       );
 
@@ -155,8 +158,11 @@ class IosSpeechService {
         localeId: supportedLocale,
         listenFor: timeout ?? const Duration(seconds: 30),
         pauseFor: const Duration(seconds: 1),
+        // ignore: deprecated_member_use
         partialResults: false,
+        // ignore: deprecated_member_use
         cancelOnError: true,
+        // ignore: deprecated_member_use
         listenMode: stt.ListenMode.confirmation,
       );
 
@@ -177,7 +183,6 @@ class IosSpeechService {
 
 /// Speech Recognition Exception
 class SpeechException implements Exception {
-
   const SpeechException({
     required this.code,
     required this.message,

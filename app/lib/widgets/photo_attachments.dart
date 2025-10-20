@@ -8,7 +8,6 @@ import '../generated/app_localizations.dart';
 import '../design_system/colors.dart';
 
 class PhotoAttachments extends StatelessWidget {
-
   const PhotoAttachments({
     super.key,
     required this.photoPaths,
@@ -50,13 +49,17 @@ class PhotoAttachments extends StatelessWidget {
                       if (snapshot.hasData) {
                         return GestureDetector(
                           onTap: () async {
-                            final photoPath = await PhotoService.getPhotoPath(photoPaths[index]);
-                            _showPhotoPreview(photoPath, photoPaths, context);
+                            final photoPath = await PhotoService.getPhotoPath(
+                                photoPaths[index]);
+                            if (context.mounted) {
+                              _showPhotoPreview(photoPath, photoPaths, context);
+                            }
                           },
                           child: Container(
                             width: DesignTokens.photoPreviewWidth,
                             height: DesignTokens.photoPreviewHeight,
-                            color: AppColors.getSecondaryBackgroundColor(context),
+                            color:
+                                AppColors.getSecondaryBackgroundColor(context),
                             child: Image.file(
                               File(snapshot.data!),
                               fit: BoxFit.contain,
@@ -90,9 +93,11 @@ class PhotoAttachments extends StatelessWidget {
     );
   }
 
-  void _showPhotoPreview(String photoPath, List<String> allPhotoPaths, BuildContext context) {
+  void _showPhotoPreview(
+      String photoPath, List<String> allPhotoPaths, BuildContext context) {
     final initialIndex = allPhotoPaths.indexOf(photoPath);
-    
+
+    // ignore: discarded_futures
     showDialog(
       context: context,
       builder: (BuildContext context) {

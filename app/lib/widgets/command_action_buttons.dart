@@ -54,16 +54,14 @@ class _CommandActionButtonsState extends ConsumerState<CommandActionButtons> {
 
   @override
   void dispose() {
-    final subscription = _audioStateSubscription;
-    _audioStateSubscription = null;
-    if (subscription != null) {
-      unawaited(subscription.cancel());
-    }
+    // ignore: cancel_subscriptions
+    unawaited(_audioStateSubscription?.cancel());
     super.dispose();
   }
 
   void _setupAudioStateListener() {
-    _audioStateSubscription = AudioPlaybackService.audioStateStream.listen((state) {
+    _audioStateSubscription =
+        AudioPlaybackService.audioStateStream.listen((state) {
       if (mounted) {
         setState(() {
           _isAudioPlaying = widget.audioPath != null &&

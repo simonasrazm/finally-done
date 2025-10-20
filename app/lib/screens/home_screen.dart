@@ -1,10 +1,11 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'dart:io';
 
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
@@ -43,6 +44,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
 
     // Track screen load performance
+    // ignore: discarded_futures
     sentryPerformance.monitorTransaction(
       PerformanceTransactions.screenHome,
       PerformanceOps.screenLoad,
@@ -137,6 +139,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _pulseController.repeat(reverse: true);
 
     // Haptic feedback
+    // ignore: discarded_futures
     HapticFeedback.mediumImpact();
 
     try {
@@ -167,14 +170,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
         await _processCommand(result);
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       // Log and send to Sentry
+      // ignore: discarded_futures
       Sentry.captureException(
         e,
         stackTrace: stackTrace,
         withScope: (scope) {
+          // ignore: discarded_futures
           scope.setTag('operation', 'recording');
+          // ignore: discarded_futures
           scope.setTag('is_recording', _isRecording.toString());
+          // ignore: discarded_futures
           scope.setTag('engine_preference', ref.read(speechEngineProvider));
         },
       );
@@ -211,14 +218,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       });
 
       // Success haptic
+      // ignore: discarded_futures
       HapticFeedback.heavyImpact();
-    } catch (e) {
+    } on Exception catch (e) {
+      // ignore: discarded_futures
       Sentry.captureException(
         e,
         withScope: (scope) {
+          // ignore: discarded_futures
           scope.setTag('operation', 'schedule_command');
+          // ignore: discarded_futures
           scope.setTag('text_length', text.trim().length.toString());
+          // ignore: discarded_futures
           scope.setTag('has_photos', _selectedPhotos.isNotEmpty.toString());
+          // ignore: discarded_futures
           scope.setTag('photo_count', _selectedPhotos.length.toString());
         },
       );
@@ -243,15 +256,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _pulseController.reset();
 
       // Success haptic
+      // ignore: discarded_futures
       HapticFeedback.heavyImpact();
 
       // TODO: Execute commands if high confidence
-    } catch (e) {
+    } on Exception catch (e) {
+      // ignore: discarded_futures
       Sentry.captureException(
         e,
         withScope: (scope) {
+          // ignore: discarded_futures
           scope.setTag('operation', 'process_command');
+          // ignore: discarded_futures
           scope.setTag('transcription_length', transcription.length.toString());
+          // ignore: discarded_futures
           scope.setTag('is_recording', _isRecording.toString());
         },
       );
@@ -296,12 +314,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           _processAudioInBackground(audioPath);
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
+      // ignore: discarded_futures
       Sentry.captureException(
         e,
         withScope: (scope) {
+          // ignore: discarded_futures
           scope.setTag('operation', 'stop_recording');
+          // ignore: discarded_futures
           scope.setTag('is_recording', _isRecording.toString());
+          // ignore: discarded_futures
           scope.setTag('engine_preference', ref.read(speechEngineProvider));
         },
       );
@@ -334,7 +356,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // Update with transcription and final status using stored ID
       queueNotifier.updateCommandTranscription(commandId, transcription);
       queueNotifier.updateCommandStatus(commandId, CommandStatus.queued);
-    } catch (e) {
+    } on Exception catch (e) {
       // Update status to failed - use stored commandId if available
       try {
         final queueNotifier = ref.read(queueProvider.notifier);
@@ -353,8 +375,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         queueNotifier.updateCommandErrorMessage(
             commandId, 'Audio processing failed: ${e.toString()}');
         queueNotifier.updateCommandFailed(commandId, true);
-      } catch (updateError) {
+      } on Exception catch (updateError) {
         // If we can't update the status, at least log the error
+        // ignore: discarded_futures
         Sentry.captureException(updateError, stackTrace: StackTrace.current);
       }
     }
@@ -382,15 +405,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       });
 
       // Success haptic
+      // ignore: discarded_futures
       HapticFeedback.heavyImpact();
-    } catch (e) {
+    } on Exception catch (e) {
+      // ignore: discarded_futures
       Sentry.captureException(
         e,
         withScope: (scope) {
+          // ignore: discarded_futures
           scope.setTag('operation', 'schedule_voice_command');
+          // ignore: discarded_futures
           scope.setTag('transcription_length', transcription.length.toString());
+          // ignore: discarded_futures
           scope.setTag('has_audio_path', (audioPath != null).toString());
+          // ignore: discarded_futures
           scope.setTag('has_photos', _selectedPhotos.isNotEmpty.toString());
+          // ignore: discarded_futures
           scope.setTag('photo_count', _selectedPhotos.length.toString());
         },
       );
@@ -415,8 +445,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         // Also save local copy to app's Documents directory
         final directory = await getApplicationDocumentsDirectory();
         final photosDir = Directory('${directory.path}/photos');
-        if (!await photosDir.exists()) {
-          await photosDir.create(recursive: true);
+        if (!photosDir.existsSync()) {
+          photosDir.createSync(recursive: true);
         }
 
         final fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -428,13 +458,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               .add(fileName); // Store just filename for local reference
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
+      // ignore: discarded_futures
       Sentry.captureException(
         e,
         withScope: (scope) {
+          // ignore: discarded_futures
           scope.setTag('operation', 'take_photo');
+          // ignore: discarded_futures
           scope.setTag(
               'has_existing_photos', _selectedPhotos.isNotEmpty.toString());
+          // ignore: discarded_futures
           scope.setTag(
               'existing_photo_count', _selectedPhotos.length.toString());
         },
@@ -455,8 +489,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (photos.isNotEmpty) {
         final directory = await getApplicationDocumentsDirectory();
         final photosDir = Directory('${directory.path}/photos');
-        if (!await photosDir.exists()) {
-          await photosDir.create(recursive: true);
+        if (!photosDir.existsSync()) {
+          photosDir.createSync(recursive: true);
         }
 
         for (final photo in photos) {
@@ -471,13 +505,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           });
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
+      // ignore: discarded_futures
       Sentry.captureException(
         e,
         withScope: (scope) {
+          // ignore: discarded_futures
           scope.setTag('operation', 'pick_from_gallery');
+          // ignore: discarded_futures
           scope.setTag(
               'has_existing_photos', _selectedPhotos.isNotEmpty.toString());
+          // ignore: discarded_futures
           scope.setTag(
               'existing_photo_count', _selectedPhotos.length.toString());
         },
@@ -660,15 +698,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         child: GestureDetector(
                           onTapDown: (_) => _scaleController.forward(),
                           onTapUp: (_) {
-                            _scaleController.reverse();
+                            unawaited(_scaleController.reverse());
                             // Use microtask to let scale animation complete before heavy work
-                            Future.microtask(() {
+                            unawaited(Future.microtask(() async {
                               if (_isRecording) {
-                                _stopRecording();
+                                await _stopRecording();
                               } else {
-                                _startRecording();
+                                await _startRecording();
                               }
-                            });
+                            }));
                           },
                           onTapCancel: () => _scaleController.reverse(),
                           child: Container(
@@ -746,7 +784,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         style: AppTypography.body,
                         onSubmitted: (text) {
                           if (text.isNotEmpty) {
-                            _scheduleCommand(text);
+                            unawaited(_scheduleCommand(text));
                           }
                         },
                       ),
@@ -754,7 +792,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     IconButton(
                       onPressed: () {
                         if (_textController.text.isNotEmpty) {
-                          _scheduleCommand(_textController.text);
+                          unawaited(_scheduleCommand(_textController.text));
                         }
                       },
                       icon: const Icon(Icons.send),

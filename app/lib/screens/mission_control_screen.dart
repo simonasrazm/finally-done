@@ -45,6 +45,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     super.initState();
 
     // Track screen load performance
+    // ignore: discarded_futures
     sentryPerformance.monitorTransaction(
       PerformanceTransactions.screenMissionControl,
       PerformanceOps.screenLoad,
@@ -406,6 +407,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
     final currentTabIndex = _tabController.index;
     final isReviewTab = currentTabIndex == _reviewTabIndex;
 
+    // ignore: discarded_futures
     TranscriptionDialogService.showEditDialog(
       context: context,
       id: id,
@@ -429,7 +431,7 @@ class _MissionControlScreenState extends ConsumerState<MissionControlScreen>
       // Use the command action service
       await CommandActionService.retryCommand(
           id, commandStatus, command.failed, ref, context);
-    } catch (e) {
+    } on Exception {
       // Error handling is done in the service
     } finally {
       // Always remove from retrying set and update UI

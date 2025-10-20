@@ -152,6 +152,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
     final isConnected = _connectionService.isConnected();
     state = state.copyWith(isConnected: isConnected);
     if (isConnected) {
+      // ignore: discarded_futures
       _fetchTasks();
     }
   }
@@ -199,7 +200,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
             }
 
             await _performTaskFetch(service);
-          } catch (e, stackTrace) {
+          } on Exception catch (e, stackTrace) {
             Sentry.captureException(e, stackTrace: stackTrace);
 
             // If it's an authentication error, try to refresh the connection
@@ -248,7 +249,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
         lastUpdated: DateTime.now(),
         selectedTaskListId: taskListId,
       );
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(
         isLoading: false,
@@ -271,7 +272,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
             state.copyWith(error: 'Google Tasks not connected [createTask]');
         return;
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(error: 'Connection check failed: ${e.toString()}');
       return;
@@ -300,7 +301,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
         // Fallback to full refresh if we don't get the created task back
         await _fetchTasks();
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(error: 'Failed to create task: ${e.toString()}');
     }
@@ -319,7 +320,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
             state.copyWith(error: 'Google Tasks not connected [completeTask]');
         return false;
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(error: 'Connection check failed: ${e.toString()}');
       return false;
@@ -337,7 +338,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
       try {
         taskListId = await _listService.getDefaultTaskListId(service);
         state = state.copyWith(selectedTaskListId: taskListId);
-      } catch (e, stackTrace) {
+      } on Exception catch (e, stackTrace) {
         Sentry.captureException(e, stackTrace: stackTrace);
         state = state.copyWith(error: 'Failed to get task list: $e');
         return false;
@@ -360,7 +361,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
             error: 'Google Tasks not connected [uncompleteTask]');
         return false;
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(error: 'Connection check failed: ${e.toString()}');
       return false;
@@ -378,7 +379,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
       try {
         taskListId = await _listService.getDefaultTaskListId(service);
         state = state.copyWith(selectedTaskListId: taskListId);
-      } catch (e, stackTrace) {
+      } on Exception catch (e, stackTrace) {
         Sentry.captureException(e, stackTrace: stackTrace);
         state = state.copyWith(error: 'Failed to get task list: $e');
         return false;
@@ -410,7 +411,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
             state.copyWith(error: 'Google Tasks not connected [deleteTask]');
         return;
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(error: 'Connection check failed: ${e.toString()}');
       return;
@@ -428,7 +429,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
       try {
         taskListId = await _listService.getDefaultTaskListId(service);
         state = state.copyWith(selectedTaskListId: taskListId);
-      } catch (e, stackTrace) {
+      } on Exception catch (e, stackTrace) {
         Sentry.captureException(e, stackTrace: stackTrace);
         state = state.copyWith(error: 'Failed to get task list: $e');
         return;
@@ -438,7 +439,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
     try {
       await TaskBusinessService.deleteTask(service, taskListId, taskId);
       _removeTaskLocally(taskId);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       // Task deletion failed, but we already removed it locally
       // This is acceptable for optimistic updates
@@ -475,6 +476,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
   void setSelectedTaskList(String? taskListId) {
     state = state.copyWith(selectedTaskListId: taskListId);
     if (state.isConnected) {
+      // ignore: discarded_futures
       _fetchTasks();
     }
   }
@@ -526,7 +528,7 @@ final taskListsProvider =
       return [];
     }
     return await tasksService.getTaskLists();
-  } catch (e, stackTrace) {
+  } on Exception catch (e, stackTrace) {
     Sentry.captureException(e, stackTrace: stackTrace);
     return [];
   }

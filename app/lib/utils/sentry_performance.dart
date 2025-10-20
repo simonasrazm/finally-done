@@ -126,6 +126,7 @@ class SentryPerformance {
 
   /// Add breadcrumb for debugging
   void addBreadcrumb(String message, {Map<String, dynamic>? data}) {
+    // ignore: discarded_futures
     Sentry.addBreadcrumb(Breadcrumb(
       message: message,
       data: data,

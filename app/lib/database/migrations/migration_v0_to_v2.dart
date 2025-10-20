@@ -35,7 +35,7 @@ class MigrationV0ToV2 {
             }
             
           }
-        } catch (e) {
+        } on Exception {
         }
       }
     }

@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Language state management
 class LanguageState {
-
   const LanguageState({
     required this.locale,
     this.isLoading = false,
@@ -25,8 +24,8 @@ class LanguageState {
 
 /// Language notifier for managing language state
 class LanguageNotifier extends StateNotifier<LanguageState> {
-  
-  LanguageNotifier() : super(LanguageState(locale: const Locale('en'))) {
+  LanguageNotifier() : super(const LanguageState(locale: Locale('en'))) {
+    // ignore: discarded_futures
     _loadSavedLanguage();
   }
   static const String _languageKey = 'selected_language';
@@ -34,17 +33,17 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
   /// Load saved language from SharedPreferences
   Future<void> _loadSavedLanguage() async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final languageCode = prefs.getString(_languageKey) ?? 'en';
       final locale = Locale(languageCode);
-      
+
       state = state.copyWith(
         locale: locale,
         isLoading: false,
       );
-    } catch (e) {
+    } on Exception {
       // Fallback to English if loading fails
       state = state.copyWith(
         locale: const Locale('en'),
@@ -56,16 +55,16 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
   /// Change language and save to SharedPreferences
   Future<void> changeLanguage(Locale locale) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_languageKey, locale.languageCode);
-      
+
       state = state.copyWith(
         locale: locale,
         isLoading: false,
       );
-    } catch (e) {
+    } on Exception {
       // Still update the state even if saving fails
       state = state.copyWith(
         locale: locale,
@@ -76,17 +75,17 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
 
   /// Get available languages
   List<Map<String, dynamic>> get availableLanguages => [
-    {
-      'code': 'en',
-      'name': 'English',
-      'flag': '🇺🇸',
-    },
-    {
-      'code': 'lt',
-      'name': 'Lietuvių',
-      'flag': '🇱🇹',
-    },
-  ];
+        {
+          'code': 'en',
+          'name': 'English',
+          'flag': '🇺🇸',
+        },
+        {
+          'code': 'lt',
+          'name': 'Lietuvių',
+          'flag': '🇱🇹',
+        },
+      ];
 
   /// Get current language display name
   String get currentLanguageName {
@@ -99,7 +98,8 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
 }
 
 /// Language provider
-final languageProvider = StateNotifierProvider<LanguageNotifier, LanguageState>((ref) {
+final languageProvider =
+    StateNotifierProvider<LanguageNotifier, LanguageState>((ref) {
   return LanguageNotifier();
 });
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../design_system/colors.dart';
@@ -38,17 +39,17 @@ class _AnimationTestScreenState extends State<AnimationTestScreen>
 
   void _triggerSquash() {
     _playSquashSound();
-    _squashController.forward().then((_) {
-      _squashController.reverse();
-    });
+    unawaited(_squashController.forward().then((_) {
+      unawaited(_squashController.reverse());
+    }));
   }
 
   void _playSquashSound() {
-    HapticFeedback.lightImpact();
-    _playSoundPattern([200, 150, 200]); // Short-short-short pattern
+    unawaited(HapticFeedback.lightImpact());
+    unawaited(_playSoundPattern([200, 150, 200])); // Short-short-short pattern
   }
 
-  void _playSoundPattern(List<int> delays) async {
+  Future<void> _playSoundPattern(List<int> delays) async {
     for (int delay in delays) {
       SystemSound.play(SystemSoundType.click);
       await Future.delayed(Duration(milliseconds: delay));
@@ -146,7 +147,8 @@ class _AnimationTestScreenState extends State<AnimationTestScreen>
       decoration: BoxDecoration(
         color: AppColors.getBackgroundColor(context),
         border: Border.all(
-          color: AppColors.getTextSecondaryColor(context).withValues(alpha: 0.3),
+          color:
+              AppColors.getTextSecondaryColor(context).withValues(alpha: 0.3),
           width: DesignTokens.borderWidthMedium,
         ),
         borderRadius: BorderRadius.circular(DesignTokens.borderRadiusSmall),

@@ -16,6 +16,7 @@ class TaskPollingService {
     _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(_pollingInterval, (_) {
       if (!_isFetching) {
+        // ignore: discarded_futures
         _fetchTasksSilently();
       }
     });

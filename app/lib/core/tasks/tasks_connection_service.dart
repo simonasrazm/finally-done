@@ -39,7 +39,7 @@ class TasksConnectionService {
       }
       
       return false;
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }

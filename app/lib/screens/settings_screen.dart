@@ -27,6 +27,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void initState() {
     super.initState();
     _nameController.text = 'Simonas'; // Default for MVP
+    // ignore: discarded_futures
     _loadSettings();
   }
 
@@ -91,6 +92,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     value: languageState.locale,
                     onChanged: (Locale? newLocale) {
                       if (newLocale != null) {
+                        // ignore: discarded_futures
                         languageNotifier.changeLanguage(newLocale);
                       }
                     },
@@ -117,6 +119,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     value: themeState.mode,
                     onChanged: (AppThemeMode? newMode) {
                       if (newMode != null) {
+                        // ignore: discarded_futures
                         themeNotifier.changeThemeMode(newMode);
                       }
                     },
@@ -151,9 +154,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   return DropdownButton<String>(
                     value: enginePreference,
                     onChanged: (String? newValue) {
-                      ref
-                          .read(speechEngineProvider.notifier)
-                          .setEngine(newValue!);
+                      ref.read(speechEngineProvider.notifier).engine =
+                          newValue!;
                     },
                     items: [
                       DropdownMenuItem(
@@ -225,6 +227,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: 'Sound Test',
               subtitle: 'Test different sound patterns for task completion',
               onTap: () {
+                // ignore: discarded_futures
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -317,6 +320,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showConfidenceDialog() {
+    // ignore: discarded_futures
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -363,6 +367,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showHelpDialog() {
+    // ignore: discarded_futures
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

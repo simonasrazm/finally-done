@@ -12,7 +12,7 @@ class ThumbnailService {
     try {
       // Read the original image
       final originalFile = File(imagePath);
-      if (!await originalFile.exists()) {
+      if (!originalFile.existsSync()) {
         return null;
       }
 
@@ -38,8 +38,8 @@ class ThumbnailService {
       // Save thumbnail
       final directory = await getApplicationDocumentsDirectory();
       final thumbnailsDir = Directory('${directory.path}/thumbnails');
-      if (!await thumbnailsDir.exists()) {
-        await thumbnailsDir.create(recursive: true);
+      if (!thumbnailsDir.existsSync()) {
+        thumbnailsDir.createSync(recursive: true);
       }
 
       final fileName = originalFile.path.split('/').last;
@@ -48,7 +48,7 @@ class ThumbnailService {
       await thumbnailFile.writeAsBytes(thumbnailBytes);
 
       return thumbnailPath;
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -61,13 +61,13 @@ class ThumbnailService {
       final thumbnailPath = '${directory.path}/thumbnails/thumb_$fileName';
       final thumbnailFile = File(thumbnailPath);
 
-      if (await thumbnailFile.exists()) {
+      if (thumbnailFile.existsSync()) {
         return thumbnailPath;
       }
 
       // Create thumbnail if it doesn't exist
       return createThumbnail(imagePath);
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -80,9 +80,9 @@ class ThumbnailService {
       final thumbnailPath = '${directory.path}/thumbnails/thumb_$fileName';
       final thumbnailFile = File(thumbnailPath);
 
-      if (await thumbnailFile.exists()) {
+      if (thumbnailFile.existsSync()) {
         await thumbnailFile.delete();
       }
-    } catch (e) {}
+    } on Exception {}
   }
 }
