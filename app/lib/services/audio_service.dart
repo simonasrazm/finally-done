@@ -21,7 +21,7 @@ class AudioService {
             AVAudioSessionOptions.allowBluetoothA2DP,
           },
         ),
-        android: AudioContextAndroid(
+        android: const AudioContextAndroid(
           isSpeakerphoneOn: false,
           stayAwake: false,
           contentType: AndroidContentType.sonification,

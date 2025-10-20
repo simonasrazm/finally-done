@@ -19,12 +19,12 @@ class TaskListService {
       return currentId;
     }
     
-    return await getDefaultTaskListId(service);
+    return getDefaultTaskListId(service);
   }
 
   /// Get all available task lists
   Future<List<dynamic>> getTaskLists(GoogleTasksService service) async {
-    return await service.getTaskLists();
+    return service.getTaskLists();
   }
 }
 

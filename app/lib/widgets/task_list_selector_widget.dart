@@ -7,9 +7,6 @@ import '../generated/app_localizations.dart';
 
 /// Widget for selecting task lists
 class TaskListSelectorWidget extends StatelessWidget {
-  final String? selectedTaskListId;
-  final List<google_tasks.TaskList> taskLists;
-  final Function(String?) onTaskListChanged;
 
   const TaskListSelectorWidget({
     super.key,
@@ -17,17 +14,20 @@ class TaskListSelectorWidget extends StatelessWidget {
     required this.taskLists,
     required this.onTaskListChanged,
   });
+  final String? selectedTaskListId;
+  final List<google_tasks.TaskList> taskLists;
+  final Function(String?) onTaskListChanged;
 
   @override
   Widget build(BuildContext context) {
-    if (taskLists.isEmpty) return SizedBox.shrink();
+    if (taskLists.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       child: Row(
         children: [
           Icon(Icons.list, color: AppColors.getTextPrimaryColor(context)),
-          SizedBox(width: DesignTokens.iconSpacing),
+          const SizedBox(width: DesignTokens.iconSpacing),
           Expanded(
             child: DropdownButton<String>(
               value: selectedTaskListId,

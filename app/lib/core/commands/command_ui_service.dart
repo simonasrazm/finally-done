@@ -50,16 +50,6 @@ class CommandUIService {
 }
 
 class CommandProperties {
-  final String text;
-  final String status;
-  final String? audioPath;
-  final String? transcription;
-  final DateTime createdAt;
-  final List<String> photoPaths;
-  final bool failed;
-  final bool actionNeeded;
-  final String? errorMessage;
-  final bool isValid;
 
   CommandProperties({
     required this.text,
@@ -88,4 +78,14 @@ class CommandProperties {
       isValid: false,
     );
   }
+  final String text;
+  final String status;
+  final String? audioPath;
+  final String? transcription;
+  final DateTime createdAt;
+  final List<String> photoPaths;
+  final bool failed;
+  final bool actionNeeded;
+  final String? errorMessage;
+  final bool isValid;
 }

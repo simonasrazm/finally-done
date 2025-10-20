@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
 import '../design_system/colors.dart';
 import '../design_system/typography.dart';
@@ -9,16 +10,6 @@ import '../services/audio_service.dart';
 
 /// Widget for displaying a single task item
 class TaskItemWidget extends StatefulWidget {
-  final google_tasks.Task task;
-  final bool isCompleted;
-  final bool showCompleted;
-  final bool isLoading;
-  final bool enableSquashAnimation;
-  final VoidCallback onTap;
-  final VoidCallback onCheckboxChanged;
-  final VoidCallback onDelete;
-  final VoidCallback onEdit;
-
   const TaskItemWidget({
     super.key,
     required this.task,
@@ -31,6 +22,15 @@ class TaskItemWidget extends StatefulWidget {
     required this.onDelete,
     required this.onEdit,
   });
+  final google_tasks.Task task;
+  final bool isCompleted;
+  final bool showCompleted;
+  final bool isLoading;
+  final bool enableSquashAnimation;
+  final VoidCallback onTap;
+  final VoidCallback onCheckboxChanged;
+  final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
   @override
   State<TaskItemWidget> createState() => _TaskItemWidgetState();
@@ -81,18 +81,18 @@ class _TaskItemWidgetState extends State<TaskItemWidget>
   void _triggerSquashAnimation() {
     if (widget.enableSquashAnimation) {
       // Only handle animation - single responsibility
-      _squashController.forward().then((_) {
-        _squashController.reverse();
-      });
+      unawaited(_squashController.forward().then((_) {
+        return _squashController.reverse();
+      }));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final hasAdditionalContent =
-        widget.task.notes?.isNotEmpty == true || widget.task.due != null;
+        widget.task.notes?.isNotEmpty ?? false || widget.task.due != null;
 
-    Widget content = InkWell(
+    final Widget content = InkWell(
       onTap: () {
         // Handle task completion feedback (audio + haptic)
         _handleTaskCompletion();
@@ -150,7 +150,7 @@ class _TaskItemWidgetState extends State<TaskItemWidget>
                         )
                       : null,
             ),
-            SizedBox(width: DesignTokens.spacing3),
+            const SizedBox(width: DesignTokens.spacing3),
 
             // Task content
             Expanded(
@@ -172,8 +172,8 @@ class _TaskItemWidgetState extends State<TaskItemWidget>
 
                   // Additional content (notes, due date)
                   if (hasAdditionalContent) ...[
-                    SizedBox(height: DesignTokens.spacing1),
-                    if (widget.task.notes?.isNotEmpty == true)
+                    const SizedBox(height: DesignTokens.spacing1),
+                    if (widget.task.notes?.isNotEmpty ?? false)
                       Text(
                         widget.task.notes!,
                         style: AppTypography.subhead.copyWith(
@@ -183,8 +183,8 @@ class _TaskItemWidgetState extends State<TaskItemWidget>
                         overflow: TextOverflow.ellipsis,
                       ),
                     if (widget.task.due != null) ...[
-                      if (widget.task.notes?.isNotEmpty == true)
-                        SizedBox(height: DesignTokens.spacing0),
+                      if (widget.task.notes?.isNotEmpty ?? false)
+                        const SizedBox(height: DesignTokens.spacing0),
                       _buildDueDate(context, widget.task.due!),
                     ],
                   ],
@@ -199,12 +199,12 @@ class _TaskItemWidgetState extends State<TaskItemWidget>
                 // Edit button
                 IconButton(
                   onPressed: widget.onEdit,
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.edit_outlined,
                     color: AppColors.textSecondary,
                     size: DesignTokens.iconSizeMedium,
                   ),
-                  constraints: BoxConstraints(
+                  constraints: const BoxConstraints(
                     minWidth: DesignTokens.touchTargetSize,
                     minHeight: DesignTokens.touchTargetSize,
                   ),
@@ -214,12 +214,12 @@ class _TaskItemWidgetState extends State<TaskItemWidget>
                 // Delete button
                 IconButton(
                   onPressed: widget.onDelete,
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.delete_outline,
                     color: AppColors.textSecondary,
                     size: DesignTokens.iconSizeMedium,
                   ),
-                  constraints: BoxConstraints(
+                  constraints: const BoxConstraints(
                     minWidth: DesignTokens.touchTargetSize,
                     minHeight: DesignTokens.touchTargetSize,
                   ),

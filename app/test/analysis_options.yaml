@@ -1,0 +1,12 @@
+analyzer:
+  errors:
+    # Allow Arrange-phase variables/mocks that are intentionally unused
+    unused_local_variable: ignore
+    # Optionally relax unused imports in tests (commented out by default)
+    # unused_import: ignore
+
+linter:
+  rules:
+    # Keep the rest of lints as in root; we only relax unused locals here
+    # Add test-specific lints if needed in the future
+

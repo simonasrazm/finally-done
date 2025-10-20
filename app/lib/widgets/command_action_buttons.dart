@@ -54,7 +54,11 @@ class _CommandActionButtonsState extends ConsumerState<CommandActionButtons> {
 
   @override
   void dispose() {
-    _audioStateSubscription?.cancel();
+    final subscription = _audioStateSubscription;
+    _audioStateSubscription = null;
+    if (subscription != null) {
+      unawaited(subscription.cancel());
+    }
     super.dispose();
   }
 

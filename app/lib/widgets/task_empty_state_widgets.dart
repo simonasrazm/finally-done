@@ -6,18 +6,18 @@ import '../generated/app_localizations.dart';
 
 /// Widget for displaying when not connected to Google
 class NotConnectedView extends StatelessWidget {
-  final VoidCallback? onNavigateToSettings;
 
   const NotConnectedView({
     super.key,
     this.onNavigateToSettings,
   });
+  final VoidCallback? onNavigateToSettings;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(DesignTokens.sectionSpacing + DesignTokens.spacing2),
+        padding: const EdgeInsets.all(DesignTokens.sectionSpacing + DesignTokens.spacing2),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -26,19 +26,19 @@ class NotConnectedView extends StatelessWidget {
               size: DesignTokens.icon4xl,
               color: AppColors.getTextSecondaryColor(context),
             ),
-            SizedBox(height: DesignTokens.sectionSpacing),
+            const SizedBox(height: DesignTokens.sectionSpacing),
             Text(
               AppLocalizations.of(context)!.notConnectedToGoogle,
               style: AppTypography.title3.copyWith(color: AppColors.getTextPrimaryColor(context)),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: DesignTokens.spacing2),
+            const SizedBox(height: DesignTokens.spacing2),
             Text(
               AppLocalizations.of(context)!.connectToGoogleToViewTasks,
               style: AppTypography.body.copyWith(color: AppColors.getTextSecondaryColor(context)),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: DesignTokens.sectionSpacing),
+            const SizedBox(height: DesignTokens.sectionSpacing),
             ElevatedButton.icon(
               onPressed: onNavigateToSettings,
               icon: const Icon(Icons.settings),
@@ -46,7 +46,7 @@ class NotConnectedView extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.backgroundSecondary,
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignTokens.componentPadding,
                   vertical: DesignTokens.spacing3,
                 ),
@@ -72,8 +72,8 @@ class LoadingView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: AppColors.primary),
-          SizedBox(height: DesignTokens.componentPadding),
+          const CircularProgressIndicator(color: AppColors.primary),
+          const SizedBox(height: DesignTokens.componentPadding),
           Text(
             AppLocalizations.of(context)!.loadingTasks,
             style: AppTypography.body.copyWith(color: AppColors.getTextSecondaryColor(context)),
@@ -86,41 +86,41 @@ class LoadingView extends StatelessWidget {
 
 /// Widget for displaying error state
 class ErrorView extends StatelessWidget {
-  final String error;
-  final VoidCallback onRetry;
 
   const ErrorView({
     super.key,
     required this.error,
     required this.onRetry,
   });
+  final String error;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(DesignTokens.componentPadding),
+        padding: const EdgeInsets.all(DesignTokens.componentPadding),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.error_outline,
               size: DesignTokens.icon4xl,
               color: AppColors.error,
             ),
-            SizedBox(height: DesignTokens.componentPadding),
+            const SizedBox(height: DesignTokens.componentPadding),
             Text(
               AppLocalizations.of(context)!.errorLoadingTasks,
               style: AppTypography.title3.copyWith(color: AppColors.getTextPrimaryColor(context)),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: DesignTokens.spacing2),
+            const SizedBox(height: DesignTokens.spacing2),
             Text(
               AppLocalizations.of(context)!.errorLoadingTasksDescription,
               style: AppTypography.body.copyWith(color: AppColors.getTextSecondaryColor(context)),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: DesignTokens.sectionSpacing),
+            const SizedBox(height: DesignTokens.sectionSpacing),
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
@@ -148,7 +148,7 @@ class EmptyView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(DesignTokens.sectionSpacing + DesignTokens.spacing2),
+        padding: const EdgeInsets.all(DesignTokens.sectionSpacing + DesignTokens.spacing2),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -157,13 +157,13 @@ class EmptyView extends StatelessWidget {
               size: DesignTokens.icon4xl,
               color: AppColors.getTextSecondaryColor(context),
             ),
-            SizedBox(height: DesignTokens.sectionSpacing),
+            const SizedBox(height: DesignTokens.sectionSpacing),
             Text(
               AppLocalizations.of(context)!.noTasksFound,
               style: AppTypography.title3.copyWith(color: AppColors.getTextPrimaryColor(context)),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: DesignTokens.spacing2),
+            const SizedBox(height: DesignTokens.spacing2),
             Text(
               AppLocalizations.of(context)!.addYourFirstTask,
               style: AppTypography.body.copyWith(color: AppColors.getTextSecondaryColor(context)),

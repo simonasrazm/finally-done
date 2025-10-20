@@ -8,7 +8,7 @@ class TaskBusinessService {
     GoogleTasksService service,
     String taskListId,
   ) async {
-    return await service.getTasks(taskListId);
+    return service.getTasks(taskListId);
   }
 
   /// Create a new task
@@ -17,7 +17,7 @@ class TaskBusinessService {
     String taskListId,
     String title,
   ) async {
-    return await service.createTask(taskListId, title);
+    return service.createTask(taskListId, title);
   }
 
   /// Complete a task

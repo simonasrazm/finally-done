@@ -83,7 +83,7 @@ class GeminiSpeechStrategy implements SpeechEngineStrategy {
         throw const SpeechEngineException('No audio path available. Please try again.');
       }
       
-      return await _geminiService.processAudioFile(audioPath);
+      return _geminiService.processAudioFile(audioPath);
       
     } catch (e) {
       throw const SpeechEngineException('Audio processing failed. Please try again.');
@@ -93,7 +93,7 @@ class GeminiSpeechStrategy implements SpeechEngineStrategy {
   /// Process a specific audio file with Gemini (for retry functionality)
   Future<String> processAudioFile(String audioPath) async {
     try {
-      return await _geminiService.processAudioFile(audioPath);
+      return _geminiService.processAudioFile(audioPath);
       
     } catch (e) {
       throw const SpeechEngineException('Audio processing failed. Please try again.');

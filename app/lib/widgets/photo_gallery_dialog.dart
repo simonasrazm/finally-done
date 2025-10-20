@@ -6,14 +6,14 @@ import 'package:finally_done/design_system/tokens.dart';
 
 /// Dialog widget for displaying photo gallery
 class PhotoGalleryDialog extends StatefulWidget {
-  final List<String> allPhotoPaths;
-  final int initialIndex;
 
   const PhotoGalleryDialog({
     super.key,
     required this.allPhotoPaths,
     required this.initialIndex,
   });
+  final List<String> allPhotoPaths;
+  final int initialIndex;
 
   @override
   State<PhotoGalleryDialog> createState() => _PhotoGalleryDialogState();
@@ -100,13 +100,13 @@ class _PhotoGalleryDialogState extends State<PhotoGalleryDialog> {
             // Photo indicators
             if (widget.allPhotoPaths.length > 1)
               Container(
-                padding: EdgeInsets.all(DesignTokens.componentPadding),
+                padding: const EdgeInsets.all(DesignTokens.componentPadding),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
                     widget.allPhotoPaths.length,
                     (index) => Container(
-                      margin: EdgeInsets.symmetric(horizontal: DesignTokens.spacing1),
+                      margin: const EdgeInsets.symmetric(horizontal: DesignTokens.spacing1),
                       width: DesignTokens.spacing2,
                       height: DesignTokens.spacing2,
                       decoration: BoxDecoration(

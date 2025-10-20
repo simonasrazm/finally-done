@@ -14,7 +14,6 @@ import '../design_system/tokens.dart';
 
 /// State for tasks management
 class TasksState {
-
   const TasksState({
     this.tasks = const [],
     this.selectedTaskListId,
@@ -50,11 +49,11 @@ class TasksState {
   }
 
   /// Get only incomplete tasks
-  List<google_tasks.Task> get incompleteTasks => 
+  List<google_tasks.Task> get incompleteTasks =>
       tasks.where((task) => task.status != 'completed').toList();
 
   /// Get only completed tasks
-  List<google_tasks.Task> get completedTasks => 
+  List<google_tasks.Task> get completedTasks =>
       tasks.where((task) => task.status == 'completed').toList();
 
   /// Get tasks due today
@@ -64,9 +63,9 @@ class TasksState {
       if (task.due == null) return false;
       final dueDate = DateTime.tryParse(task.due!);
       if (dueDate == null) return false;
-      return dueDate.year == today.year && 
-             dueDate.month == today.month && 
-             dueDate.day == today.day;
+      return dueDate.year == today.year &&
+          dueDate.month == today.month &&
+          dueDate.day == today.day;
     }).toList();
   }
 
@@ -84,7 +83,6 @@ class TasksState {
 
 /// Notifier for managing tasks state
 class TasksNotifier extends StateNotifier<TasksState> {
-
   TasksNotifier(this._ref) : super(TasksState(lastUpdated: DateTime.now())) {
     _initializeServices();
     _waitForIntegrationManager();
@@ -107,35 +105,39 @@ class TasksNotifier extends StateNotifier<TasksState> {
   void _waitForIntegrationManager() async {
     // Wait for integration manager to have providers
     while (_ref.read(integrationManagerProvider).isEmpty) {
-      await Future.delayed(const Duration(milliseconds: DesignTokens.delayPolling));
+      await Future.delayed(
+          const Duration(milliseconds: DesignTokens.delayPolling));
     }
-    
+
     // Wait for Google integration to be fully initialized
     int attempts = 0;
-    while (attempts < 20) { // Max 5 seconds (20 * 250ms)
+    while (attempts < 20) {
+      // Max 5 seconds (20 * 250ms)
       final googleState = _ref.read(integrationManagerProvider)['google'];
       if (googleState != null && googleState.isAuthenticated) {
         final isServiceConnected = googleState.isServiceConnected('tasks');
         final tasksService = _ref.read(googleTasksServiceProvider);
-        
+
         if (isServiceConnected || tasksService != null) {
           break;
         }
       }
-      await Future.delayed(const Duration(milliseconds: DesignTokens.delayPolling));
+      await Future.delayed(
+          const Duration(milliseconds: DesignTokens.delayPolling));
       attempts++;
     }
-    
+
     _startPolling();
     _checkInitialConnection();
-    
+
     // Listen to integration manager state changes
     _ref.listen(integrationManagerProvider, (previous, next) {
       final googleState = next['google'];
       if (googleState != null && googleState.isAuthenticated) {
-        final wasConnected = previous?['google']?.isServiceConnected('tasks') ?? false;
+        final wasConnected =
+            previous?['google']?.isServiceConnected('tasks') ?? false;
         final isNowConnected = googleState.isServiceConnected('tasks');
-        
+
         if (isNowConnected && !wasConnected) {
           _checkInitialConnection();
         } else if (!state.isConnected && isNowConnected) {
@@ -168,13 +170,13 @@ class TasksNotifier extends StateNotifier<TasksState> {
   /// Fetch tasks from Google
   Future<void> _fetchTasks() async {
     try {
-      return await sentryPerformance.monitorTransaction(
+      return sentryPerformance.monitorTransaction(
         PerformanceTransactions.apiTasksFetch,
         PerformanceOps.apiCall,
         () async {
           // Check connection status
           final isConnected = _connectionService.isConnected();
-          
+
           if (!isConnected) {
             final service = await _connectionService.getOrCreateService();
             if (service == null) {
@@ -195,17 +197,18 @@ class TasksNotifier extends StateNotifier<TasksState> {
             if (service == null) {
               throw Exception('Google Tasks service not available');
             }
-            
+
             await _performTaskFetch(service);
           } catch (e, stackTrace) {
             Sentry.captureException(e, stackTrace: stackTrace);
-            
+
             // If it's an authentication error, try to refresh the connection
-            if (e.toString().contains('invalid_token') || e.toString().contains('Authentication expired')) {
+            if (e.toString().contains('invalid_token') ||
+                e.toString().contains('Authentication expired')) {
               _checkInitialConnection();
               return;
             }
-            
+
             state = state.copyWith(
               isLoading: false,
               error: e.toString(),
@@ -231,10 +234,11 @@ class TasksNotifier extends StateNotifier<TasksState> {
   Future<void> _performTaskFetch(dynamic service) async {
     try {
       // Get task list ID - use selected one or get default
-      final taskListId = await _listService.ensureTaskListId(service, state.selectedTaskListId);
-      
+      final taskListId = await _listService.ensureTaskListId(
+          service, state.selectedTaskListId);
+
       final tasks = await TaskBusinessService.fetchTasks(service, taskListId);
-      
+
       // Update state with fetched tasks
       state = state.copyWith(
         tasks: tasks,
@@ -244,7 +248,6 @@ class TasksNotifier extends StateNotifier<TasksState> {
         lastUpdated: DateTime.now(),
         selectedTaskListId: taskListId,
       );
-      
     } catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(
@@ -264,7 +267,8 @@ class TasksNotifier extends StateNotifier<TasksState> {
   Future<void> createTask(String title, {String? taskListId}) async {
     try {
       if (!_connectionService.isConnected()) {
-        state = state.copyWith(error: 'Google Tasks not connected [createTask]');
+        state =
+            state.copyWith(error: 'Google Tasks not connected [createTask]');
         return;
       }
     } catch (e, stackTrace) {
@@ -279,15 +283,16 @@ class TasksNotifier extends StateNotifier<TasksState> {
         state = state.copyWith(error: 'Google Tasks service not available');
         return;
       }
-      
+
       final taskListIdToUse = taskListId ?? state.selectedTaskListId;
       if (taskListIdToUse == null) {
         state = state.copyWith(error: 'No task list selected');
         return;
       }
 
-      final createdTask = await TaskBusinessService.createTask(service, taskListIdToUse, title);
-      
+      final createdTask =
+          await TaskBusinessService.createTask(service, taskListIdToUse, title);
+
       // Add task locally immediately for better UX
       if (createdTask != null) {
         _addTaskLocally(createdTask);
@@ -295,7 +300,6 @@ class TasksNotifier extends StateNotifier<TasksState> {
         // Fallback to full refresh if we don't get the created task back
         await _fetchTasks();
       }
-      
     } catch (e, stackTrace) {
       Sentry.captureException(e, stackTrace: stackTrace);
       state = state.copyWith(error: 'Failed to create task: ${e.toString()}');
@@ -308,10 +312,11 @@ class TasksNotifier extends StateNotifier<TasksState> {
       state = state.copyWith(error: 'Task ID is missing');
       return false;
     }
-    
+
     try {
       if (!_connectionService.isConnected()) {
-        state = state.copyWith(error: 'Google Tasks not connected [completeTask]');
+        state =
+            state.copyWith(error: 'Google Tasks not connected [completeTask]');
         return false;
       }
     } catch (e, stackTrace) {
@@ -325,7 +330,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
       state = state.copyWith(error: 'Google Tasks service not available');
       return false;
     }
-    
+
     // Get task list ID
     String? taskListId = state.selectedTaskListId;
     if (taskListId == null || taskListId.isEmpty) {
@@ -338,7 +343,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
         return false;
       }
     }
-    
+
     await TaskBusinessService.completeTask(service, taskListId, taskId);
     return true;
   }
@@ -348,10 +353,11 @@ class TasksNotifier extends StateNotifier<TasksState> {
     if (taskId.isEmpty) {
       return false;
     }
-    
+
     try {
       if (!_connectionService.isConnected()) {
-        state = state.copyWith(error: 'Google Tasks not connected [uncompleteTask]');
+        state = state.copyWith(
+            error: 'Google Tasks not connected [uncompleteTask]');
         return false;
       }
     } catch (e, stackTrace) {
@@ -365,7 +371,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
       state = state.copyWith(error: 'Google Tasks service not available');
       return false;
     }
-    
+
     // Get task list ID
     String? taskListId = state.selectedTaskListId;
     if (taskListId == null || taskListId.isEmpty) {
@@ -378,15 +384,16 @@ class TasksNotifier extends StateNotifier<TasksState> {
         return false;
       }
     }
-    
+
     await TaskBusinessService.uncompleteTask(service, taskListId, taskId);
     return true;
   }
 
   /// Update task status locally without full refresh
   void updateTaskStatusLocally(String taskId, String newStatus) {
-    final updatedTasks = _localStateService.updateTaskStatusLocally(state.tasks, taskId, newStatus);
-    
+    final updatedTasks = _localStateService.updateTaskStatusLocally(
+        state.tasks, taskId, newStatus);
+
     // Update state with modified tasks list
     state = state.copyWith(
       tasks: updatedTasks,
@@ -399,7 +406,8 @@ class TasksNotifier extends StateNotifier<TasksState> {
   Future<void> deleteTask(String taskId) async {
     try {
       if (!_connectionService.isConnected()) {
-        state = state.copyWith(error: 'Google Tasks not connected [deleteTask]');
+        state =
+            state.copyWith(error: 'Google Tasks not connected [deleteTask]');
         return;
       }
     } catch (e, stackTrace) {
@@ -413,7 +421,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
       state = state.copyWith(error: 'Google Tasks service not available');
       return;
     }
-    
+
     // Get task list ID
     String? taskListId = state.selectedTaskListId;
     if (taskListId == null || taskListId.isEmpty) {
@@ -426,7 +434,7 @@ class TasksNotifier extends StateNotifier<TasksState> {
         return;
       }
     }
-    
+
     try {
       await TaskBusinessService.deleteTask(service, taskListId, taskId);
       _removeTaskLocally(taskId);
@@ -439,8 +447,9 @@ class TasksNotifier extends StateNotifier<TasksState> {
 
   /// Add task locally without full refresh
   void _addTaskLocally(google_tasks.Task newTask) {
-    final updatedTasks = _localStateService.addTaskLocally(state.tasks, newTask);
-    
+    final updatedTasks =
+        _localStateService.addTaskLocally(state.tasks, newTask);
+
     // Update state with modified tasks list
     state = state.copyWith(
       tasks: updatedTasks,
@@ -451,8 +460,9 @@ class TasksNotifier extends StateNotifier<TasksState> {
 
   /// Remove task locally without full refresh
   void _removeTaskLocally(String taskId) {
-    final updatedTasks = _localStateService.removeTaskLocally(state.tasks, taskId);
-    
+    final updatedTasks =
+        _localStateService.removeTaskLocally(state.tasks, taskId);
+
     // Update state with modified tasks list
     state = state.copyWith(
       tasks: updatedTasks,
@@ -502,9 +512,10 @@ final tasksProvider = StateNotifierProvider<TasksNotifier, TasksState>((ref) {
 });
 
 /// Provider for task lists
-final taskListsProvider = FutureProvider<List<google_tasks.TaskList>>((ref) async {
+final taskListsProvider =
+    FutureProvider<List<google_tasks.TaskList>>((ref) async {
   final manager = ref.read(integrationManagerProvider.notifier);
-  
+
   if (!manager.isServiceConnected('google', 'tasks')) {
     return [];
   }
@@ -522,7 +533,8 @@ final taskListsProvider = FutureProvider<List<google_tasks.TaskList>>((ref) asyn
 });
 
 /// Provider for default task list
-final defaultTaskListProvider = FutureProvider<google_tasks.TaskList?>((ref) async {
+final defaultTaskListProvider =
+    FutureProvider<google_tasks.TaskList?>((ref) async {
   final taskLists = await ref.watch(taskListsProvider.future);
   return taskLists.isNotEmpty ? taskLists.first : null;
 });
@@ -533,7 +545,7 @@ final defaultTaskListIdProvider = FutureProvider<String?>((ref) async {
   if (tasksService == null) {
     return null;
   }
-  
+
   final taskLists = await tasksService.getTaskLists();
   return taskLists.isNotEmpty ? taskLists.first.id : null;
 });

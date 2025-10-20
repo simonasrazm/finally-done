@@ -13,7 +13,7 @@ class PhotoService {
   /// Get thumbnail path for a photo
   static Future<String?> getThumbnailPath(String fileName) async {
     final photoPath = await getPhotoPath(fileName);
-    return await ThumbnailService.getThumbnailPath(photoPath);
+    return ThumbnailService.getThumbnailPath(photoPath);
   }
 
   /// Delete photo file and its thumbnail

@@ -49,7 +49,7 @@ class GeminiApiService {
   /// Process audio file with Gemini Pro
   Future<String> processAudioFile(String audioPath) async {
     if (!isApiKeyAvailable) {
-      throw GeminiApiException('Gemini API key not found. Please add GEMINI_API_KEY to .env file');
+      throw const GeminiApiException('Gemini API key not found. Please add GEMINI_API_KEY to .env file');
     }
 
     try {
@@ -71,26 +71,26 @@ class GeminiApiService {
       final response = await _dio.post(
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=$_apiKey',
         data: {
-          "contents": [
+          'contents': [
             {
-              "parts": [
+              'parts': [
                 {
-                  "text": transcriptionPrompt
+                  'text': transcriptionPrompt
                 },
                 {
-                  "inline_data": {
-                    "mime_type": "audio/mp4",
-                    "data": audioBase64
+                  'inline_data': {
+                    'mime_type': 'audio/mp4',
+                    'data': audioBase64
                   }
                 }
               ]
             }
           ],
-          "generationConfig": {
-            "temperature": 0.1,
-            "topK": 1,
-            "topP": 1,
-            "maxOutputTokens": 10000,
+          'generationConfig': {
+            'temperature': 0.1,
+            'topK': 1,
+            'topP': 1,
+            'maxOutputTokens': 10000,
           }
         },
         options: Options(
@@ -109,7 +109,7 @@ class GeminiApiService {
             result['candidates'][0]['content']['parts'] != null &&
             result['candidates'][0]['content']['parts'].isNotEmpty) {
           
-          String geminiResult = result['candidates'][0]['content']['parts'][0]['text'];
+          final String geminiResult = result['candidates'][0]['content']['parts'][0]['text'];
           return geminiResult;
         } else {
           // Check for prompt feedback (content filtering)
@@ -122,7 +122,7 @@ class GeminiApiService {
         }
       }
       
-      throw GeminiApiException('Invalid response from Gemini API');
+      throw const GeminiApiException('Invalid response from Gemini API');
       
     } catch (e) {
       throw e is GeminiApiException ? e : GeminiApiException('Audio processing failed: $e');
@@ -132,27 +132,27 @@ class GeminiApiService {
   /// Process text with Gemini Pro for better understanding (legacy method)
   Future<String> processText(String text) async {
     if (!isApiKeyAvailable) {
-      throw GeminiApiException('Gemini API key not found. Please add GEMINI_API_KEY to .env file');
+      throw const GeminiApiException('Gemini API key not found. Please add GEMINI_API_KEY to .env file');
     }
 
     try {
       final response = await _dio.post(
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=$_apiKey',
         data: {
-          "contents": [
+          'contents': [
             {
-              "parts": [
+              'parts': [
                 {
-                  "text": "Please transcribe and improve this speech recognition result. If it's in Lithuanian, keep it in Lithuanian. If it's unclear or seems like gibberish, try to interpret what the person might have said. Keep your response concise and direct: '$text'"
+                  'text': "Please transcribe and improve this speech recognition result. If it's in Lithuanian, keep it in Lithuanian. If it's unclear or seems like gibberish, try to interpret what the person might have said. Keep your response concise and direct: '$text'"
                 }
               ]
             }
           ],
-          "generationConfig": {
-            "temperature": 0.1,
-            "topK": 1,
-            "topP": 1,
-            "maxOutputTokens": 10000,
+          'generationConfig': {
+            'temperature': 0.1,
+            'topK': 1,
+            'topP': 1,
+            'maxOutputTokens': 10000,
           }
         },
         options: Options(
@@ -170,12 +170,12 @@ class GeminiApiService {
             result['candidates'][0]['content']['parts'] != null &&
             result['candidates'][0]['content']['parts'].isNotEmpty) {
           
-          String geminiResult = result['candidates'][0]['content']['parts'][0]['text'];
+          final String geminiResult = result['candidates'][0]['content']['parts'][0]['text'];
           return geminiResult;
         }
       }
       
-      throw GeminiApiException('Invalid response from Gemini API');
+      throw const GeminiApiException('Invalid response from Gemini API');
       
     } catch (e) {
       // Fallback to original text if Gemini fails
@@ -186,8 +186,8 @@ class GeminiApiService {
 
 /// Gemini API Exception
 class GeminiApiException implements Exception {
-  final String message;
   const GeminiApiException(this.message);
+  final String message;
   
   @override
   String toString() => 'GeminiApiException: $message';

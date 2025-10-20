@@ -162,7 +162,7 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
                 Container(
                   width: 20,
                   height: 20,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppColors.separator,
                     shape: BoxShape.circle,
                   ),
@@ -365,7 +365,7 @@ class _ServiceManagementDialog extends ConsumerWidget {
           onPressed: onSignOut,
           child: Text(
             AppLocalizations.of(context)!.signOut,
-            style: TextStyle(color: AppColors.error),
+            style: const TextStyle(color: AppColors.error),
           ),
         ),
         TextButton(

@@ -66,7 +66,7 @@ class ThumbnailService {
       }
 
       // Create thumbnail if it doesn't exist
-      return await createThumbnail(imagePath);
+      return createThumbnail(imagePath);
     } catch (e) {
       return null;
     }

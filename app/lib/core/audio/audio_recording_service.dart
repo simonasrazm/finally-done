@@ -31,7 +31,7 @@ class AudioRecordingService {
       // Check permissions
       final hasPermission = await _audioRecorder.hasPermission();
       if (!hasPermission) {
-        throw AudioRecordingException('Microphone permission required');
+        throw const AudioRecordingException('Microphone permission required');
       }
       
       // Create audio file path in documents directory (permanent)
@@ -45,7 +45,7 @@ class AudioRecordingService {
       
       // Start recording with AAC encoder (more reliable than WAV)
       await _audioRecorder.start(
-        path: _currentAudioPath!,
+        path: _currentAudioPath,
         encoder: AudioEncoder.aacLc,
       );
       
@@ -86,19 +86,19 @@ class AudioRecordingService {
   
   /// Check if microphone permission is available
   Future<bool> hasPermission() async {
-    return await _audioRecorder.hasPermission();
+    return _audioRecorder.hasPermission();
   }
   
   /// Request microphone permission
   Future<bool> requestPermission() async {
-    return await _audioRecorder.hasPermission();
+    return _audioRecorder.hasPermission();
   }
 }
 
 /// Audio Recording Exception
 class AudioRecordingException implements Exception {
-  final String message;
   const AudioRecordingException(this.message);
+  final String message;
   
   @override
   String toString() => 'AudioRecordingException: $message';

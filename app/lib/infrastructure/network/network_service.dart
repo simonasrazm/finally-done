@@ -6,9 +6,9 @@ import '../../design_system/tokens.dart';
 /// Centralized network service for handling common connectivity challenges
 /// Provides retry logic, authentication refresh, and error handling for all connectors
 class NetworkService {
-  static final NetworkService _instance = NetworkService._internal();
   factory NetworkService() => _instance;
   NetworkService._internal();
+  static final NetworkService _instance = NetworkService._internal();
 
   /// Default retry configuration
   static const int defaultMaxRetries = 3;
@@ -25,7 +25,7 @@ class NetworkService {
     bool Function(dynamic error)? isRetryableError,
   }) async {
     int retryCount = 0;
-    String operationLabel = operationName ?? 'network operation';
+    final String operationLabel = operationName ?? 'network operation';
     
     while (retryCount < maxRetries) {
       try {
@@ -73,7 +73,7 @@ class NetworkService {
     );
 
     final credentials = AccessCredentials(
-      AccessToken('Bearer', accessToken, tokenExpiry ?? DateTime.now().toUtc().add(Duration(hours: 1))),
+      AccessToken('Bearer', accessToken, tokenExpiry ?? DateTime.now().toUtc().add(const Duration(hours: 1))),
       refreshToken,
       scopes,
     );
@@ -143,10 +143,10 @@ class NetworkService {
 
 /// Custom exception for network-related errors
 class NetworkException implements Exception {
-  final String message;
-  final dynamic originalError;
   
   NetworkException(this.message, [this.originalError]);
+  final String message;
+  final dynamic originalError;
   
   @override
   String toString() => 'NetworkException: $message${originalError != null ? ' (Original: $originalError)' : ''}';
@@ -154,11 +154,6 @@ class NetworkException implements Exception {
 
 /// Configuration for network operations
 class NetworkConfig {
-  final int maxRetries;
-  final Duration baseDelay;
-  final Duration maxDelay;
-  final Duration connectionTimeout;
-  final Duration receiveTimeout;
   
   const NetworkConfig({
     this.maxRetries = NetworkService.defaultMaxRetries,
@@ -167,6 +162,11 @@ class NetworkConfig {
     this.connectionTimeout = const Duration(seconds: 30),
     this.receiveTimeout = const Duration(seconds: 60),
   });
+  final int maxRetries;
+  final Duration baseDelay;
+  final Duration maxDelay;
+  final Duration connectionTimeout;
+  final Duration receiveTimeout;
   
   /// Default configuration for most operations
   static const NetworkConfig defaultConfig = NetworkConfig();

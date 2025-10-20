@@ -5,18 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// NLP Service for AI Command Processing
 /// Handles command interpretation using Gemini Pro
 class NLPService {
-  
-  NLPService({Dio? dio, String? geminiApiKey}) 
+  NLPService({Dio? dio, String? geminiApiKey})
       : _dio = dio ?? Dio(),
         _geminiApiKey = geminiApiKey;
   final Dio _dio;
   final String? _geminiApiKey;
-  
+
   /// Parse command using Gemini Pro
   Future<ParsedCommand> parseCommand(String transcription) async {
     try {
       // Use Gemini Pro for command interpretation
-      return await _parseWithGemini(transcription);
+      return _parseWithGemini(transcription);
     } catch (e) {
       // Return low confidence result for manual review
       return ParsedCommand(
@@ -26,13 +25,13 @@ class NLPService {
       );
     }
   }
-  
+
   /// Parse with Gemini Pro
   Future<ParsedCommand> _parseWithGemini(String transcription) async {
     if (_geminiApiKey == null) {
       throw Exception('Gemini API key not configured');
     }
-    
+
     final response = await _dio.post(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
       queryParameters: {'key': _geminiApiKey},
@@ -54,13 +53,12 @@ class NLPService {
         receiveTimeout: const Duration(seconds: 30),
       ),
     );
-    
-    final responseText = response.data['candidates'][0]['content']['parts'][0]['text'] as String;
+
+    final responseText =
+        response.data['candidates'][0]['content']['parts'][0]['text'] as String;
     return _parseResponse(responseText);
   }
-  
-  
-  
+
   /// Build prompt for LLM
   String _buildPrompt(String transcription) {
     return '''
@@ -99,7 +97,7 @@ Examples:
 "Set alarm for 7am" → alarm, alarm, confidence 0.9
 ''';
   }
-  
+
   /// Parse LLM response
   ParsedCommand _parseResponse(String response) {
     try {
@@ -112,14 +110,14 @@ Examples:
         cleanResponse = cleanResponse.substring(0, cleanResponse.length - 3);
       }
       cleanResponse = cleanResponse.trim();
-      
+
       final json = jsonDecode(cleanResponse) as Map<String, dynamic>;
-      
+
       final entities = <ParsedEntity>[];
       for (final entityJson in json['entities'] as List) {
         entities.add(ParsedEntity.fromJson(entityJson as Map<String, dynamic>));
       }
-      
+
       return ParsedCommand(
         entities: entities,
         lowConfidence: json['low_confidence'] as bool? ?? false,
@@ -136,7 +134,6 @@ Examples:
 
 /// Parsed Command Result
 class ParsedCommand {
-  
   const ParsedCommand({
     required this.entities,
     required this.lowConfidence,
@@ -145,14 +142,13 @@ class ParsedCommand {
   final List<ParsedEntity> entities;
   final bool lowConfidence;
   final String? error;
-  
+
   bool get hasError => error != null;
   bool get isEmpty => entities.isEmpty;
 }
 
 /// Parsed Entity
 class ParsedEntity {
-  
   const ParsedEntity({
     required this.type,
     required this.content,
@@ -161,13 +157,13 @@ class ParsedEntity {
     required this.confidence,
     required this.reasoning,
   });
-  
+
   factory ParsedEntity.fromJson(Map<String, dynamic> json) {
     return ParsedEntity(
       type: json['type'] as String,
       content: json['content'] as String,
       target: json['target'] as String,
-      datetime: json['datetime'] != null 
+      datetime: json['datetime'] != null
           ? DateTime.tryParse(json['datetime'] as String)
           : null,
       confidence: (json['confidence'] as num).toDouble(),
@@ -180,7 +176,7 @@ class ParsedEntity {
   final DateTime? datetime;
   final double confidence;
   final String reasoning;
-  
+
   Map<String, dynamic> toJson() {
     return {
       'type': type,

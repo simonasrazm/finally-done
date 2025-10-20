@@ -49,7 +49,7 @@ class SpeechService {
     try {
       final strategy = _engineFactory.createStrategy(enginePreference);
       
-      return await strategy.recognizeSpeech(
+    return strategy.recognizeSpeech(
         language: language,
         timeout: timeout,
       );
@@ -61,7 +61,7 @@ class SpeechService {
   /// Process recorded audio with Gemini (for Gemini engine)
   Future<String> processRecordedAudio() async {
     try {
-      return await _geminiService.processAudioFile(_audioService.currentAudioPath!);
+    return _geminiService.processAudioFile(_audioService.currentAudioPath!);
     } catch (e) {
       throw SpeechServiceException('Audio processing failed: $e');
     }
@@ -70,7 +70,7 @@ class SpeechService {
   /// Process a specific audio file with Gemini
   Future<String> processAudioFile(String audioPath) async {
     try {
-      return await _geminiService.processAudioFile(audioPath);
+    return _geminiService.processAudioFile(audioPath);
     } catch (e) {
       throw SpeechServiceException('Audio processing failed: $e');
     }
@@ -79,7 +79,7 @@ class SpeechService {
   /// Check if speech recognition is available for language
   Future<bool> isAvailable(String language) async {
     try {
-      return await _iosService.isAvailable();
+    return _iosService.isAvailable();
     } catch (e) {
       return false;
     }
@@ -102,7 +102,7 @@ class SpeechService {
   /// Get supported languages
   Future<List<String>> getSupportedLanguages() async {
     try {
-      return await _iosService.getSupportedLanguages();
+    return _iosService.getSupportedLanguages();
     } catch (e) {
       return ['en-US']; // Fallback to English
     }

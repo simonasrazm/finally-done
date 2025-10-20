@@ -5,11 +5,11 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Realm database service for persistent storage
 class RealmService {
-  late Realm _realm;
 
   RealmService() {
     _initializeRealm();
   }
+  late Realm _realm;
 
   void _initializeRealm() {
     try {

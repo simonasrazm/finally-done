@@ -5,14 +5,14 @@ import '../design_system/tokens.dart';
 import '../generated/app_localizations.dart';
 
 class ExpandableErrorMessage extends StatefulWidget {
-  final String errorMessage;
-  final Map<String, bool> expandedErrorMessages;
 
   const ExpandableErrorMessage({
     super.key,
     required this.errorMessage,
     required this.expandedErrorMessages,
   });
+  final String errorMessage;
+  final Map<String, bool> expandedErrorMessages;
 
   @override
   State<ExpandableErrorMessage> createState() => _ExpandableErrorMessageState();
@@ -26,7 +26,7 @@ class _ExpandableErrorMessageState extends State<ExpandableErrorMessage> {
     final bool isExpanded = widget.expandedErrorMessages[widget.errorMessage] ?? false;
     
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spacing2),
+      padding: const EdgeInsets.all(DesignTokens.spacing2),
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
@@ -39,7 +39,7 @@ class _ExpandableErrorMessageState extends State<ExpandableErrorMessage> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.error_outline,
                 size: DesignTokens.iconSm,
                 color: AppColors.error,

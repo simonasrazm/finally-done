@@ -141,7 +141,7 @@ class _SoundTestScreenState extends State<SoundTestScreen> {
   ) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           border: Border.all(color: color.withValues(alpha: 0.3)),

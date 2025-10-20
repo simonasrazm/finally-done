@@ -6,15 +6,15 @@ import 'audio_recording_service.dart';
 
 /// Factory for creating speech engine strategies
 class SpeechEngineFactory {
-  final IosSpeechService _iosService;
-  final GeminiApiService _geminiService;
-  final AudioRecordingService _audioService;
   
   SpeechEngineFactory(
     this._iosService,
     this._geminiService,
     this._audioService,
   );
+  final IosSpeechService _iosService;
+  final GeminiApiService _geminiService;
+  final AudioRecordingService _audioService;
   
   /// Create a speech engine strategy based on preference
   SpeechEngineStrategy createStrategy(String enginePreference) {
@@ -39,7 +39,7 @@ class SpeechEngineFactory {
   /// Check if an engine is available
   Future<bool> isEngineAvailable(String enginePreference) async {
     final strategy = createStrategy(enginePreference);
-    return await strategy.isAvailable();
+    return strategy.isAvailable();
   }
 }
 

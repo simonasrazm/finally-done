@@ -145,7 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
       if (enginePreference == 'gemini') {
         // For Gemini, start recording and wait for user to stop
-        String result = await speechService.recognizeSpeech(
+        final String result = await speechService.recognizeSpeech(
           enginePreference: enginePreference,
         );
 
@@ -156,7 +156,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         }
       } else {
         // For iOS, use the old method
-        String result = await speechService.recognizeSpeech(
+        final String result = await speechService.recognizeSpeech(
           enginePreference: enginePreference,
         );
 
@@ -282,7 +282,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
       if (enginePreference == 'gemini') {
         // Stop recording and get audio path immediately
-        String? audioPath = await speechService.stopRecording();
+        final String? audioPath = await speechService.stopRecording();
 
         if (audioPath != null && audioPath.isNotEmpty) {
           // Store the audio path in the speech service
@@ -329,7 +329,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final commandId = command.id;
 
       // Process audio in background
-      String transcription = await speechService.processRecordedAudio();
+      final String transcription = await speechService.processRecordedAudio();
 
       // Update with transcription and final status using stored ID
       queueNotifier.updateCommandTranscription(commandId, transcription);
@@ -511,7 +511,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(
+          padding: const EdgeInsets.all(
               DesignTokens.layoutPadding + DesignTokens.spacing1),
           child: Column(
             children: [
@@ -531,7 +531,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
               // Photo preview
               if (_selectedPhotos.isNotEmpty) ...[
-                SizedBox(height: DesignTokens.sectionSpacing),
+                const SizedBox(height: DesignTokens.sectionSpacing),
                 Row(
                   children: [
                     Text(
@@ -548,7 +548,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         });
                       },
                       child: Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: DesignTokens.spacing3,
                           vertical:
                               DesignTokens.spacing1 + DesignTokens.spacing1,
@@ -561,7 +561,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.clear,
                               size: DesignTokens.iconSm,
                               color: AppColors.error,
@@ -633,7 +633,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
               ],
 
-              SizedBox(
+              const SizedBox(
                   height: DesignTokens.sectionSpacing + DesignTokens.spacing4),
 
               // Main recording area with three buttons
@@ -646,7 +646,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     onTap: () => _takePhoto(),
                   ),
 
-                  SizedBox(width: DesignTokens.sectionSpacing),
+                  const SizedBox(width: DesignTokens.sectionSpacing),
 
                   // Main recording button
                   AnimatedBuilder(
@@ -706,7 +706,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     },
                   ),
 
-                  SizedBox(width: DesignTokens.sectionSpacing),
+                  const SizedBox(width: DesignTokens.sectionSpacing),
 
                   // Photos button on the right
                   _buildInputButton(
@@ -716,12 +716,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ],
               ),
 
-              SizedBox(
+              const SizedBox(
                   height: DesignTokens.sectionSpacing + DesignTokens.spacing4),
 
               // Text input alternative
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignTokens.componentPadding,
                   vertical: DesignTokens.spacing3,
                 ),
@@ -764,13 +764,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
               ),
 
-              SizedBox(height: DesignTokens.sectionSpacing),
+              const SizedBox(height: DesignTokens.sectionSpacing),
 
               // Transcription result
               if (_transcription.isNotEmpty)
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(DesignTokens.componentPadding),
+                  padding: const EdgeInsets.all(DesignTokens.componentPadding),
                   decoration: BoxDecoration(
                     color: AppColors.getSecondaryBackgroundColor(context),
                     borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
@@ -796,7 +796,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 ),
 
-              SizedBox(height: DesignTokens.sectionSpacing),
+              const SizedBox(height: DesignTokens.sectionSpacing),
             ],
           ),
         ),

@@ -105,13 +105,13 @@ class MigrationManager {
 }
 
 class MigrationPath {
-  final int from;
-  final int to;
-  final String description;
 
   const MigrationPath({
     required this.from,
     required this.to,
     required this.description,
   });
+  final int from;
+  final int to;
+  final String description;
 }

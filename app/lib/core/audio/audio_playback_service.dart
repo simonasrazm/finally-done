@@ -54,9 +54,9 @@ class AudioPlaybackService {
       // Convert filename to full path
       final fullPath = await _getFullAudioPath(audioPath);
 
-      // Check if file exists first
+      // Check if file exists first (sync to avoid slow async IO lint)
       final file = File(fullPath);
-      if (!await file.exists()) {
+      if (!file.existsSync()) {
         if (context.mounted) {
           _showSnackBar(context, 'Audio file not found', isError: true);
         }
@@ -183,10 +183,11 @@ class AudioPlaybackService {
   static String? get currentAudioPath => _currentAudioPath;
 
   /// Dispose the audio player
-  static void dispose() {
-    _audioPlayer.dispose();
+  static Future<void> dispose() async {
+    // Dispose player and controller; await to satisfy discarded_futures
+    await _audioPlayer.dispose();
     _isPlaying = false;
     _currentAudioPath = null;
-    _audioStateController.close();
+    await _audioStateController.close();
   }
 }

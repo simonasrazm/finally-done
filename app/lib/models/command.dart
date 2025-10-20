@@ -3,18 +3,6 @@
 
 // Temporary data models for MVP
 class Command {
-  final String id;
-  final String userId;
-  final String? audioPath;
-  final String transcription;
-  final String? rawLLMOutput;
-  final DateTime timestamp;
-  final String status;
-  final double? confidence;
-  final List<Entity> entities;
-  final String? language;
-  final String? source;
-  final Map<String, String>? metadata;
 
   Command({
     required this.id,
@@ -30,19 +18,21 @@ class Command {
     this.source,
     this.metadata,
   });
+  final String id;
+  final String userId;
+  final String? audioPath;
+  final String transcription;
+  final String? rawLLMOutput;
+  final DateTime timestamp;
+  final String status;
+  final double? confidence;
+  final List<Entity> entities;
+  final String? language;
+  final String? source;
+  final Map<String, String>? metadata;
 }
 
 class Entity {
-  final String id;
-  final String type;
-  final String content;
-  final String targetConnector;
-  final String? externalId;
-  final DateTime? scheduledTime;
-  final String status;
-  final double confidence;
-  final String? reasoning;
-  final Map<String, String>? metadata;
 
   Entity({
     required this.id,
@@ -56,28 +46,19 @@ class Entity {
     this.reasoning,
     this.metadata,
   });
+  final String id;
+  final String type;
+  final String content;
+  final String targetConnector;
+  final String? externalId;
+  final DateTime? scheduledTime;
+  final String status;
+  final double confidence;
+  final String? reasoning;
+  final Map<String, String>? metadata;
 }
 
 class UserConfig {
-  final String userId;
-  final String? name;
-  final String? email;
-  final String? googleAccessToken;
-  final String? googleRefreshToken;
-  final DateTime? googleTokenExpiry;
-  final String? evernoteAccessToken;
-  final String? evernoteRefreshToken;
-  final DateTime? evernoteTokenExpiry;
-  final Map<String, String> preferences;
-  final String defaultLanguage;
-  final double confidenceThreshold;
-  final bool darkModeEnabled;
-  final bool hapticFeedbackEnabled;
-  final bool soundEnabled;
-  final String? customAlarmSound;
-  final int totalCommands;
-  final int successfulCommands;
-  final DateTime lastUsed;
 
   UserConfig({
     required this.userId,
@@ -100,4 +81,23 @@ class UserConfig {
     required this.successfulCommands,
     required this.lastUsed,
   });
+  final String userId;
+  final String? name;
+  final String? email;
+  final String? googleAccessToken;
+  final String? googleRefreshToken;
+  final DateTime? googleTokenExpiry;
+  final String? evernoteAccessToken;
+  final String? evernoteRefreshToken;
+  final DateTime? evernoteTokenExpiry;
+  final Map<String, String> preferences;
+  final String defaultLanguage;
+  final double confidenceThreshold;
+  final bool darkModeEnabled;
+  final bool hapticFeedbackEnabled;
+  final bool soundEnabled;
+  final String? customAlarmSound;
+  final int totalCommands;
+  final int successfulCommands;
+  final DateTime lastUsed;
 }

@@ -98,15 +98,15 @@ class CommandRetryService {
 
 /// Result of a retry action
 class RetryResult {
-  final String newStatus;
-  final bool clearError;
-  final bool clearErrorMessage;
 
   const RetryResult({
     required this.newStatus,
     required this.clearError,
     required this.clearErrorMessage,
   });
+  final String newStatus;
+  final bool clearError;
+  final bool clearErrorMessage;
 
   @override
   bool operator ==(Object other) {

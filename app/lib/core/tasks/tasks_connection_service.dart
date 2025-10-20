@@ -76,7 +76,7 @@ class TasksConnectionService {
     }
 
     // If no existing service, try to create one directly
-    return await createDirectService();
+    return createDirectService();
   }
 
   /// Check if an error indicates connectivity issues

@@ -10,7 +10,7 @@ class IosSpeechService {
   Future<bool> isAvailable() async {
     try {
       return await _speech.initialize();
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
@@ -18,10 +18,10 @@ class IosSpeechService {
   /// Check if we have microphone permission
   Future<bool> hasPermission() async {
     try {
-      bool available = await _speech.initialize();
+      final available = await _speech.initialize();
       if (!available) return false;
       return await _speech.hasPermission;
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
@@ -29,12 +29,12 @@ class IosSpeechService {
   /// Get supported languages
   Future<List<String>> getSupportedLanguages() async {
     try {
-      bool available = await _speech.initialize();
+      final available = await _speech.initialize();
       if (!available) return ['en-US'];
 
-      List<stt.LocaleName> locales = await _speech.locales();
+      final locales = await _speech.locales();
       return locales.map((locale) => locale.localeId).toList();
-    } catch (e) {
+    } on Exception {
       return ['en-US']; // Fallback to English
     }
   }
@@ -46,18 +46,18 @@ class IosSpeechService {
   }) async {
     try {
       // Initialize speech recognition
-      bool available = await _speech.initialize();
+      final bool available = await _speech.initialize();
       if (!available) {
-        throw SpeechException(
+        throw const SpeechException(
           code: 'INIT_FAILED',
           message: 'Speech recognition not available',
         );
       }
 
       // Check permissions
-      bool hasPermission = await _speech.hasPermission;
+      final bool hasPermission = await _speech.hasPermission;
       if (!hasPermission) {
-        throw SpeechException(
+        throw const SpeechException(
           code: 'PERMISSION_DENIED',
           message: 'Microphone permission required',
         );
@@ -95,7 +95,7 @@ class IosSpeechService {
         message: e.message ?? 'Unknown speech recognition error',
         details: e.details,
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw SpeechException(
         code: 'RECOGNITION_FAILED',
         message: 'iOS speech recognition failed: $e',
@@ -110,14 +110,14 @@ class IosSpeechService {
   }) async {
     try {
       // Initialize speech recognition with permission check
-      bool available = await _speech.initialize();
+      final available = await _speech.initialize();
 
       if (!available) {
         return 'Speech recognition not available. Please check permissions.';
       }
 
       // Check if we have permission
-      bool hasPermission = await _speech.hasPermission;
+      final hasPermission = await _speech.hasPermission;
 
       if (!hasPermission) {
         return 'Microphone permission required. Please enable in Settings.';
@@ -131,7 +131,7 @@ class IosSpeechService {
       String transcription = '';
 
       // Check if language is supported
-      List<stt.LocaleName> locales = await _speech.locales();
+      final locales = await _speech.locales();
 
       // Try to find a supported locale
       String? supportedLocale;
@@ -169,7 +169,7 @@ class IosSpeechService {
       }
 
       return transcription.isNotEmpty ? transcription : 'No speech detected';
-    } catch (e) {
+    } on Exception catch (e) {
       return 'Error: ${e.toString()}';
     }
   }
@@ -177,15 +177,15 @@ class IosSpeechService {
 
 /// Speech Recognition Exception
 class SpeechException implements Exception {
-  final String code;
-  final String message;
-  final dynamic details;
 
   const SpeechException({
     required this.code,
     required this.message,
     this.details,
   });
+  final String code;
+  final String message;
+  final dynamic details;
 
   @override
   String toString() => 'SpeechException($code): $message';

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
-import '../../lib/providers/tasks_provider.dart';
+import 'package:finally_done/providers/tasks_provider.dart';
 import 'task_toggle_error_handling_test.mocks.dart';
 
 // Generate mocks

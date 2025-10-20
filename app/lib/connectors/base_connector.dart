@@ -5,6 +5,12 @@ import '../infrastructure/network/network_service.dart';
 /// Base class for all API connectors
 /// Provides common functionality for network operations, authentication, and error handling
 abstract class BaseConnector {
+
+  BaseConnector({
+    required String connectorName,
+    NetworkConfig? networkConfig,
+  }) : _connectorName = connectorName,
+       _networkConfig = networkConfig ?? NetworkConfig.defaultConfig;
   final NetworkService _networkService = NetworkService();
   final String _connectorName;
   final NetworkConfig _networkConfig;
@@ -14,12 +20,6 @@ abstract class BaseConnector {
   String? _refreshToken;
   DateTime? _tokenExpiry;
   List<String> _scopes = [];
-
-  BaseConnector({
-    required String connectorName,
-    NetworkConfig? networkConfig,
-  }) : _connectorName = connectorName,
-       _networkConfig = networkConfig ?? NetworkConfig.defaultConfig;
 
   /// Initialize the connector with authentication credentials
   Future<void> initialize({
@@ -153,10 +153,10 @@ abstract class BaseConnector {
 
 /// Exception for connector-related errors
 class ConnectorException implements Exception {
-  final String message;
-  final dynamic originalError;
   
   ConnectorException(this.message, [this.originalError]);
+  final String message;
+  final dynamic originalError;
   
   @override
   String toString() => 'ConnectorException: $message${originalError != null ? ' (Original: $originalError)' : ''}';

@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:googleapis/tasks/v1.dart' as google_tasks;
-import '../../lib/providers/tasks_provider.dart';
-import '../../lib/widgets/task_item_widget.dart';
+import 'package:finally_done/providers/tasks_provider.dart';
+import 'package:finally_done/widgets/task_item_widget.dart';
 import 'task_toggle_integration_test.mocks.dart';
 
 // Generate mocks
@@ -130,10 +130,6 @@ void main() {
     group('Error Handling UI States', () {
       test('should handle API failure without UI state corruption', () async {
         // Arrange
-        final _task = google_tasks.Task()
-          ..id = 'task-1'
-          ..title = 'Test Task'
-          ..status = 'needsAction';
 
         // Mock API failure
         when(mockTasksNotifier.completeTask('task-1'))
@@ -251,14 +247,7 @@ void main() {
 
       test('should handle rapid successive API calls correctly', () async {
         // Arrange
-        final _task1 = google_tasks.Task()
-          ..id = 'task-1'
-          ..title = 'Test Task 1'
-          ..status = 'needsAction';
-        final _task2 = google_tasks.Task()
-          ..id = 'task-2'
-          ..title = 'Test Task 2'
-          ..status = 'needsAction';
+        // No local tasks needed for this flow
 
         // Mock successful API calls
         when(mockTasksNotifier.completeTask('task-1'))
@@ -309,14 +298,7 @@ void main() {
 
       test('should handle mixed success and failure scenarios', () async {
         // Arrange
-        final _task1 = google_tasks.Task()
-          ..id = 'task-1'
-          ..title = 'Test Task 1'
-          ..status = 'needsAction';
-        final _task2 = google_tasks.Task()
-          ..id = 'task-2'
-          ..title = 'Test Task 2'
-          ..status = 'needsAction';
+        // No local tasks needed for this flow
 
         // Mock mixed results
         when(mockTasksNotifier.completeTask('task-1'))

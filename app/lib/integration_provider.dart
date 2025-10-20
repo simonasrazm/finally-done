@@ -2,13 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Represents a specific service within an integration provider
 class IntegrationService {
-  final String id;
-  final String name;
-  final String description;
-  final String icon;
-  final bool isConnected;
-  final Map<String, dynamic> permissions;
-  final String? scope;
 
   const IntegrationService({
     required this.id,
@@ -19,6 +12,13 @@ class IntegrationService {
     this.permissions = const {},
     this.scope,
   });
+  final String id;
+  final String name;
+  final String description;
+  final String icon;
+  final bool isConnected;
+  final Map<String, dynamic> permissions;
+  final String? scope;
 
   IntegrationService copyWith({
     String? id,
@@ -43,15 +43,6 @@ class IntegrationService {
 
 /// Represents the state of an integration provider
 class IntegrationProviderState {
-  final bool isAuthenticated;
-  final String? userEmail;
-  final String? userName;
-  final String? userId;
-  final Map<String, IntegrationService> services;
-  final bool isLoading;
-  final bool isConnecting;
-  final bool isSyncing;
-  final String? lastSyncTime;
 
   const IntegrationProviderState({
     this.isAuthenticated = false,
@@ -64,6 +55,15 @@ class IntegrationProviderState {
     this.isSyncing = false,
     this.lastSyncTime,
   });
+  final bool isAuthenticated;
+  final String? userEmail;
+  final String? userName;
+  final String? userId;
+  final Map<String, IntegrationService> services;
+  final bool isLoading;
+  final bool isConnecting;
+  final bool isSyncing;
+  final String? lastSyncTime;
 
   IntegrationProviderState copyWith({
     bool? isAuthenticated,
@@ -103,10 +103,6 @@ class IntegrationProviderState {
 
 /// Abstract base class for integration providers
 abstract class IntegrationProvider extends StateNotifier<IntegrationProviderState> {
-  final String id;
-  final String displayName;
-  final String icon;
-  final String description;
 
   IntegrationProvider({
     required this.id,
@@ -114,6 +110,10 @@ abstract class IntegrationProvider extends StateNotifier<IntegrationProviderStat
     required this.icon,
     required this.description,
   }) : super(const IntegrationProviderState());
+  final String id;
+  final String displayName;
+  final String icon;
+  final String description;
 
   /// Get list of available services for this provider
   List<IntegrationService> get availableServices;

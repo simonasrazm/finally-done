@@ -6,19 +6,19 @@ import '../generated/app_localizations.dart';
 
 /// Widget for adding new tasks
 class TaskInputWidget extends StatelessWidget {
-  final TextEditingController controller;
-  final VoidCallback onCreateTask;
 
   const TaskInputWidget({
     super.key,
     required this.controller,
     required this.onCreateTask,
   });
+  final TextEditingController controller;
+  final VoidCallback onCreateTask;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.componentPadding),
+      padding: const EdgeInsets.all(DesignTokens.componentPadding),
       child: Row(
         children: [
           Expanded(
@@ -32,21 +32,21 @@ class TaskInputWidget extends StatelessWidget {
                     .copyWith(color: AppColors.getTextSecondaryColor(context)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-                  borderSide: BorderSide(color: AppColors.separatorOpaque),
+                  borderSide: const BorderSide(color: AppColors.separatorOpaque),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-                  borderSide: BorderSide(color: AppColors.separatorOpaque),
+                  borderSide: const BorderSide(color: AppColors.separatorOpaque),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-                  borderSide: BorderSide(
+                  borderSide: const BorderSide(
                       color: AppColors.primary,
                       width: DesignTokens.borderWidth2),
                 ),
                 filled: true,
                 fillColor: AppColors.getSecondaryBackgroundColor(context),
-                contentPadding: EdgeInsets.symmetric(
+                contentPadding: const EdgeInsets.symmetric(
                   horizontal: DesignTokens.inputPadding,
                   vertical: DesignTokens.spacing2,
                 ),
@@ -54,7 +54,7 @@ class TaskInputWidget extends StatelessWidget {
               onSubmitted: (_) => onCreateTask(),
             ),
           ),
-          SizedBox(width: DesignTokens.spacing2),
+          const SizedBox(width: DesignTokens.spacing2),
           ElevatedButton.icon(
             onPressed: onCreateTask,
             icon: const Icon(Icons.add),
@@ -65,7 +65,7 @@ class TaskInputWidget extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
               ),
-              padding: EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: DesignTokens.componentPadding,
                 vertical: DesignTokens.spacing2,
               ),

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import '../design_system/colors.dart';
 
 class FinallyDoneIcon extends StatelessWidget {
-  final double size;
-  final Color? backgroundColor;
-  final Color? iconColor;
-
   const FinallyDoneIcon({
-    Key? key,
+    super.key,
     this.size = 64.0,
     this.backgroundColor,
     this.iconColor,
-  }) : super(key: key);
+  });
+  final double size;
+  final Color? backgroundColor;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -21,14 +21,14 @@ class FinallyDoneIcon extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: backgroundColor != null 
-            ? [backgroundColor!, backgroundColor!]
-            : [const Color(0xFF00C851), const Color(0xFF00A86B)],
+          colors: backgroundColor != null
+              ? [backgroundColor!, backgroundColor!]
+              : [const Color(0xFF00C851), const Color(0xFF00A86B)],
         ),
         borderRadius: BorderRadius.circular(size * 0.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: AppColors.textPrimary.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -42,14 +42,14 @@ class FinallyDoneIcon extends StatelessWidget {
             top: size * 0.2,
             child: _buildVoiceWaves(size * 0.3),
           ),
-          
+
           // Task list
           Positioned(
             right: size * 0.15,
             top: size * 0.25,
             child: _buildTaskList(size * 0.25),
           ),
-          
+
           // Checkmark (completion indicator)
           Positioned(
             right: size * 0.1,
@@ -58,11 +58,11 @@ class FinallyDoneIcon extends StatelessWidget {
               width: size * 0.2,
               height: size * 0.2,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: AppColors.textPrimary.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -86,7 +86,7 @@ class FinallyDoneIcon extends StatelessWidget {
       height: waveSize,
       child: CustomPaint(
         painter: VoiceWavesPainter(
-          color: iconColor ?? Colors.white,
+          color: iconColor ?? AppColors.white,
         ),
       ),
     );
@@ -97,7 +97,7 @@ class FinallyDoneIcon extends StatelessWidget {
       width: listSize,
       height: listSize * 1.2,
       decoration: BoxDecoration(
-        color: iconColor ?? Colors.white,
+        color: iconColor ?? AppColors.white,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Column(
@@ -125,9 +125,8 @@ class FinallyDoneIcon extends StatelessWidget {
 }
 
 class VoiceWavesPainter extends CustomPainter {
-  final Color color;
-
   VoiceWavesPainter({required this.color});
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -137,17 +136,17 @@ class VoiceWavesPainter extends CustomPainter {
       ..strokeWidth = 2.0;
 
     final center = Offset(size.width * 0.5, size.height * 0.5);
-    
+
     // Draw concentric arcs representing sound waves
     for (int i = 0; i < 3; i++) {
       final radius = (size.width * 0.2) + (i * size.width * 0.15);
       final rect = Rect.fromCircle(center: center, radius: radius);
-      
+
       // Draw arc from top-left to bottom-right
       canvas.drawArc(
         rect,
         -1.57, // -90 degrees
-        3.14,  // 180 degrees
+        3.14, // 180 degrees
         false,
         paint,
       );
@@ -160,16 +159,15 @@ class VoiceWavesPainter extends CustomPainter {
 
 // Alternative icon concepts
 class Concept1Icon extends StatelessWidget {
+  const Concept1Icon({
+    super.key,
+    this.size = 64.0,
+    this.backgroundColor = const Color(0xFF007AFF),
+    this.iconColor = AppColors.white,
+  });
   final double size;
   final Color backgroundColor;
   final Color iconColor;
-
-  const Concept1Icon({
-    Key? key,
-    this.size = 64.0,
-    this.backgroundColor = const Color(0xFF007AFF),
-    this.iconColor = Colors.white,
-  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +179,7 @@ class Concept1Icon extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: AppColors.textPrimary.withValues(alpha: 0.2),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),
@@ -203,8 +201,8 @@ class Concept1Icon extends StatelessWidget {
             child: Container(
               width: size * 0.25,
               height: size * 0.25,
-              decoration: BoxDecoration(
-                color: Colors.white,
+              decoration: const BoxDecoration(
+                color: AppColors.white,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -221,16 +219,15 @@ class Concept1Icon extends StatelessWidget {
 }
 
 class Concept2Icon extends StatelessWidget {
-  final double size;
-  final Color backgroundColor;
-  final Color accentColor;
-
   const Concept2Icon({
-    Key? key,
+    super.key,
     this.size = 64.0,
     this.backgroundColor = Colors.white,
     this.accentColor = const Color(0xFF34C759),
-  }) : super(key: key);
+  });
+  final double size;
+  final Color backgroundColor;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -259,48 +256,48 @@ class Concept2Icon extends StatelessWidget {
 }
 
 class CheckmarkWithWavesPainter extends CustomPainter {
-  final Color accentColor;
-  final double size;
-
   CheckmarkWithWavesPainter({
     required this.accentColor,
     required this.size,
   });
+  final Color accentColor;
+  final double size;
 
   @override
   void paint(Canvas canvas, Size canvasSize) {
     final center = Offset(size / 2, size / 2);
     final circleRadius = size * 0.4;
-    
+
     // Draw the solid green circle
     final circlePaint = Paint()
       ..color = accentColor
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawCircle(center, circleRadius, circlePaint);
-    
+
     // Draw the heart-like shapes (two overlapping circles)
     final heartPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    
+
     final heartSize = size * 0.12;
-    final heartCenter = Offset(center.dx - heartSize * 0.3, center.dy - heartSize * 0.2);
-    
+    final heartCenter =
+        Offset(center.dx - heartSize * 0.3, center.dy - heartSize * 0.2);
+
     // Left heart shape
     canvas.drawCircle(
       Offset(heartCenter.dx - heartSize * 0.3, heartCenter.dy),
       heartSize * 0.6,
       heartPaint,
     );
-    
+
     // Right heart shape
     canvas.drawCircle(
       Offset(heartCenter.dx + heartSize * 0.3, heartCenter.dy),
       heartSize * 0.6,
       heartPaint,
     );
-    
+
     // Bottom part of heart
     final heartBottomPath = Path();
     heartBottomPath.moveTo(heartCenter.dx - heartSize * 0.6, heartCenter.dy);
@@ -312,37 +309,41 @@ class CheckmarkWithWavesPainter extends CustomPainter {
     );
     heartBottomPath.close();
     canvas.drawPath(heartBottomPath, heartPaint);
-    
+
     // Draw the signal waves
     final wavePaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = size * 0.025
       ..strokeCap = StrokeCap.round;
-    
+
     // Upper waves (from top-left of hearts)
-    final upperWaveStart = Offset(heartCenter.dx - heartSize * 0.4, heartCenter.dy - heartSize * 0.3);
+    final upperWaveStart = Offset(
+        heartCenter.dx - heartSize * 0.4, heartCenter.dy - heartSize * 0.3);
     for (int i = 0; i < 3; i++) {
       final waveRadius = size * 0.08 + (i * size * 0.06);
-      final waveCenter = Offset(upperWaveStart.dx - waveRadius * 0.3, upperWaveStart.dy - waveRadius * 0.2);
+      final waveCenter = Offset(upperWaveStart.dx - waveRadius * 0.3,
+          upperWaveStart.dy - waveRadius * 0.2);
       final rect = Rect.fromCircle(center: waveCenter, radius: waveRadius);
-      
+
       canvas.drawArc(
         rect,
         -0.5, // Start angle
-        1.0,  // Sweep angle
+        1.0, // Sweep angle
         false,
         wavePaint,
       );
     }
-    
+
     // Lower waves (from bottom-right of hearts)
-    final lowerWaveStart = Offset(heartCenter.dx + heartSize * 0.4, heartCenter.dy + heartSize * 0.3);
+    final lowerWaveStart = Offset(
+        heartCenter.dx + heartSize * 0.4, heartCenter.dy + heartSize * 0.3);
     for (int i = 0; i < 3; i++) {
       final waveRadius = size * 0.08 + (i * size * 0.06);
-      final waveCenter = Offset(lowerWaveStart.dx + waveRadius * 0.3, lowerWaveStart.dy + waveRadius * 0.2);
+      final waveCenter = Offset(lowerWaveStart.dx + waveRadius * 0.3,
+          lowerWaveStart.dy + waveRadius * 0.2);
       final rect = Rect.fromCircle(center: waveCenter, radius: waveRadius);
-      
+
       canvas.drawArc(
         rect,
         2.0, // Start angle
@@ -358,16 +359,15 @@ class CheckmarkWithWavesPainter extends CustomPainter {
 }
 
 class Concept3Icon extends StatelessWidget {
+  const Concept3Icon({
+    super.key,
+    this.size = 64.0,
+    this.backgroundColor = const Color(0xFF5856D6),
+    this.iconColor = AppColors.white,
+  });
   final double size;
   final Color backgroundColor;
   final Color iconColor;
-
-  const Concept3Icon({
-    Key? key,
-    this.size = 64.0,
-    this.backgroundColor = const Color(0xFF5856D6),
-    this.iconColor = Colors.white,
-  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -383,7 +383,7 @@ class Concept3Icon extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: AppColors.textPrimary.withValues(alpha: 0.2),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),
@@ -405,7 +405,7 @@ class Concept3Icon extends StatelessWidget {
             child: Icon(
               Icons.auto_awesome,
               size: size * 0.25,
-              color: Colors.yellow,
+              color: AppColors.warning,
             ),
           ),
           // Checkmark
@@ -415,7 +415,7 @@ class Concept3Icon extends StatelessWidget {
             child: Icon(
               Icons.task_alt,
               size: size * 0.25,
-              color: Colors.green,
+              color: AppColors.success,
             ),
           ),
         ],
@@ -425,16 +425,15 @@ class Concept3Icon extends StatelessWidget {
 }
 
 class Concept4Icon extends StatelessWidget {
+  const Concept4Icon({
+    super.key,
+    this.size = 64.0,
+    this.backgroundColor = const Color(0xFFFF9500),
+    this.iconColor = AppColors.white,
+  });
   final double size;
   final Color backgroundColor;
   final Color iconColor;
-
-  const Concept4Icon({
-    Key? key,
-    this.size = 64.0,
-    this.backgroundColor = const Color(0xFFFF9500),
-    this.iconColor = Colors.white,
-  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -446,7 +445,7 @@ class Concept4Icon extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: AppColors.textPrimary.withValues(alpha: 0.2),
             blurRadius: size * 0.05,
             offset: Offset(0, size * 0.05),
           ),
@@ -468,14 +467,14 @@ class Concept4Icon extends StatelessWidget {
             child: Container(
               width: size * 0.15,
               height: size * 0.15,
-              decoration: BoxDecoration(
-                color: Colors.red,
+              decoration: const BoxDecoration(
+                color: AppColors.error,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.mic,
                 size: size * 0.08,
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
           ),
@@ -486,7 +485,7 @@ class Concept4Icon extends StatelessWidget {
             child: Icon(
               Icons.check_circle,
               size: size * 0.2,
-              color: Colors.green,
+              color: AppColors.success,
             ),
           ),
         ],
@@ -501,20 +500,20 @@ class AppIconVariants {
   static Widget medium() => const FinallyDoneIcon(size: 64.0);
   static Widget large() => const FinallyDoneIcon(size: 128.0);
   static Widget xlarge() => const FinallyDoneIcon(size: 256.0);
-  
+
   // Alternative color schemes
-  static Widget blue() => FinallyDoneIcon(
-    size: 64.0,
-    backgroundColor: const Color(0xFF4A90E2),
-  );
-  
-  static Widget purple() => FinallyDoneIcon(
-    size: 64.0,
-    backgroundColor: const Color(0xFF9C27B0),
-  );
-  
-  static Widget orange() => FinallyDoneIcon(
-    size: 64.0,
-    backgroundColor: const Color(0xFFFF6B35),
-  );
+  static Widget blue() => const FinallyDoneIcon(
+        size: 64.0,
+        backgroundColor: Color(0xFF4A90E2),
+      );
+
+  static Widget purple() => const FinallyDoneIcon(
+        size: 64.0,
+        backgroundColor: Color(0xFF9C27B0),
+      );
+
+  static Widget orange() => const FinallyDoneIcon(
+        size: 64.0,
+        backgroundColor: Color(0xFFFF6B35),
+      );
 }

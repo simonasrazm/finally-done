@@ -17,9 +17,9 @@ import '../widgets/task_empty_state_widgets.dart';
 import '../widgets/animated_title_widget.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
-  final VoidCallback? onNavigateToSettings;
 
   const TasksScreen({super.key, this.onNavigateToSettings});
+  final VoidCallback? onNavigateToSettings;
 
   @override
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
@@ -45,8 +45,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   List<google_tasks.Task> _allTasks = [];
 
   // Track tasks being updated for immediate visual feedback - SEPARATE for each list
-  Set<String> _incompleteTasksUpdating = {};
-  Set<String> _allTasksUpdating = {};
+  final Set<String> _incompleteTasksUpdating = {};
+  final Set<String> _allTasksUpdating = {};
 
   @override
   void initState() {
@@ -106,14 +106,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     }
 
     // Wait for the tasks service to be available
-    await Future.delayed(Duration(milliseconds: DesignTokens.delayShort));
+    await Future.delayed(const Duration(milliseconds: DesignTokens.delayShort));
 
     final defaultTaskList = await ref.read(defaultTaskListProvider.future);
     if (defaultTaskList != null && mounted) {
       setState(() {
         _selectedTaskListId = defaultTaskList.id;
       });
-      ref.read(tasksProvider.notifier).setTaskList(defaultTaskList.id!);
+      ref.read(tasksProvider.notifier).setTaskList(defaultTaskList.id);
     }
   }
 
@@ -126,14 +126,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
       _newTaskController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Task added')),
+        const SnackBar(content: Text('Task added')),
       );
     } catch (e, stackTrace) {
       // Error adding task
       Sentry.captureException(e, stackTrace: stackTrace);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Failed to add task'),
           backgroundColor: AppColors.error,
         ),
@@ -174,7 +174,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.taskCompleted),
-              duration: Duration(milliseconds: DesignTokens.delaySnackbarQuick),
+              duration: const Duration(milliseconds: DesignTokens.delaySnackbarQuick),
             ),
           );
 
@@ -225,7 +225,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
             content: Text(!isCompleted
                 ? AppLocalizations.of(context)!.taskCompleted
                 : AppLocalizations.of(context)!.taskUncompleted),
-            duration: Duration(milliseconds: DesignTokens.delaySnackbarQuick),
+            duration: const Duration(milliseconds: DesignTokens.delaySnackbarQuick),
           ),
         );
 
@@ -252,7 +252,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       SnackBar(
         content: Text('Failed to $action task'),
         backgroundColor: AppColors.error,
-        duration: Duration(milliseconds: DesignTokens.delaySnackbarQuick),
+        duration: const Duration(milliseconds: DesignTokens.delaySnackbarQuick),
       ),
     );
   }
@@ -278,7 +278,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Failed to delete task'),
           backgroundColor: AppColors.error,
           duration: Duration(milliseconds: DesignTokens.delaySnackbarQuick),
@@ -409,7 +409,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   Widget _buildIncompleteList() {
     return AnimatedList(
       key: _incompleteListKey,
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.componentPadding,
         vertical: DesignTokens.spacing1,
       ),
@@ -458,7 +458,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   Widget _buildAllItemsList() {
     return AnimatedList(
       key: _allItemsListKey,
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.componentPadding,
         vertical: DesignTokens.spacing1,
       ),
@@ -544,7 +544,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
             child: _buildTaskItemWidget(task),
           ),
         ),
-        duration: Duration(
+        duration: const Duration(
             milliseconds: DesignTokens.animationNormal), // Quicker slide-out
       );
 

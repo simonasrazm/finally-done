@@ -5,16 +5,17 @@ import '../design_system/typography.dart';
 import '../utils/photo_service.dart';
 import '../widgets/photo_gallery_dialog.dart';
 import '../generated/app_localizations.dart';
+import '../design_system/colors.dart';
 
 class PhotoAttachments extends StatelessWidget {
-  final List<String> photoPaths;
-  final VoidCallback onPhotoTap;
 
   const PhotoAttachments({
     super.key,
     required this.photoPaths,
     required this.onPhotoTap,
   });
+  final List<String> photoPaths;
+  final VoidCallback onPhotoTap;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +56,7 @@ class PhotoAttachments extends StatelessWidget {
                           child: Container(
                             width: DesignTokens.photoPreviewWidth,
                             height: DesignTokens.photoPreviewHeight,
-                            color: Colors.grey[100],
+                            color: AppColors.getSecondaryBackgroundColor(context),
                             child: Image.file(
                               File(snapshot.data!),
                               fit: BoxFit.contain,
@@ -63,7 +64,7 @@ class PhotoAttachments extends StatelessWidget {
                                 return Container(
                                   width: DesignTokens.photoPreviewWidth,
                                   height: DesignTokens.photoPreviewHeight,
-                                  color: Colors.grey[300],
+                                  color: AppColors.separator,
                                   child: const Icon(Icons.image_not_supported),
                                 );
                               },
@@ -74,7 +75,7 @@ class PhotoAttachments extends StatelessWidget {
                         return Container(
                           width: DesignTokens.photoPreviewWidth,
                           height: DesignTokens.photoPreviewHeight,
-                          color: Colors.grey[300],
+                          color: AppColors.separator,
                           child: const CircularProgressIndicator(),
                         );
                       }

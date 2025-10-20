@@ -6,9 +6,9 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 /// This utility provides consistent transaction and span management
 /// for tracking app performance across all critical operations.
 class SentryPerformance {
-  static final SentryPerformance _instance = SentryPerformance._internal();
   factory SentryPerformance() => _instance;
   SentryPerformance._internal();
+  static final SentryPerformance _instance = SentryPerformance._internal();
 
   final Map<String, dynamic> _activeSpans = {};
   final Map<String, dynamic> _activeTransactions = {};

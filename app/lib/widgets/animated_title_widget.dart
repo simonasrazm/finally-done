@@ -5,9 +5,6 @@ import '../design_system/tokens.dart';
 
 /// A reusable animated title widget with easeInQuart curve
 class AnimatedTitleWidget extends StatefulWidget {
-  final String text;
-  final TextStyle? style;
-  final Duration? duration;
 
   const AnimatedTitleWidget({
     super.key,
@@ -15,6 +12,9 @@ class AnimatedTitleWidget extends StatefulWidget {
     this.style,
     this.duration,
   });
+  final String text;
+  final TextStyle? style;
+  final Duration? duration;
 
   @override
   State<AnimatedTitleWidget> createState() => _AnimatedTitleWidgetState();
@@ -31,7 +31,7 @@ class _AnimatedTitleWidgetState extends State<AnimatedTitleWidget>
 
     _animationController = AnimationController(
       duration: widget.duration ??
-          Duration(milliseconds: DesignTokens.animationTitle),
+          const Duration(milliseconds: DesignTokens.animationTitle),
       vsync: this,
     );
 

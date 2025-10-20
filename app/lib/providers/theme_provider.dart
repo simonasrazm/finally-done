@@ -11,13 +11,13 @@ enum AppThemeMode {
 
 /// Theme state
 class ThemeState {
-  final AppThemeMode mode;
-  final ThemeMode flutterThemeMode;
 
   ThemeState({
     required this.mode,
     required this.flutterThemeMode,
   });
+  final AppThemeMode mode;
+  final ThemeMode flutterThemeMode;
 
   ThemeState copyWith({
     AppThemeMode? mode,

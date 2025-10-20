@@ -124,10 +124,6 @@ class RetryMechanism {
 
 /// Simple retry configuration
 class RetryConfig {
-  final List<int> retrySequence;
-  final bool Function(dynamic error)? shouldRetry;
-  final void Function(int attempt, int delaySeconds)? onRetry;
-  final void Function(int totalAttempts)? onMaxRetriesReached;
   
   const RetryConfig({
     this.retrySequence = RetryMechanism.defaultRetrySequence,
@@ -135,6 +131,10 @@ class RetryConfig {
     this.onRetry,
     this.onMaxRetriesReached,
   });
+  final List<int> retrySequence;
+  final bool Function(dynamic error)? shouldRetry;
+  final void Function(int attempt, int delaySeconds)? onRetry;
+  final void Function(int totalAttempts)? onMaxRetriesReached;
 }
 
 /// Extension methods for easier usage

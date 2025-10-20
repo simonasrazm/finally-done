@@ -71,7 +71,7 @@ class CommandActionService {
     
     // Process the specific audio file with Gemini
     final speechService = ref.read(speechServiceProvider);
-    String transcription = await speechService.processAudioFile(fullAudioPath);
+    final String transcription = await speechService.processAudioFile(fullAudioPath);
     
     // Update transcription and status - use retry service to determine correct status
     final retryResult = CommandRetryService.determineRetryAction(command.status, command.failed);

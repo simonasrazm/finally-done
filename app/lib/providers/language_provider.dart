@@ -4,13 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Language state management
 class LanguageState {
-  final Locale locale;
-  final bool isLoading;
 
   const LanguageState({
     required this.locale,
     this.isLoading = false,
   });
+  final Locale locale;
+  final bool isLoading;
 
   LanguageState copyWith({
     Locale? locale,
@@ -25,11 +25,11 @@ class LanguageState {
 
 /// Language notifier for managing language state
 class LanguageNotifier extends StateNotifier<LanguageState> {
-  static const String _languageKey = 'selected_language';
   
   LanguageNotifier() : super(LanguageState(locale: const Locale('en'))) {
     _loadSavedLanguage();
   }
+  static const String _languageKey = 'selected_language';
 
   /// Load saved language from SharedPreferences
   Future<void> _loadSavedLanguage() async {
